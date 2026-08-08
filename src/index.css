@@ -1,0 +1,206 @@
+@import "tailwindcss";
+
+@theme {
+  /* v2 palette — design-and-content.md */
+  --color-oxblood: #5c1508;
+  --color-heritage: #8c2901;
+  --color-brass: #b8863a;
+  --color-champagne: #e9d9ae;
+  --color-ivory: #fbf6ec;
+  --color-parchment: #efe3cb;
+  --color-espresso: #211712;
+  --color-terracotta: #c97b4a;
+  --color-emerald: #1f3d2b;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+
+  --gold-shimmer: linear-gradient(120deg, #b8863a 0%, #e9d9ae 45%, #b8863a 100%);
+}
+
+@layer base {
+  * {
+    font-family: var(--font-sans);
+  }
+
+  .font-display,
+  .font-display * {
+    font-family: var(--font-display);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    overflow-x: clip;
+  }
+
+  body {
+    @apply bg-ivory text-espresso antialiased;
+    letter-spacing: 0.01em;
+    overflow-x: clip;
+    background-color: var(--color-ivory);
+  }
+
+  em {
+    font-style: italic;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  ::selection {
+    background-color: var(--color-champagne);
+    color: var(--color-espresso);
+  }
+}
+
+@layer components {
+  .btn-khadi {
+    isolation: isolate;
+    background-color: var(--color-champagne);
+    background-image:
+      repeating-linear-gradient(90deg, rgba(33, 23, 18, 0.2) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(90deg, rgba(33, 23, 18, 0.11) 0 1px, transparent 1px 9px),
+      repeating-linear-gradient(0deg, rgba(33, 23, 18, 0.17) 0 1px, transparent 1px 6px),
+      repeating-linear-gradient(0deg, rgba(33, 23, 18, 0.1) 0 1px, transparent 1px 11px),
+      radial-gradient(120% 90% at 15% 20%, rgba(201, 123, 74, 0.07), transparent 60%),
+      radial-gradient(110% 120% at 85% 85%, rgba(184, 134, 58, 0.08), transparent 55%);
+    border-radius: 4px 7px 5px 8px / 7px 5px 8px 4px;
+    box-shadow: 0 1px 2px rgba(33, 23, 18, 0.08);
+    transition:
+      background-position 0.6s ease,
+      color 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.4s ease;
+  }
+
+  .btn-khadi::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: radial-gradient(rgba(33, 23, 18, 0.22) 0.8px, transparent 1.2px);
+    background-size: 11px 9px;
+  }
+
+  .btn-stitch {
+    position: absolute;
+    inset: 5px;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(140, 41, 1, 0.55) 0 3px, transparent 3px 7px),
+      repeating-linear-gradient(90deg, rgba(140, 41, 1, 0.55) 0 3px, transparent 3px 7px),
+      repeating-linear-gradient(0deg, rgba(140, 41, 1, 0.55) 0 3px, transparent 3px 7px),
+      repeating-linear-gradient(0deg, rgba(140, 41, 1, 0.55) 0 3px, transparent 3px 7px);
+    background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+    background-position: 0 0, 0 100%, 0 0, 100% 0;
+    background-repeat: no-repeat;
+    opacity: 0.55;
+    transition: opacity 0.3s ease;
+  }
+
+  .btn-khadi::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 120px 120px;
+    opacity: 0.36;
+  }
+
+  .btn-khadi:hover {
+    border-color: rgba(33, 23, 18, 0.35);
+    box-shadow: 0 2px 8px rgba(33, 23, 18, 0.14);
+    animation: khadi-weave 1.2s linear infinite;
+  }
+
+  .group:hover .btn-stitch {
+    opacity: 1;
+    animation: stitch-march 0.8s linear infinite;
+  }
+
+  @keyframes khadi-weave {
+    from {
+      background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+    }
+    to {
+      background-position: 5px 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+    }
+  }
+
+  @keyframes stitch-march {
+    from {
+      background-position: 0 0, 0 100%, 0 0, 100% 0;
+    }
+    to {
+      background-position: 7px 0, 7px 100%, 0 7px, 100% 7px;
+    }
+  }
+
+  .grain {
+    position: relative;
+  }
+
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .grain-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+    opacity: 0.06;
+  }
+
+  .weave {
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        rgba(233, 217, 174, 0.22) 0 1px,
+        transparent 1px 16px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(233, 217, 174, 0.14) 0 1px,
+        transparent 1px 24px
+      );
+  }
+
+  .weave-espresso {
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        rgba(33, 23, 18, 0.1) 0 1px,
+        transparent 1px 16px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        rgba(33, 23, 18, 0.07) 0 1px,
+        transparent 1px 24px
+      );
+  }
+}
