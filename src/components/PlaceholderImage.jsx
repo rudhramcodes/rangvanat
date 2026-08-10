@@ -23,7 +23,7 @@ const PlaceholderImage = ({ label = 'Image', className = '', framed = false, alt
     aria-label={alt || `${label} — photography coming soon`}
     className={`relative overflow-hidden ${
       light
-        ? 'bg-gradient-to-br from-parchment via-ivory to-champagne/80'
+        ? 'bg-gradient-to-br from-parchment via-aged-parchment to-champagne/80'
         : 'bg-gradient-to-br from-heritage via-oxblood to-espresso'
     } ${round ? 'rounded-full' : ''} ${className}`}
   >

@@ -1,51 +1,36 @@
-import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 
 const Button = ({
-  to,
-  href,
+  href = '#',
   type = 'button',
   onClick,
   children,
   className = '',
   size = 'md',
+  variant = 'primary',
   dark = false,
   arrow = false,
 }) => {
-  const cls = `btn-khadi group relative inline-flex select-none items-center justify-center gap-3 overflow-hidden border font-semibold uppercase tracking-[0.3em] text-espresso ${
-    dark ? 'border-ivory/25' : 'border-espresso/15'
-  } ${size === 'sm' ? 'px-6 py-2.5 text-[11px] tracking-[0.25em]' : 'px-8 py-4 text-[11px]'} ${className}`
+  const cls = `btn ${variant === 'ghost' ? 'btn-ghost' : 'btn-primary'} ${
+    dark ? 'btn-dark' : ''
+  } ${size === 'sm' ? 'btn-sm' : ''} ${className}`
 
   const content = (
     <>
-      <span aria-hidden className="btn-stitch" />
-      <span className="relative z-10 transition-all duration-300 group-hover:tracking-[0.36em] group-hover:text-heritage">
-        {children}
-      </span>
+      <span aria-hidden className="btn-underline" />
+      <span className="btn-label">{children}</span>
       {arrow && (
-        <ArrowRight size={15} className="relative z-10 transition-transform duration-300 group-hover:translate-x-1.5" />
+        <span aria-hidden className="btn-arrow">
+          <ArrowRight size={15} strokeWidth={1.5} />
+        </span>
       )}
     </>
   )
 
-  if (to) {
-    return (
-      <Link to={to} onClick={onClick} className={cls}>
-        {content}
-      </Link>
-    )
-  }
-  if (href) {
-    return (
-      <a href={href} onClick={onClick} className={cls}>
-        {content}
-      </a>
-    )
-  }
   return (
-    <button type={type} onClick={onClick} className={cls}>
+    <a href={href} onClick={onClick} className={cls}>
       {content}
-    </button>
+    </a>
   )
 }
 

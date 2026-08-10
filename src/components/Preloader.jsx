@@ -1,68 +1,42 @@
 import { useEffect, useRef } from 'react'
-import { animate, createTimeline } from 'animejs'
+import { createTimeline } from 'animejs'
 
-/**
- * Preloader — spins the Rangvanat charkha WHEEL (hub + rim + spokes)
- * while the site loads. The stand (post, base, braces) stays static —
- * exactly how a real charkha works: the wheel spins on a fixed axle.
- *
- * Usage:
- *   const [isLoading, setIsLoading] = useState(true)
- *   useEffect(() => {
- *     Promise.all([...your real asset/data loading...]).then(() => setIsLoading(false))
- *   }, [])
- *   {isLoading !== null && <Preloader isLoading={isLoading} onDone={() => setShowPreloader(false)} />}
- */
-const Preloader = ({ isLoading = true, onDone }) => {
+const Charkha = () => (
+  <svg viewBox="0 0 100 100" className="h-24 w-24 sm:h-28 sm:w-28" aria-hidden>
+    <circle cx="50" cy="50" r="44" fill="none" stroke="#b8863a" strokeWidth="1.5" />
+    <g data-spokes style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <line
+          key={i}
+          x1="50"
+          y1="50"
+          x2="50"
+          y2="10"
+          stroke="#e9d9ae"
+          strokeWidth="1"
+          transform={`rotate(${i * 45} 50 50)`}
+        />
+      ))}
+    </g>
+    <circle cx="50" cy="50" r="3.5" fill="#e9d9ae" />
+  </svg>
+)
+
+const Preloader = ({ isLoading, onDone }) => {
   const overlayRef = useRef(null)
   const wheelRef = useRef(null)
-  const brandRef = useRef(null)
-  const spinAnim = useRef(null)
-  const hasExited = useRef(false)
-
-  const prefersReducedMotion =
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
   useEffect(() => {
-    if (!prefersReducedMotion) {
-      spinAnim.current = animate(wheelRef.current, {
-        rotate: '+=360',
-        duration: 2200,
-        easing: 'linear',
-        loop: true,
-      })
-    }
-
-    animate(brandRef.current, {
-      opacity: [0, 1],
-      translateY: [12, 0],
-      duration: 600,
-      delay: 300,
-      easing: 'outCubic',
-    })
-
-    return () => spinAnim.current?.pause()
-  }, [prefersReducedMotion])
-
-  useEffect(() => {
-    if (isLoading || hasExited.current) return
-    hasExited.current = true
-
-    spinAnim.current?.pause()
+    if (isLoading) return undefined
 
     const tl = createTimeline({
-      defaults: { easing: 'outCubic' },
+      defaults: { ease: 'inOutCubic' },
       onComplete: onDone,
     })
-
-    tl.add(wheelRef.current, {
-      rotate: '+=300',
-      duration: 1700,
-      easing: 'outQuint',
-    })
-      .add(brandRef.current, { opacity: 0, translateY: -8, duration: 400 }, '-=250')
-      .add(overlayRef.current, { opacity: 0, duration: 700 }, '-=150')
+    tl.add(wheelRef.current.querySelector('[data-spokes]'), { rotate: 360, duration: 1400 })
+      .add('.preloader-brand', { opacity: [0, 1], translateY: [12, 0], duration: 500 }, '-=800')
+      .add(overlayRef.current, { opacity: 0, duration: 700 }, '+=150')
+    return () => tl.pause?.()
   }, [isLoading, onDone])
 
   return (
@@ -70,49 +44,10 @@ const Preloader = ({ isLoading = true, onDone }) => {
       ref={overlayRef}
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-espresso grain"
     >
-      <svg viewBox="0 0 389.9 300.73" className="h-24 w-24 sm:h-28 sm:w-28" aria-hidden>
-        {/* R — static */}
-        <path
-          fill="#8c2901"
-          d="M134.84,85.12V15.12c0-8.08,4.66-8.26,10.53-8.26h13.29c18.78,0,34.07,15.29,34.07,34.07v10.06c0,18.78-15.36,34.14-34.14,34.14h-23.75ZM95.31,164.96h52.62v-4.62h-2.59c-5.77,0-10.5-4.72-10.5-10.5v-57.93h10.18c12.11,1.06,16.88,3.27,23.69,16.81l86.99,172.75c7.45,14.8,16.63,19.73,31.71,19.23h28.91l-.2-4.62h-5.52c-13.31,0-22.89-3.54-29.68-16.87l-82.34-163.62c-6.24-12.4-10.94-20.95-22.08-24.76,10.72-1.83,19.4-5.88,25.96-11.45,9.96-8.45,15.05-20.4,15.05-33.42,0-24.92-18.67-45.96-54.42-45.96h-67.79v4.62h2.59c5.77,0,10.5,4.72,10.5,10.5v134.72c0,5.77-4.72,10.5-10.5,10.5h-2.59v4.62Z"
-        />
-
-        {/* V — static */}
-        <path
-          fill="#cca756"
-          d="M199.68,85.12h59.47v4.62h-4.79c-11.3,0-11.54,9.17-7.42,17.3l54.25,124.15,59.73-124.15c4.12-8.13,3.88-17.3-7.42-17.3h-4.79v-4.62h41.18v4.63c-9.76.38-14.55,8.08-18.24,15.69l-76.16,157.18h-8.51l-71.71-162.38c-2.57-5.82-9.9-10.27-15.6-10.49v-4.63Z"
-        />
-
-        {/* Charkha STAND — static (post, ball finial, braces, base) */}
-        <path
-          fill="#cca756"
-          d="M180.99,217.66h-43.81v1.08l-2.72.08v1.38l-7.73.24v-1.38l-42.63,1.32,36.26,22.45.69-1.2,6.57,4.07-.69,1.2,2.31,1.43-2.19,3.8-2.39-1.29-.69,1.2-6.81-3.66.69-1.2-37.57-20.17,20.17,37.57,1.2-.69,3.5,6.52,75.85-52.76ZM137.18,215.43h43.12l-75.22-52.63-3.43,6.39-1.2-.69-20.17,37.57,37.57-20.17-.69-1.2,6.81-3.66.69,1.2,2.39-1.29,2.19,3.8-2.31,1.43.69,1.2-6.57,4.07-.69-1.2-36.26,22.45,42.63,1.32v-1.38l7.73.24v1.38l2.72.08v1.08ZM82.28,286.86c-.39-1.8-1.29-3.41-2.55-4.66-1.29-1.29-2.96-2.21-4.81-2.58h-.02s0,0,0,0c-.45-.09-.91-.14-1.38-.16l-.05,1.76h-1.38l-.08,2.72h-4.39l-.08-2.72h-1.38l-.05-1.76c-.47.02-.93.08-1.38.16h0s-.02,0-.02,0c-1.86.37-3.52,1.29-4.81,2.58-1.26,1.26-2.16,2.87-2.55,4.66h24.96ZM173.72,286.86l1.07-4.82c.3-1.34,1.12-2.49,2.49-2.49h1.95l2.05-58.94-76.04,52.9.15.29-3.8,2.19-1.43-2.31-1.2.69-4.07-6.57,1.2-.69-22.45-36.26-1.32,42.63h1.38l-.05,1.57c.47.02.92.06,1.38.12v-.06c6.93-.61,13.51-2.42,19.53-5.22l2.38,3.84c-4.6,2.19-9.5,3.83-14.63,4.86.18.16.36.33.53.5,2.06,2.06,3.48,4.77,3.91,7.78h86.97ZM227.05,286.86l-32.17-64.8,1.99,57.48h1.95c1.37,0,2.19,1.15,2.49,2.49l1.07,4.82h24.66ZM66.15,151.88h1.38l.08-2.72h4.39l.08,2.72h1.38l.24,7.73h-1.38l1.32,42.62,22.45-36.26-1.2-.69,4.07-6.57,1.2.69,1.43-2.31,3.8,2.19-.23.42,76.37,53.44.08-2.44c.05-1.39,1.13-2.52,2.52-2.52h.64c-.64-.75-1.02-1.72-1.02-2.77,0-2.37,1.92-4.29,4.29-4.29s4.29,1.92,4.29,4.29c0,1.06-.38,2.03-1.02,2.77h.64c1.39,0,2.47,1.14,2.52,2.52l.16,4.72h6.44c.72,0,1.3.5,1.3,1.11s-.58,1.11-1.3,1.11h-5.51l34.36,69.21h1.49c2.5,0,4,2.11,4.54,4.54l2.07,9.33H0l2.07-9.33c.54-2.44,2.04-4.54,4.54-4.54h46.24c.44-3.01,1.85-5.72,3.91-7.78.17-.17.35-.34.53-.5-5.13-1.03-10.03-2.68-14.63-4.86l2.38-3.84c6.03,2.8,12.61,4.61,19.53,5.22v.06c.45-.06.91-.11,1.38-.12l-.05-1.57h1.38l-1.32-42.63-22.45,36.26,1.2.69-4.07,6.57-1.2-.69-1.43,2.31-3.8-2.19,1.29-2.39-1.2-.69,3.66-6.81,1.2.69,20.17-37.57-37.57,20.17.69,1.2-6.81,3.66-.69-1.2-2.39,1.29-2.19-3.8,2.31-1.43-.69-1.2,6.57-4.07.69,1.2,36.26-22.45-42.63-1.32v1.38l-7.73-.24v-1.38l-2.72-.08v-4.39l2.72-.08v-1.38l7.73-.24v1.38l42.63-1.32-36.26-22.45-.69,1.2-6.57-4.07.69-1.2-2.31-1.43,2.19-3.8,2.39,1.29.69-1.2,6.81,3.66-.69,1.2,37.57,20.17-20.17-37.57-1.2.69-3.66-6.81,1.2-.69-1.29-2.39,3.8-2.19,1.43,2.31,1.19-.69,4.07,6.57-1.2.69,22.45,36.26,1.32-42.62h-1.38l.24-7.73Z"
-        />
-
-        {/* Charkha WHEEL — rotates: hub + rim + straight spokes */}
-        <g ref={wheelRef} style={{ transformBox: 'view-box', transformOrigin: '69.8px 216.55px', willChange: 'transform' }}>
-          <path
-            fill="#cca756"
-            d="M69.8,207.43c5.03,0,9.12,4.08,9.12,9.12s-4.08,9.12-9.12,9.12-9.12-4.08-9.12-9.12,4.08-9.12,9.12-9.12ZM45.05,163.2c6.03-2.8,12.61-4.61,19.53-5.22l.14-4.51c-7.84.62-15.28,2.68-22.05,5.9l2.38,3.84ZM21.7,182.73c3.91-5.55,8.75-10.39,14.29-14.3l-2.13-3.98c-6.3,4.36-11.78,9.83-16.14,16.14l3.98,2.13ZM11.25,211.31c.61-6.93,2.42-13.51,5.22-19.53l-3.84-2.38c-3.22,6.77-5.27,14.21-5.9,22.05l4.51-.14ZM16.47,241.3c-2.8-6.03-4.61-12.61-5.22-19.53l-4.51-.14c.62,7.84,2.68,15.28,5.9,22.05l3.84-2.38ZM36,264.64c-5.55-3.91-10.39-8.75-14.3-14.3l-3.98,2.13c4.36,6.3,9.83,11.78,16.14,16.14l2.13-3.98ZM117.91,250.35c-3.91,5.55-8.75,10.39-14.29,14.29l2.13,3.98c6.3-4.36,11.78-9.83,16.14-16.14l-3.98-2.13ZM128.36,221.77c-.61,6.93-2.42,13.51-5.22,19.53l3.84,2.38c3.22-6.77,5.27-14.21,5.9-22.05l-4.51.14ZM123.14,191.78c2.8,6.03,4.61,12.61,5.22,19.53l4.51.14c-.62-7.84-2.68-15.28-5.9-22.05l-3.84,2.38ZM103.61,168.44c5.55,3.91,10.39,8.75,14.29,14.3l3.98-2.13c-4.36-6.3-9.83-11.78-16.14-16.14l-2.13,3.98ZM75.03,157.98c6.93.61,13.51,2.42,19.53,5.22l2.38-3.84c-6.77-3.22-14.21-5.27-22.05-5.9l.14,4.51ZM69.8,211.09c3.01,0,5.45,2.44,5.45,5.45s-2.44,5.45-5.45,5.45-5.45-2.44-5.45-5.45,2.44-5.45,5.45-5.45Z"
-          />
-          {/* Straight spokes — hand-added, 10-fold, hub center (69.8, 216.55) */}
-          <line x1="82.80" y1="216.55" x2="121.80" y2="216.55" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="80.32" y1="224.19" x2="111.87" y2="247.11" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="73.82" y1="228.91" x2="85.87" y2="266.00" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="65.78" y1="228.91" x2="53.73" y2="266.00" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="59.28" y1="224.19" x2="27.73" y2="247.11" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="56.80" y1="216.55" x2="17.80" y2="216.55" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="59.28" y1="208.91" x2="27.73" y2="185.99" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="65.78" y1="204.19" x2="53.73" y2="167.10" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="73.82" y1="204.19" x2="85.87" y2="167.10" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-          <line x1="80.32" y1="208.91" x2="111.87" y2="185.99" stroke="#cca756" strokeWidth="2.5" strokeLinecap="round" />
-        </g>
-      </svg>
-
-      <p
-        ref={brandRef}
-        className="text-[11px] font-medium uppercase tracking-[0.5em] text-champagne opacity-0"
-      >
+      <div ref={wheelRef}>
+        <Charkha />
+      </div>
+      <p className="preloader-brand text-[11px] font-medium uppercase tracking-[0.5em] text-champagne opacity-0">
         RANGVANAT
       </p>
     </div>
