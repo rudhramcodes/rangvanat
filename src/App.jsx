@@ -13,7 +13,7 @@ import {
 import Preloader from './components/Preloader'
 
 const imagePaths = {
-  hero: '/images/1.webp',
+  hero: '/images/hero.png',
   story: '/images/2.webp',
   process: '/images/3.webp',
   artisanOne: '/images/artisan-portrait-01.webp',
@@ -39,7 +39,6 @@ const Asset = ({ src, label, className = '', children, alt = assetAlt(label) }) 
     role="img"
     aria-label={alt}
   >
-    <span className="asset-label">Add image: {label}</span>
     {children}
   </div>
 )
@@ -57,7 +56,6 @@ const Header = ({ menuOpen, setMenuOpen }) => (
   <header className="site-header">
     <a className="logo-link" href="#top" aria-label="Rangvanat home">
       <img src="/images/logo-only.svg" alt="Rangvanat" />
-      <span>Rangvanat</span>
     </a>
 
     <nav className="desktop-nav" aria-label="Primary navigation">
