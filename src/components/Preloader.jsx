@@ -34,7 +34,6 @@ const Preloader = ({ isLoading, onDone }) => {
       onComplete: onDone,
     })
     tl.add(wheelRef.current.querySelector('[data-spokes]'), { rotate: 360, duration: 1400 })
-      .add('.preloader-brand', { opacity: [0, 1], translateY: [12, 0], duration: 500 }, '-=800')
       .add(overlayRef.current, { opacity: 0, duration: 700 }, '+=150')
     return () => tl.pause?.()
   }, [isLoading, onDone])
@@ -47,7 +46,7 @@ const Preloader = ({ isLoading, onDone }) => {
       <div ref={wheelRef}>
         <Charkha />
       </div>
-      <p className="preloader-brand text-[11px] font-medium uppercase tracking-[0.5em] text-champagne opacity-0">
+      <p className="preloader-brand text-[11px] font-medium uppercase tracking-[0.5em] text-champagne">
         RANGVANAT
       </p>
     </div>

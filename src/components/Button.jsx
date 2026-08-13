@@ -11,7 +11,7 @@ const Button = ({
   dark = false,
   arrow = false,
 }) => {
-  const cls = `btn ${variant === 'ghost' ? 'btn-ghost' : 'btn-primary'} ${
+  const cls = `btn-khadi btn ${variant === 'ghost' ? 'btn-ghost' : 'btn-primary'} ${
     dark ? 'btn-dark' : ''
   } ${size === 'sm' ? 'btn-sm' : ''} ${className}`
 

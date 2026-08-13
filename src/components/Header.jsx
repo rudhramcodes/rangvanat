@@ -93,12 +93,12 @@ const Header = () => {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="nav-open border-b border-champagne/10 py-4 font-display text-4xl font-medium text-champagne transition-colors hover:text-brass"
+                className="nav-open border-b border-champagne/10 border-y py-4 font-display text-4xl font-medium text-champagne transition-colors hover:text-brass"
                 style={{ animationDelay: `${i * 60}ms` }}
               >
                 {item.label}
               </a>
-            ))}
+            ))}}
           </nav>
           <div className="px-8 pb-10">
             <Button

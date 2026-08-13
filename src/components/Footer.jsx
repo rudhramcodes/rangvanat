@@ -94,7 +94,7 @@ const Footer = () => {
       <span className="ghost-wordmark" aria-hidden>
         RANGVANAT
       </span>
-      <div className="page-x relative grid gap-10 pb-16 pt-20 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1.2fr_1.4fr]">
+      <div className="page-x relative grid gap-10 pb-16 pt-20 md:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr]">
         <div>
           <a href="#top" aria-label="RANGVANAT — home">
             <img

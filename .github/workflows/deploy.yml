@@ -1,0 +1,67 @@
+name: Rangvanat CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    concurrency: 1
+
+    steps:
+      # ============================================================
+      # 1. Checkout repository
+      # ============================================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ============================================================
+      # 2. Set up Node.js
+      # ============================================================
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ============================================================
+      # 3. Install dependencies
+      # ============================================================
+      - name Install dependencies
+        run: npm ci
+
+      # ============================================================
+      # 4. Build the Vite React project
+      # ============================================================
+      - name: Build Vite
+        run: npm run build
+
+      # ============================================================
+      # 5. Deploy to Hostinger via FTP
+      # ============================================================
+      - name: Deploy to Hostinger
+        env:
+          FTP_HOST: ${{ secrets.FTP_HOST }}
+          FTP_USER: ${{ secrets.FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_PORT: 21
+          REMOTE_DIR: /public_html
+        uses: combined-software/ftp-deploy-action@v4
+        with:
+          server-address: ${{ env.FTP_HOST }}
+          username: ${{ env.FTP_USER }}
+          password: ${{ env.FTP_PASSWORD }}
+          port: ${{ env.FTP_PORT }}
+          local-dir: ./dist/
+          remote-dir: ${{ env.REMOTE_DIR }}
+          overwrite: true
+          delete-remote: true
+
+      # ============================================================
+      # 6. Optional: Verify deployment
+      # ============================================================
+      - name: ✅ Verify deployment
+        run: echo "Rangvanat deployed successfully to Hostinger!"
