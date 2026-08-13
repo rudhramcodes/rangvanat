@@ -43,22 +43,20 @@ jobs:
       # 5. Deploy to Hostinger via FTP
       # ============================================================
       - name: Deploy to Hostinger
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USER: ${{ secrets.FTP_USER }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_PORT: 21
-          REMOTE_DIR: /public_html
-        uses: combined-software/ftp-deploy-action@v4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server-address: ${{ env.FTP_HOST }}
-          username: ${{ env.FTP_USER }}
-          password: ${{ env.FTP_PASSWORD }}
-          port: ${{ env.FTP_PORT }}
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
           local-dir: ./dist/
-          remote-dir: ${{ env.REMOTE_DIR }}
-          overwrite: true
-          delete-remote: true
+          server-dir: /public_html/
+          dangerous-clean-slate: true
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/node_modules/**/*
 
       # ============================================================
       # 6. Optional: Verify deployment
