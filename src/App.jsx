@@ -49,20 +49,26 @@ const Asset = ({ src, label, className = '', children, alt = assetAlt(label) }) 
 
 const Eyebrow = ({ children }) => <p className="eyebrow">{children}</p>
 
-const Cta = ({ children, href = '#collections', dark = false, light = false, brand = false, size = 'md' }) => (
-  <a
-    className={`cta ${dark ? 'cta-dark' : ''} ${light ? 'cta-light' : ''} ${brand ? 'cta-brand' : ''} cta-${size}`}
-    href={href}
-  >
-    <span className="cta-sheen" aria-hidden="true" />
-    <span className="cta-label">
-      <span className="cta-text">{children}</span>
-      <span className="cta-text cta-text--ghost" aria-hidden="true">
-        {children}
+const Cta = ({ children, href = '#collections', size = 'md' }) => {
+  const chars = String(children)
+    .split('')
+    .map((ch, i) => (
+      <span key={i} className="cta-char" style={{ '--i': i }}>
+        {ch === ' ' ? '\u00A0' : ch}
       </span>
-    </span>
-  </a>
-)
+    ))
+  return (
+    <a className={`cta cta-${size}`} href={href}>
+      <span className="cta-sheen" aria-hidden="true" />
+      <span className="cta-label">
+        <span className="cta-text">{chars}</span>
+        <span className="cta-text cta-text--ghost" aria-hidden="true">
+          {chars}
+        </span>
+      </span>
+    </a>
+  )
+}
 
 const Header = ({ menuOpen, setMenuOpen }) => (
   <>
@@ -115,7 +121,7 @@ const Header = ({ menuOpen, setMenuOpen }) => (
       </nav>
       <div className="mobile-menu-foot">
         <p>Bardoli · Gujarat · India</p>
-        <Cta href="#contact" dark size="sm">
+        <Cta href="#contact" size="sm">
           Join the Journey
         </Cta>
       </div>
@@ -141,7 +147,7 @@ const Hero = () => (
       <Eyebrow>Khadi Art by Rangvesh</Eyebrow>
       <h1>Every Thread Remembers.</h1>
       <p>Hand-spun khadi, patient colour, and stories made wearable.</p>
-      <Cta href="#collections" brand size="lg">
+      <Cta href="#collections" size="lg">
         Discover Rangvanat
       </Cta>
     </div>
@@ -201,7 +207,7 @@ const FounderNote = () => (
         <span>Designer, Founder & Managing Director</span>
       </p>
     </div>
-    <Cta href="#craft" light>
+    <Cta href="#craft">
       Begin with the Story
     </Cta>
   </section>

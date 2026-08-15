@@ -227,6 +227,17 @@
     .grain-overlay {
       animation: none;
     }
+
+    .cta-char,
+    .cta-sheen,
+    .cta {
+      transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+    }
+
+    .cta-char {
+      transform: none !important;
+    }
   }
 
   .weave {
@@ -463,8 +474,8 @@
   }
 
   .cta {
-    --cta-fg: var(--color-champagne);
-    --cta-border: rgba(232, 217, 174, 0.45);
+    --cta-fg: var(--color-oxblood);
+    --cta-border: var(--color-champagne);
     --cta-fill: var(--color-champagne);
     --cta-fill-fg: var(--color-oxblood);
 
@@ -478,52 +489,32 @@
     padding: 0 26px;
     border: 1px solid var(--cta-border);
     border-radius: 1px;
+    background: var(--cta-fill);
     color: var(--cta-fg);
-    font-size: 12px;
+    font-family: var(--font-display);
+    font-size: 14px;
     font-weight: 600;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.14em;
     text-decoration: none;
     text-transform: uppercase;
     white-space: nowrap;
     cursor: pointer;
     overflow: hidden;
-    transition:
-      border-color 0.35s ease,
-      color 0.35s ease;
     will-change: transform;
   }
 
   .cta-lg {
     min-height: 56px;
     padding: 0 36px;
-    font-size: 13px;
+    font-size: 16px;
+    letter-spacing: 0.16em;
   }
 
   .cta-sm {
     min-height: 36px;
     padding: 0 18px;
-    font-size: 11px;
-  }
-
-  /* fill sweep — khadi weave washes in from the left */
-  .cta::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -2;
-    background: linear-gradient(
-      120deg,
-      var(--cta-fill),
-      color-mix(in srgb, var(--cta-fill) 86%, var(--color-brass))
-    );
-    transform: scaleX(0);
-    transform-origin: left center;
-    transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
-  }
-
-  .cta:hover::before,
-  .cta:focus-visible::before {
-    transform: scaleX(1);
+    font-size: 12px;
+    letter-spacing: 0.12em;
   }
 
   /* diagonal shine that sweeps after the fill */
@@ -538,119 +529,75 @@
       transparent 58%
     );
     transform: translateX(-130%) skewX(-8deg);
-    transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .cta:hover .cta-sheen,
   .cta:focus-visible .cta-sheen {
     transform: translateX(130%) skewX(-8deg);
+    transition-delay: 0.3s;
   }
 
-  /* label roll — text lifts, ghost copy rises in */
+  /* per-letter stagger roll — text lifts letter by letter, ghost rises in */
   .cta-label {
-    display: block;
+    display: inline-flex;
     overflow: hidden;
-    line-height: 1.4;
+    line-height: 1;
+    padding: 2px 0;
   }
 
   .cta-text {
-    display: block;
-    transition: transform 0.45s cubic-bezier(0.65, 0, 0.35, 1);
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
   }
 
   .cta-text--ghost {
     position: absolute;
     inset: 0;
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--cta-fill-fg);
-    transform: translateY(120%);
+    visibility: hidden;
+    transition: visibility 0s 0.5s;
   }
 
-  .cta:hover .cta-text,
-  .cta:focus-visible .cta-text {
-    transform: translateY(-120%);
+  .cta-char {
+    display: inline-block;
+    transition:
+      transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.3s ease;
+    transition-delay: calc(var(--i) * 18ms);
+    will-change: transform, opacity;
+  }
+
+  .cta-text--ghost .cta-char {
+    transform: translateY(115%);
+    opacity: 0;
+  }
+
+  .cta:hover .cta-text .cta-char,
+  .cta:focus-visible .cta-text .cta-char {
+    transform: translateY(-115%);
+    opacity: 0;
   }
 
   .cta:hover .cta-text--ghost,
   .cta:focus-visible .cta-text--ghost {
-    transform: translateY(0);
+    visibility: visible;
+    transition: visibility 0s 0s;
   }
 
-  .cta:hover,
-  .cta:focus-visible {
-    border-color: var(--cta-hover-border, var(--cta-fill));
-    color: var(--cta-fill-fg);
+  .cta:hover .cta-text--ghost .cta-char,
+  .cta:focus-visible .cta-text--ghost .cta-char {
+    transform: translateY(0);
+    opacity: 1;
   }
 
   .cta:active {
     transform: translateY(1px);
-    transition:
-      border-color 0.35s ease,
-      color 0.35s ease,
-      transform 0.12s ease;
-  }
-
-  /* dark ground / over imagery — brighter ivory text for contrast */
-  .cta-dark {
-    --cta-fg: var(--color-ivory);
-    --cta-border: rgba(251, 246, 236, 0.6);
-    --cta-fill: var(--color-ivory);
-    --cta-fill-fg: var(--color-oxblood);
-    --cta-hover-border: var(--color-ivory);
-  }
-
-  /* brand variant — champagne rest, oxblood (brand red) hover */
-  .cta-brand {
-    --cta-fg: var(--color-oxblood);
-    --cta-border: transparent;
-    --cta-fill: var(--color-champagne);
-    --cta-fill-fg: var(--color-ivory);
-    --cta-hover-border: var(--color-oxblood);
-    background: var(--color-champagne);
-  }
-
-  .cta-brand::before {
-    background: linear-gradient(
-      120deg,
-      var(--color-oxblood),
-      color-mix(in srgb, var(--color-oxblood) 82%, var(--color-brass))
-    );
-  }
-
-  .cta-brand .cta-sheen {
-    background: linear-gradient(
-      105deg,
-      transparent 42%,
-      rgba(251, 246, 236, 0.65) 50%,
-      transparent 58%
-    );
-  }
-
-  /* light background variant — for parchment / ivory pull-pages */
-  .cta-light {
-    --cta-fg: var(--color-oxblood);
-    --cta-border: rgba(42, 14, 6, 0.4);
-    --cta-fill: var(--color-oxblood);
-    --cta-fill-fg: var(--color-parchment);
-    --cta-hover-border: var(--color-oxblood);
-  }
-
-  .cta-light::before {
-    background: linear-gradient(
-      120deg,
-      var(--cta-fill),
-      color-mix(in srgb, var(--cta-fill) 85%, var(--color-brass))
-    );
-  }
-
-  .cta-light .cta-sheen {
-    background: linear-gradient(
-      105deg,
-      transparent 42%,
-      rgba(239, 227, 203, 0.5) 50%,
-      transparent 58%
-    );
+    transition: transform 0.12s ease;
   }
 
   .hero {
