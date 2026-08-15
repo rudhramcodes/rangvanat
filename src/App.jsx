@@ -169,22 +169,26 @@ const Story = () => (
 )
 
 const Heritage = () => (
-  <section id="heritage" className="section split-section">
-    <Asset
-      src={imagePaths.story}
-      label="story-bardoli-illustration.jpg"
-      className="framed-image"
-      alt="Bardoli heritage illustration"
-    />
-    <div className="section-copy">
+  <section id="heritage" className="section heritage-section">
+    <div className="heritage-head">
       <Eyebrow>Where we come from</Eyebrow>
       <h2>A legacy woven in Bardoli.</h2>
-      <p>
-        Rangvanat comes from Bardoli, Sardar Patel's home ground. A length of hand-spun cloth was
-        once the loudest thing a person could say here. We did not inherit khadi as a fabric. We
-        inherited it as a vow to finish.
-      </p>
-      <Cta href="#craft">Read the Story</Cta>
+    </div>
+    <div className="heritage-body">
+      <Asset
+        src={imagePaths.story}
+        label="story-bardoli-illustration.jpg"
+        className="framed-image"
+        alt="Bardoli heritage illustration"
+      />
+      <div className="section-copy">
+        <p>
+          Rangvanat comes from Bardoli, Sardar Patel's home ground. A length of hand-spun cloth was
+          once the loudest thing a person could say here. We did not inherit khadi as a fabric. We
+          inherited it as a vow to finish.
+        </p>
+        <Cta href="#craft">Read the Story</Cta>
+      </div>
     </div>
   </section>
 )
