@@ -3,7 +3,7 @@ import { createTimeline } from 'animejs'
 
 const Charkha = () => (
   <svg viewBox="0 0 100 100" className="h-24 w-24 sm:h-28 sm:w-28" aria-hidden>
-    <circle cx="50" cy="50" r="44" fill="none" stroke="#b8863a" strokeWidth="1.5" />
+    <circle cx="50" cy="50" r="44" fill="none" stroke="#cfa158" strokeWidth="1.5" />
     <g data-spokes style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>
       {Array.from({ length: 8 }).map((_, i) => (
         <line
@@ -46,7 +46,7 @@ const Preloader = ({ isLoading, onDone }) => {
       <div ref={wheelRef}>
         <Charkha />
       </div>
-      <p className="preloader-brand text-[11px] font-medium uppercase tracking-[0.5em] text-champagne">
+      <p className="preloader-brand font-subhead text-[12px] font-semibold uppercase tracking-[0.5em] text-brass">
         RANGVANAT
       </p>
     </div>
