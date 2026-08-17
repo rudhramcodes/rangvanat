@@ -1689,6 +1689,10 @@
       font-size: 30px;
     }
 
+    .founder {
+      justify-content: center;
+    }
+
     .quote-section .cta {
       margin-top: 32px;
     }
