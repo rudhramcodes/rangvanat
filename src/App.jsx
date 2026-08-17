@@ -18,6 +18,10 @@ const imagePaths = {
   heritageMain: '/images/heritage-main.jpg',
   heritageDetail: '/images/heritage-detail.jpg',
   process: '/images/3.webp',
+  processSpinning: '/images/spinning.jpg',
+  processDyeing: '/images/dyeing.jpg',
+  processWeaving: '/images/3.webp',
+  processFinishing: '/images/finishing.jpg',
   artisanOne: '/images/artisan-portrait-01.webp',
   artisanTwo: '/images/artisan-loom-01.webp',
   collectionLarge: '/images/4.webp',
@@ -324,32 +328,92 @@ const Timeline = () => {
   )
 }
 
-const Craft = () => (
-  <section id="craft" className="section process-section">
-    <Asset
-      src={imagePaths.process}
-      label="process-charkha.jpg"
-      className="process-image"
-      alt="Artisan spinning khadi on a charkha"
-    />
-    <div className="section-copy">
-      <Eyebrow>The process</Eyebrow>
-      <h2>Spun slow. Woven with intention.</h2>
-      <p>
-        Every piece begins the way it did a hundred years ago. On a charkha, in the hands of
-        someone who has spent a lifetime learning what the thread wants to become.
-      </p>
-      {[
-        ['Spinning', 'Cotton becomes thread under patient hands. The thread is not forced; it is coaxed.'],
-        ['Dyeing', 'Natural colour settles slowly into the fibre. It does not sit on the surface; it becomes one with it.'],
-        ['Weaving', 'The loom turns memory into fabric. Each throw of the shuttle is a decision.'],
-        ['Finishing', 'Every edge is checked before it leaves Bardoli. Not quality control. Craft pride.'],
-      ].map(([title, body]) => (
-        <article className="process-step" key={title}>
-          <h3>{title}</h3>
-          <p>{body}</p>
-        </article>
-      ))}
+const PROCESS_STEPS = [
+  {
+    num: '01',
+    title: 'Spinning',
+    body: 'Cotton becomes thread under patient hands. The thread is not forced; it is coaxed.',
+    src: imagePaths.processSpinning,
+    label: 'process-spinning.jpg',
+    alt: 'Artisan spinning cotton into thread',
+  },
+  {
+    num: '02',
+    title: 'Dyeing',
+    body: 'Natural colour settles slowly into the fibre. It does not sit on the surface; it becomes one with it.',
+    src: imagePaths.processDyeing,
+    label: 'process-dyeing.jpg',
+    alt: 'Fabric resting in a natural dye bath',
+  },
+  {
+    num: '03',
+    title: 'Weaving',
+    body: 'The loom turns memory into fabric. Each throw of the shuttle is a decision.',
+    src: imagePaths.processWeaving,
+    label: 'process-weaving.jpg',
+    alt: 'Artisan weaving khadi on a handloom',
+  },
+  {
+    num: '04',
+    title: 'Finishing',
+    body: 'Every edge is checked before it leaves Bardoli. Not quality control. Craft pride.',
+    src: imagePaths.processFinishing,
+    label: 'process-finishing.jpg',
+    alt: 'Folded khadi fabric finished by hand',
+  },
+]
+
+const Craft = () => {
+  const gridRef = useRef(null)
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    if (reduced) return
+    const cards = gridRef.current?.querySelectorAll('.process-card')
+    if (!cards?.length) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 36 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.12,
+          scrollTrigger: { trigger: gridRef.current, start: 'top 82%', once: true },
+        },
+      )
+    }, gridRef)
+    return () => ctx.revert()
+  }, [reduced])
+
+  return (
+    <section id="craft" className="section process-section">
+      <div className="process-head">
+        <Eyebrow>The process</Eyebrow>
+        <h2>Spun slow. Woven with intention.</h2>
+        <p>
+          Every piece begins the way it did a hundred years ago. On a charkha, in the hands of
+          someone who has spent a lifetime learning what the thread wants to become.
+        </p>
+      </div>
+      <div className="process-grid" ref={gridRef}>
+        {PROCESS_STEPS.map(({ num, title, body, src, label, alt }) => (
+          <article className="process-card" key={title}>
+            <div className="process-card-media">
+              <Asset src={src} label={label} className="process-card-image" alt={alt} />
+              <span className="process-card-num" aria-hidden="true">
+                {num}
+              </span>
+            </div>
+            <div className="process-card-body">
+              <h3>{title}</h3>
+              <p>{body}</p>
+            </div>
+          </article>
+        ))}
+      </div>
       <div className="value-blocks">
         {[
           ['The thread sets the pace.', 'A charkha spins where a mill would rush.'],
@@ -362,9 +426,9 @@ const Craft = () => (
           </article>
         ))}
       </div>
-    </div>
-  </section>
-)
+    </section>
+  )
+}
 
 const Artisans = () => (
   <section id="artisans" className="dark-section artisans-section grain">
