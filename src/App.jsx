@@ -22,11 +22,11 @@ const imagePaths = {
   processDyeing: '/images/dyeing.jpg',
   processWeaving: '/images/3.webp',
   processFinishing: '/images/finishing.jpg',
-  artisanOne: '/images/artisan-portrait-01.webp',
-  artisanTwo: '/images/artisan-loom-01.webp',
-  collectionLarge: '/images/4.webp',
-  collectionTop: '/images/5.webp',
-  collectionBottom: '/images/6.webp',
+  artisanOne: '/images/artisan1.jpg',
+  artisanTwo: '/images/artisan2.jpg',
+  collectionLarge: '/images/everyday-edit.jpg',
+  collectionTop: '/images/statement-edit.jpg',
+  collectionBottom: '/images/bridal-edit.jpg',
 }
 
 // Paste your hero video URL here (mp4/webm). Leave empty ("") to show the background only.
@@ -430,27 +430,41 @@ const Craft = () => {
   )
 }
 
-const Artisans = () => (
-  <section id="artisans" className="dark-section artisans-section grain">
-    <div>
-      <Eyebrow>Who we weave for</Eyebrow>
-      <h2>Behind every weave, a woman rewriting her own story.</h2>
-      <p>
-        Rangvanat exists because of the women who sit at the wheel before sunrise. Rural artisans
-        for whom every thread spun is also a step toward standing on their own.
-      </p>
-      <div className="counters">
-        <strong>200+<span>Women Artisans</span></strong>
-        <strong>3<span>Generations of Craft</span></strong>
-        <strong>1<span>Shared Dream</span></strong>
+const Artisans = () => {
+  const collageRef = useReveal({ variant: 'scaleIn', delay: 0.1 })
+
+  return (
+    <section id="artisans" className="dark-section artisans-section">
+      <div className="artisan-copy">
+        <Eyebrow>Who we weave for</Eyebrow>
+        <h2>Behind every weave, a woman rewriting her own story.</h2>
+        <p>
+          Rangvanat exists because of the women who sit at the wheel before sunrise. Rural artisans
+          for whom every thread spun is also a step toward standing on their own.
+        </p>
+        <div className="counters">
+          <strong>200+<span>Women Artisans</span></strong>
+          <strong>3<span>Generations of Craft</span></strong>
+          <strong>1<span>Shared Dream</span></strong>
+        </div>
       </div>
-    </div>
-    <div className="artisan-images">
-      <Asset src={imagePaths.artisanOne} label="artisan-portrait-01.jpg" alt="Rangvanat artisan portrait" />
-      <Asset src={imagePaths.artisanTwo} label="artisan-loom-01.jpg" alt="Rangvanat artisan at loom" />
-    </div>
-  </section>
-)
+      <div className="artisan-collage" ref={collageRef}>
+        <Asset
+          src={imagePaths.artisanOne}
+          label="artisan1.jpg"
+          className="artisan-portrait"
+          alt="Rangvanat artisan portrait"
+        />
+        <Asset
+          src={imagePaths.artisanTwo}
+          label="artisan2.jpg"
+          className="artisan-landscape"
+          alt="Rangvanat artisan at the loom"
+        />
+      </div>
+    </section>
+  )
+}
 
 const Collections = () => (
   <section id="collections" className="section collections-section">
@@ -466,24 +480,30 @@ const Collections = () => (
       <Cta href="#contact">Explore the Collection</Cta>
     </div>
     <div className="collection-grid">
-      <Asset src={imagePaths.collectionLarge} label="collection-everyday-edit.jpg" alt="Everyday khadi edit">
-        <div className="collection-caption">
+      <article className="collection-card">
+        <Asset src={imagePaths.collectionLarge} label="collection-everyday-edit.jpg" alt="Everyday khadi edit" />
+        <div className="collection-meta">
+          <span className="collection-num" aria-hidden="true">01</span>
           <h3>The Everyday Edit</h3>
           <p>Khadi for daily life, elevated. Pieces that feel special without being precious.</p>
         </div>
-      </Asset>
-      <Asset src={imagePaths.collectionTop} label="collection-statement-edit.jpg" alt="Statement khadi edit">
-        <div className="collection-caption">
+      </article>
+      <article className="collection-card">
+        <Asset src={imagePaths.collectionTop} label="collection-statement-edit.jpg" alt="Statement khadi edit" />
+        <div className="collection-meta">
+          <span className="collection-num" aria-hidden="true">02</span>
           <h3>The Statement Edit</h3>
           <p>Not loud, but significant. Khadi that commands attention through presence, not print.</p>
         </div>
-      </Asset>
-      <Asset src={imagePaths.collectionBottom} label="collection-bridal-edit.jpg" alt="Bridal khadi edit">
-        <div className="collection-caption">
+      </article>
+      <article className="collection-card">
+        <Asset src={imagePaths.collectionBottom} label="collection-bridal-edit.jpg" alt="Bridal khadi edit" />
+        <div className="collection-meta">
+          <span className="collection-num" aria-hidden="true">03</span>
           <h3>The Bridal Edit</h3>
           <p>Not as costume, but as commitment.</p>
         </div>
-      </Asset>
+      </article>
     </div>
   </section>
 )
