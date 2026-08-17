@@ -11,10 +11,12 @@ import {
   X,
 } from 'lucide-react'
 import Preloader from './components/Preloader'
+import { useReveal } from './lib/motion'
 
 const imagePaths = {
   hero: '/images/hero.png',
-  story: '/images/2.webp',
+  heritageMain: '/images/heritage-main.jpg',
+  heritageDetail: '/images/heritage-detail.jpg',
   process: '/images/3.webp',
   artisanOne: '/images/artisan-portrait-01.webp',
   artisanTwo: '/images/artisan-loom-01.webp',
@@ -168,30 +170,46 @@ const Story = () => (
   </section>
 )
 
-const Heritage = () => (
-  <section id="heritage" className="section heritage-section">
-    <div className="heritage-head">
-      <Eyebrow>Where we come from</Eyebrow>
-      <h2>A legacy woven in Bardoli.</h2>
-    </div>
-    <div className="heritage-body">
-      <Asset
-        src={imagePaths.story}
-        label="story-bardoli-illustration.jpg"
-        className="framed-image"
-        alt="Bardoli heritage illustration"
-      />
-      <div className="section-copy">
-        <p>
-          Rangvanat comes from Bardoli, Sardar Patel's home ground. A length of hand-spun cloth was
-          once the loudest thing a person could say here. We did not inherit khadi as a fabric. We
-          inherited it as a vow to finish.
-        </p>
-        <Cta href="#craft">Read the Story</Cta>
+const Heritage = () => {
+  const headRef = useReveal({ variant: 'mask', delay: 0 })
+  const mediaRef = useReveal({ variant: 'scaleIn', delay: 0.1 })
+  const copyRef = useReveal({ variant: 'fadeUp', delay: 0.2 })
+
+  return (
+    <section id="heritage" className="section heritage-section">
+      <div className="heritage-body">
+        <div className="heritage-text">
+          <div className="heritage-head" ref={headRef}>
+            <Eyebrow>Where we come from</Eyebrow>
+            <h2>A legacy woven in Bardoli.</h2>
+          </div>
+          <div className="heritage-copy" ref={copyRef}>
+            <p>
+              Rangvanat comes from Bardoli, Sardar Patel's home ground. A length of hand-spun cloth
+              was once the loudest thing a person could say here. We did not inherit khadi as a
+              fabric. We inherited it as a vow to finish.
+            </p>
+            <Cta href="#craft">Read the Story</Cta>
+          </div>
+        </div>
+        <div className="heritage-media" ref={mediaRef}>
+          <Asset
+            src={imagePaths.heritageMain}
+            label="heritage-bardoli-charkha.jpg"
+            className="framed-image"
+            alt="Bardoli heritage charkha illustration"
+          />
+          <Asset
+            src={imagePaths.heritageDetail}
+            label="heritage-cotton-thread.jpg"
+            className="heritage-detail"
+            alt="Cotton thread texture detail"
+          />
+        </div>
       </div>
-    </div>
-  </section>
-)
+    </section>
+  )
+}
 
 const FounderNote = () => (
   <section id="founder" className="quote-section">
