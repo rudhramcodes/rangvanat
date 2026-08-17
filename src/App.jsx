@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AtSign,
   Camera,
@@ -11,7 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import Preloader from './components/Preloader'
-import { useReveal } from './lib/motion'
+import { gsap, ScrollTrigger, useReducedMotion, useReveal } from './lib/motion'
 
 const imagePaths = {
   hero: '/images/hero.png',
@@ -213,42 +213,116 @@ const Heritage = () => {
 
 const FounderNote = () => (
   <section id="founder" className="quote-section">
-    <blockquote>
-      "I did not want to just make clothes. I wanted to fold a piece of Bardoli's soil, a piece of my
-      grandmother's stories, into every seam I send out into the world. Khadi taught me that slow is
-      not a weakness. It is where the meaning actually lives."
-    </blockquote>
-    <div className="founder">
-      <Asset
-        src="/images/home/founder-rachana-kapadia.jpg"
-        label="founder-rachana-kapadia.jpg"
-        alt="Rachana Kapadia portrait"
-      />
-      <p>
-        <strong>Rachana Kapadia</strong>
-        <span>Designer, Founder & Managing Director</span>
-      </p>
+    <div className="founder-panel">
+      <div className="founder-arch">
+        <Asset
+          src="/images/founder-rachana-kapadia.jpg"
+          label="founder-rachana-kapadia.jpg"
+          alt="Rachana Kapadia portrait"
+        />
+      </div>
     </div>
-    <Cta href="#craft">
-      Begin with the Story
-    </Cta>
+    <div className="founder-quote">
+      <p className="founder-eyebrow">From the Founder</p>
+      <blockquote className="tracking-tight">
+        "I did not want to just make clothes. I wanted to fold a piece of Bardoli's soil, a piece of my
+        grandmother's stories, into every seam I send out into the world. Khadi taught me that slow is
+        not a weakness. It is where the meaning actually lives."
+      </blockquote>
+      <div className="founder">
+        <p>
+          <strong>Rachana Kapadia</strong>
+          <span>Designer, Founder & Managing Director</span>
+        </p>
+      </div>
+      <Cta href="#craft">
+        Begin with the Story
+      </Cta>
+    </div>
   </section>
 )
 
-const Timeline = () => (
-  <section id="timeline" className="timeline-strip" aria-label="Rangvanat heritage timeline">
-    {[
-      ['Bardoli', 'Charkha roots. The village where thread first became defiance.'],
-      ['Gandhi & Swadeshi', 'Freedom in every fibre. When khadi became the uniform of a movement.'],
-      ['Today / Rangvanat', 'Handwoven for now. The wheel still turns; the wardrobe changed.'],
-    ].map(([title, body], index) => (
-      <div className={index === 1 ? 'is-large' : ''} key={title}>
-        <span>{title}</span>
-        <p>{body}</p>
+const TIMELINE_ITEMS = [
+  ['Bardoli', 'Charkha roots. The village where thread first became defiance.'],
+  ['Gandhi & Swadeshi', 'Freedom in every fibre. When khadi became the uniform of a movement.'],
+  ['Today / Rangvanat', 'Handwoven for now. The wheel still turns; the wardrobe changed.'],
+]
+
+const MarqueeRow = ({ ghost = false }) => {
+  const items = [...TIMELINE_ITEMS, ...TIMELINE_ITEMS]
+  return (
+    <div className={`marquee-row${ghost ? ' marquee-row--ghost' : ''}`} aria-hidden={ghost}>
+      <div className="marquee-track">
+        {items.map(([title], index) => (
+          <span className="marquee-item" key={`${title}-${index}`}>
+            <span className="marquee-text">{title}</span>
+            <span className="marquee-star" aria-hidden="true">✦</span>
+          </span>
+        ))}
       </div>
-    ))}
-  </section>
-)
+    </div>
+  )
+}
+
+const Timeline = () => {
+  const sectionRef = useRef(null)
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    if (reduced) return
+    const section = sectionRef.current
+    if (!section) return
+
+    const tracks = gsap.utils.toArray('.marquee-track', section)
+    const tween = gsap.fromTo(
+      tracks,
+      { xPercent: (index) => (index === 0 ? 0 : -50) },
+      { xPercent: (index) => (index === 0 ? -50 : 0), ease: 'none', duration: 28, repeat: -1 }
+    )
+
+    const st = ScrollTrigger.create({
+      trigger: section,
+      start: 'top bottom',
+      end: 'bottom top',
+      onUpdate: (self) => {
+        const speed = gsap.utils.clamp(0.4, 2.5, 1 + Math.abs(self.getVelocity()) / 600)
+        tween.timeScale(speed)
+      },
+    })
+
+    const onEnter = () => tween.timeScale(0)
+    const onLeave = () => tween.timeScale(1)
+    section.addEventListener('mouseenter', onEnter)
+    section.addEventListener('mouseleave', onLeave)
+
+    return () => {
+      st.kill()
+      tween.kill()
+      section.removeEventListener('mouseenter', onEnter)
+      section.removeEventListener('mouseleave', onLeave)
+    }
+  }, [reduced])
+
+  if (reduced) {
+    return (
+      <section id="timeline" className="timeline-strip timeline-strip--static" aria-label="Rangvanat heritage timeline">
+        {TIMELINE_ITEMS.map(([title, body], index) => (
+          <div className={index === 1 ? 'is-large' : ''} key={title}>
+            <span>{title}</span>
+            <p>{body}</p>
+          </div>
+        ))}
+      </section>
+    )
+  }
+
+  return (
+    <section id="timeline" className="timeline-marquee" aria-label="Rangvanat heritage timeline" ref={sectionRef}>
+      <MarqueeRow />
+      <MarqueeRow ghost />
+    </section>
+  )
+}
 
 const Craft = () => (
   <section id="craft" className="section process-section">

@@ -41,7 +41,7 @@ const Preloader = ({ isLoading, onDone }) => {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-espresso grain"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-oxblood grain"
     >
       <div ref={wheelRef}>
         <Charkha />
