@@ -22,14 +22,19 @@ export const useReducedMotion = () => {
 }
 
 export const initLenis = (reduced) => {
-  if (reduced) return () => {}
+  if (reduced) {
+    window.__lenis = null
+    return () => {}
+  }
   const lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1 })
+  window.__lenis = lenis
   lenis.on('scroll', ScrollTrigger.update)
   gsap.ticker.add((time) => lenis.raf(time * 1000))
   gsap.ticker.lagSmoothing(0)
   return () => {
     gsap.ticker.remove((time) => lenis.raf(time * 1000))
     lenis.destroy()
+    window.__lenis = null
   }
 }
 

@@ -1490,34 +1490,12 @@
     color: var(--color-terracotta);
   }
 
-  .closing-form button {
+  .closing-form .cta {
     align-self: flex-start;
     min-height: 48px;
-    padding: 0 30px;
-    border: 1px solid var(--color-champagne);
-    border-radius: 999px;
-    background: var(--color-champagne);
-    color: var(--color-oxblood);
-    font-family: var(--font-subhead);
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition:
-      background-color 0.2s ease,
-      border-color 0.2s ease;
   }
 
-  .closing-form button:hover {
-    background: var(--color-brass);
-    border-color: var(--color-brass);
-  }
-
-  .closing-form button:active {
-    transform: scale(0.97);
-  }
-
-  .closing-form button:focus-visible {
+  .closing-form .cta:focus-visible {
     outline: 2px solid var(--color-brass);
     outline-offset: 3px;
   }
@@ -1571,13 +1549,14 @@
   }
 
   .care-brand {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: clamp(34px, 3.4vw, 46px);
-    font-weight: 400;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--color-champagne);
+    display: block;
+    width: clamp(140px, 15vw, 190px);
+    height: auto;
+    filter: brightness(1.15);
+  }
+
+  .care-tag-full {
+    display: inline;
   }
 
   .care-origin {
@@ -1618,6 +1597,10 @@
 
   .care-label nav a {
     width: fit-content;
+  }
+
+  .care-link-arrow {
+    display: none;
   }
 
   .care-label nav a,
@@ -2205,21 +2188,70 @@
     }
 
     .care-label {
-      padding: 44px 22px 38px;
+      padding: 40px 20px 34px;
+    }
+
+    .care-tag-full {
+      display: none;
+    }
+
+    .care-brand {
+      width: 115px;
     }
 
     .care-grid {
       grid-template-columns: 1fr;
-      gap: 32px;
-      margin-top: 32px;
+      gap: 30px;
+      margin-top: 28px;
     }
 
-    .care-brand {
-      font-size: 30px;
+    .care-label nav {
+      gap: 0;
+    }
+
+    .care-label nav a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(207, 161, 88, 0.16);
+      font-size: 14px;
+    }
+
+    .care-link-arrow {
+      display: inline-block;
+      color: var(--color-brass);
+      font-size: 14px;
+      transition: transform 0.25s ease;
+    }
+
+    .care-label nav a:active .care-link-arrow {
+      transform: translateX(4px);
+    }
+
+    .care-info a:not(.socials a) {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .care-info .socials a {
+      width: 44px;
+      height: 44px;
+    }
+
+    .care-info {
+      gap: 24px;
     }
 
     .care-wash {
-      margin-top: 32px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 26px;
+      text-align: center;
+      border-top: 1.5px dashed rgba(207, 161, 88, 0.4);
     }
 
     .care-tag {
@@ -2231,7 +2263,7 @@
       min-height: 48px;
     }
 
-    .closing-form button {
+    .closing-form .cta {
       width: 100%;
     }
 

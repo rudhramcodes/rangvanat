@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import Preloader from './components/Preloader'
 import { animate, stagger } from 'animejs'
-import { gsap, ScrollTrigger, useReducedMotion, useReveal } from './lib/motion'
+import { gsap, ScrollTrigger, initLenis, useReducedMotion, useReveal } from './lib/motion'
 
 const imagePaths = {
   hero: '/images/hero.png',
@@ -56,7 +56,7 @@ const Asset = ({ src, label, className = '', children, alt = assetAlt(label) }) 
 
 const Eyebrow = ({ children }) => <p className="eyebrow">{children}</p>
 
-const Cta = ({ children, href = '#collections', size = 'md' }) => {
+const Cta = ({ children, href = '#collections', size = 'md', as, btnRef }) => {
   const chars = String(children)
     .split('')
     .map((ch, i) => (
@@ -64,8 +64,8 @@ const Cta = ({ children, href = '#collections', size = 'md' }) => {
         {ch === ' ' ? '\u00A0' : ch}
       </span>
     ))
-  return (
-    <a className={`cta cta-${size}`} href={href}>
+  const inner = (
+    <>
       <span className="cta-sheen" aria-hidden="true" />
       <span className="cta-label">
         <span className="cta-text">{chars}</span>
@@ -73,6 +73,18 @@ const Cta = ({ children, href = '#collections', size = 'md' }) => {
           {chars}
         </span>
       </span>
+    </>
+  )
+  if (as === 'button') {
+    return (
+      <button type="submit" className={`cta cta-${size}`} ref={btnRef}>
+        {inner}
+      </button>
+    )
+  }
+  return (
+    <a className={`cta cta-${size}`} href={href}>
+      {inner}
     </a>
   )
 }
@@ -830,9 +842,7 @@ const Closing = () => {
             />
             <span className="closing-underline" aria-hidden="true" />
           </div>
-          <button type="submit" ref={buttonRef}>
-            Join the Journey
-          </button>
+          <Cta as="button" btnRef={buttonRef}>Join the Journey</Cta>
         </form>
         <p className="form-helper">One letter when a story is ready. Nothing else.</p>
         <p
@@ -889,9 +899,11 @@ const Footer = () => {
   return (
     <footer className="footer grain">
       <div className="care-label" ref={labelRef}>
-        <span className="care-tag care-item">100% Handwoven Khadi · Made in Bardoli</span>
-        <p className="care-brand care-item">Rangvanat</p>
-        <p className="care-origin care-item">
+        <span className="care-tag care-item">
+          <span className="care-tag-full">100% </span>Handwoven Khadi · Made in Bardoli
+        </span>
+        <img src="/images/full-logo.svg" alt="Rangvanat" className="care-brand care-item" />
+        <p className="care-origin care-item my-10">
           The art of weaving colours into fabric, and fabric into stories.
         </p>
         <p className="care-promise care-item">Your address stays in Bardoli. No lists are sold, ever.</p>
@@ -901,6 +913,9 @@ const Footer = () => {
             {navLinks.map((link) => (
               <a key={link} href={`#${link.toLowerCase()}`}>
                 {link}
+                <span className="care-link-arrow" aria-hidden="true">
+                  →
+                </span>
               </a>
             ))}
           </nav>
@@ -908,7 +923,12 @@ const Footer = () => {
             <div>
               <h3>Reach Us</h3>
               <p>Bardoli, Gujarat, India</p>
-              <a href="mailto:hello@rangvanat.com">hello@rangvanat.com</a>
+              <a href="mailto:hello@rangvanat.com">
+                hello@rangvanat.com
+                <span className="care-link-arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
             </div>
             <div>
               <h3>Follow Us</h3>
@@ -959,6 +979,36 @@ const App = () => {
       document.body.style.overflow = ''
     }
   }, [menuOpen])
+
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    return initLenis(reduced)
+  }, [reduced])
+
+  useEffect(() => {
+    if (reduced) return
+    const onClick = (e) => {
+      const anchor = e.target.closest('a[href^="#"]')
+      if (!anchor) return
+      const hash = anchor.getAttribute('href')
+      if (hash === '#') return
+      const lenis = window.__lenis
+      if (hash === '#top') {
+        e.preventDefault()
+        if (lenis) lenis.scrollTo(0, { duration: 1.4 })
+        else window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+      const target = document.querySelector(hash)
+      if (!target) return
+      e.preventDefault()
+      if (lenis) lenis.scrollTo(target, { offset: -78, duration: 1.4 })
+      else target.scrollIntoView({ behavior: 'smooth' })
+    }
+    document.addEventListener('click', onClick)
+    return () => document.removeEventListener('click', onClick)
+  }, [reduced])
 
   return (
     <>
