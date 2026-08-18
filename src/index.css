@@ -1691,6 +1691,15 @@
     text-transform: uppercase;
   }
 
+  .care-wash b {
+    font-weight: 700;
+    color: rgba(232, 217, 174, 0.78);
+  }
+
+  .care-wash b::after {
+    content: ":";
+  }
+
   .care-thread {
     position: absolute;
     left: 22%;
@@ -2248,10 +2257,28 @@
     .care-wash {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
+      gap: 4px;
       margin-top: 26px;
+      font-size: 8px;
+      letter-spacing: 0.1em;
       text-align: center;
       border-top: 1.5px dashed rgba(207, 161, 88, 0.4);
+    }
+
+    .care-wash span {
+      display: grid;
+      gap: 3px;
+      align-content: start;
+    }
+
+    .care-wash b {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+    }
+
+    .care-wash b::after {
+      content: none;
     }
 
     .care-tag {

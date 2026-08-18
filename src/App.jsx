@@ -947,9 +947,15 @@ const Footer = () => {
           </div>
         </div>
         <p className="care-wash care-item">
-          <span>Wash: by hand</span>
-          <span>Dry: in the sun</span>
-          <span>Wear: anywhere</span>
+          <span>
+            <b>Wash</b> by hand
+          </span>
+          <span>
+            <b>Dry</b> in the sun
+          </span>
+          <span>
+            <b>Wear</b> anywhere
+          </span>
         </p>
         <span className="care-thread" aria-hidden="true" />
       </div>
