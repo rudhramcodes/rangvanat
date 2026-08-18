@@ -33,6 +33,9 @@ const imagePaths = {
 // Paste your hero video URL here (mp4/webm). Leave empty ("") to show the background only.
 // const HERO_VIDEO_URL = 'https://www.pexels.com/download/video/3967195/'
 const HERO_VIDEO_URL = 'https://res.cloudinary.com/dvsrgdyi7/video/upload/rangvanat-hero.mp4'
+// Lightweight mobile rendition (~3 MB vs ~45 MB): no audio track, good quality, 1080px wide.
+const HERO_VIDEO_MOBILE_URL =
+  'https://res.cloudinary.com/dvsrgdyi7/video/upload/ac_none,q_auto:good,w_1080,c_limit/rangvanat-hero.mp4'
 
 const navLinks = ['Story', 'Craft', 'Artisans', 'Collections', 'Contact']
 
@@ -132,7 +135,12 @@ const Header = ({ menuOpen, setMenuOpen }) => (
       </div>
       <nav aria-label="Mobile navigation">
         {navLinks.map((link, index) => (
-          <a key={link} href={`#${link.toLowerCase()}`} onClick={() => setMenuOpen(false)}>
+          <a
+            key={link}
+            href={`#${link.toLowerCase()}`}
+            style={{ '--i': index }}
+            onClick={() => setMenuOpen(false)}
+          >
             <span className="nav-index">{String(index + 1).padStart(2, '0')}</span>
             {link}
           </a>
@@ -148,30 +156,54 @@ const Header = ({ menuOpen, setMenuOpen }) => (
   </>
 )
 
-const Hero = () => (
-  <section id="top" className="hero grain">
-    {HERO_VIDEO_URL && (
-      <video
-        className="hero-video"
-        src={HERO_VIDEO_URL}
-        poster={imagePaths.hero}
-        autoPlay
-        muted
-        loop
-        playsInline
-        aria-hidden="true"
-      />
-    )}
-    <div className="hero-content">
-      <Eyebrow>Khadi Art by Rangvesh</Eyebrow>
-      <h1>Every Thread Remembers.</h1>
-      <p>Hand-spun khadi, patient colour, and stories made wearable.</p>
-      <Cta href="#collections" size="lg">
-        Discover Rangvanat
-      </Cta>
-    </div>
-  </section>
-)
+const Hero = () => {
+  const videoRef = useRef(null)
+  const isMobile = window.matchMedia('(max-width: 768px)').matches
+  const saveData = navigator.connection?.saveData === true
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) video.play().catch(() => {})
+        else video.pause()
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(video)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <section id="top" className="hero grain">
+      {HERO_VIDEO_URL &&
+        (saveData ? (
+          <img className="hero-video" src={imagePaths.hero} alt="" aria-hidden="true" />
+        ) : (
+          <video
+            ref={videoRef}
+            className="hero-video"
+            src={isMobile ? HERO_VIDEO_MOBILE_URL : HERO_VIDEO_URL}
+            poster={imagePaths.hero}
+            autoPlay
+            muted
+            loop
+            playsInline
+            aria-hidden="true"
+          />
+        ))}
+      <div className="hero-content">
+        <Eyebrow>Khadi Art by Rangvesh</Eyebrow>
+        <h1>Every Thread Remembers.</h1>
+        <p>Hand-spun khadi, patient colour, and stories made wearable.</p>
+        <Cta href="#collections" size="lg">
+          Discover Rangvanat
+        </Cta>
+      </div>
+    </section>
+  )
+}
 
 const Story = () => (
   <section id="story" className="section story-section">
@@ -981,8 +1013,15 @@ const App = () => {
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
+    if (window.__lenis) {
+      menuOpen ? window.__lenis.stop() : window.__lenis.start()
+    }
+    const onEscape = (e) => e.key === 'Escape' && setMenuOpen(false)
+    if (menuOpen) window.addEventListener('keydown', onEscape)
     return () => {
       document.body.style.overflow = ''
+      window.__lenis?.start()
+      window.removeEventListener('keydown', onEscape)
     }
   }, [menuOpen])
 
