@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react'
 import Preloader from './components/Preloader'
+import { animate, stagger } from 'animejs'
 import { gsap, ScrollTrigger, useReducedMotion, useReveal } from './lib/motion'
 
 const imagePaths = {
@@ -508,148 +509,437 @@ const Collections = () => (
   </section>
 )
 
-const Questions = () => (
-  <section id="questions" className="section questions-section">
-    <div className="questions-head">
-      <Eyebrow>Fair doubts</Eyebrow>
-      <h2>Three honest questions.</h2>
-    </div>
-    <div className="questions-grid">
-      {[
-        ['“Isn’t khadi coarse, more government emporium than luxury?”', 'Khadi earned that reputation when it was sold as duty. Spun fine and woven slow, it drapes with the best of them. The difference is the hand, not the standard.'],
-        ['“Is this a charity project wearing a fashion label?”', 'No. The women who weave for Rangvanat are paid for mastery, not pitied for circumstance. Craft dignity is the business model, not the marketing.'],
-        ['“If I can’t buy it here, what am I joining?”', 'A letter, and a front-row seat. Custodians hear first when an edit opens. Every piece begins with an enquiry, not a cart.'],
-      ].map(([doubt, answer]) => (
-        <article className="question-card" key={doubt}>
-          <h3>{doubt}</h3>
-          <p>{answer}</p>
-        </article>
-      ))}
-    </div>
-  </section>
-)
+const Questions = () => {
+  const listRef = useRef(null)
+  const reduced = useReducedMotion()
 
-const Pillars = () => (
-  <section id="pillars" className="section pillars-section">
-    <div className="pillars-head">
-      <h2>What we hold to.</h2>
-    </div>
-    {[
-      ['Heritage Inspired', 'Every design begins with a story worth remembering. Not every story. Ours.', Sparkles, 'wide'],
-      ['Empowering Women Artisans', 'Behind every thread, a livelihood. Behind every weave, a future. Not as cause. As craft dignity.', HandHeart],
-      ['Sustainable Fashion', 'Made slow, made to last. Khadi was sustainable before the word existed.', Leaf, 'green'],
-      ['Global Vision', 'From Bardoli to the world, without losing an inch of who we are.', Globe2],
-    ].map(([title, body, Icon, tone]) => (
-      <article className={`pillar ${tone || ''}`} key={title}>
-        <Icon size={24} />
-        <h3>{title}</h3>
-        <p>{body}</p>
-      </article>
-    ))}
-  </section>
-)
+  useEffect(() => {
+    const list = listRef.current
+    const items = list?.querySelectorAll('.question-item')
+    if (!list || !items?.length || reduced) return undefined
 
-const Faq = () => (
-  <section id="faq" className="section faq-section">
-    <div className="faq-head">
-      <Eyebrow>Before you write</Eyebrow>
-      <h2>Questions, answered plainly.</h2>
-    </div>
-    <div className="faq-list">
-      {[
-        ['What is khadi?', 'Cloth whose thread is spun by hand and woven on a handloom. No stage is mechanised. The slight irregularity is not a flaw. It is the signature.'],
-        ['How is Rangvanat different from a khadi store?', 'A khadi store sells cloth. Rangvanat designs garments as edits. Each piece begins with a story and ends in a seam.'],
-        ['Can I buy a piece?', 'Yes, by enquiry, not cart. Write to hello@rangvanat.com or use the Enquire button. Edits are made in small numbers, and each begins with a conversation.'],
-        ['Where do you ship?', 'Anywhere a courier reaches. Timings and duties are confirmed during enquiry.'],
-        ['How are the artisans paid?', 'Directly, per piece, at rates set with the collective, not against a factory clock.'],
-        ['What do I get as a custodian?', 'One letter when a story is ready. New edits, artisan profiles, process notes. No promotions. Unsubscribing stays one click.'],
-      ].map(([question, answer]) => (
-        <details className="faq-item" key={question}>
-          <summary>{question}</summary>
-          <p>{answer}</p>
-        </details>
-      ))}
-    </div>
-  </section>
-)
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        animate(items, {
+          opacity: [0, 1],
+          translateY: [28, 0],
+          duration: 800,
+          ease: 'outQuad',
+          delay: stagger(120),
+        })
+      },
+      { threshold: 0.15 },
+    )
+    observer.observe(list)
+    return () => observer.disconnect()
+  }, [reduced])
 
-const Closing = () => {
-  const [status, setStatus] = useState('idle')
+  const nudge = (e, amount) => {
+    if (reduced) return
+    const q = e.currentTarget.querySelector('.question-q')
+    if (!q) return
+    animate(q, { translateX: amount, duration: 300, ease: 'outQuad' })
+  }
 
   return (
-    <section id="contact" className="closing-section grain">
-      <Eyebrow>Become a custodian</Eyebrow>
-      <h2>From Bardoli to the World.</h2>
-      <p>
-        Not a subscriber. Not a follower. A custodian. Someone who looks after something worth
-        looking after. Be the first to hear when a new Rangvanat story is ready to be told.
-      </p>
-      <form
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault()
-          const input = event.currentTarget.elements['newsletter-email']
-          if (!input.checkValidity()) {
-            setStatus('error')
-            return
-          }
-          setStatus('joined')
-        }}
-      >
-        <label htmlFor="newsletter-email">Email address</label>
-        <input id="newsletter-email" name="newsletter-email" type="email" placeholder="Your email address" required />
-        <button type="submit">Join the Journey</button>
-      </form>
-      <p className="form-helper">One letter when a story is ready. Nothing else.</p>
-      <p className="form-status" aria-live="polite">
-        {status === 'joined' ? 'Thank you. Welcome to the journey.' : ''}
-        {status === 'error' ? 'That address didn’t take. One more try?' : ''}
-      </p>
+    <section id="questions" className="section questions-section">
+      <div className="questions-head">
+        <Eyebrow>Fair doubts</Eyebrow>
+        <h2>Three honest questions.</h2>
+        <p className="questions-intro">
+          Asked at every market stall. Answered here, once, without a script.
+        </p>
+      </div>
+      <div className="questions-list" ref={listRef}>
+        {[
+          ['Isn’t khadi coarse, more government emporium than luxury?', 'Khadi earned that reputation when it was sold as duty. Spun fine and woven slow, it drapes with the best of them. The difference is the hand, not the standard.'],
+          ['Is this a charity project wearing a fashion label?', 'No. The women who weave for Rangvanat are paid for mastery, not pitied for circumstance. Craft dignity is the business model, not the marketing.'],
+          ['If I can’t buy it here, what am I joining?', 'A letter, and a front-row seat. Custodians hear first when an edit opens. Every piece begins with an enquiry, not a cart.'],
+        ].map(([doubt, answer]) => (
+          <article
+            className="question-item"
+            key={doubt}
+            onMouseEnter={(e) => nudge(e, 6)}
+            onMouseLeave={(e) => nudge(e, 0)}
+          >
+            <div className="question-body">
+              <h3 className="question-q">{doubt}</h3>
+              <p>{answer}</p>
+            </div>
+          </article>
+        ))}
+      </div>
     </section>
   )
 }
 
-const Footer = () => (
-  <footer className="footer grain">
-    <span className="footer-ghost">RANGVANAT</span>
-    <div>
-      <img src="/images/logo-only.svg" alt="Rangvanat" />
-      <p>The art of weaving colours into fabric, and fabric into stories.</p>
-    </div>
-    <nav aria-label="Footer navigation">
-      <h3>Explore</h3>
-      {navLinks.map((link) => (
-        <a key={link} href={`#${link.toLowerCase()}`}>
-          {link}
-        </a>
-      ))}
-    </nav>
-    <div>
-      <h3>Reach Us</h3>
-      <p>Bardoli, Gujarat, India</p>
-      <p>hello@rangvanat.com</p>
-    </div>
-    <div>
-      <h3>Follow Us</h3>
-      <div className="socials">
-        <a href="https://instagram.com" aria-label="Instagram">
-          <Camera size={18} />
-        </a>
-        <a href="https://instagram.com" aria-label="Rangvanat social profile">
-          <AtSign size={18} />
-        </a>
-        <a href="mailto:hello@rangvanat.com" aria-label="Email">
-          <Mail size={18} />
-        </a>
+// eslint-disable-next-line no-unused-vars -- Pillars is temporarily hidden (render commented out)
+const Pillars = () => {
+  const gridRef = useRef(null)
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    if (reduced) return
+    const cards = gridRef.current?.querySelectorAll('.pillar')
+    if (!cards?.length) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 32 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.1,
+          scrollTrigger: { trigger: gridRef.current, start: 'top 82%', once: true },
+        },
+      )
+    }, gridRef)
+    return () => ctx.revert()
+  }, [reduced])
+
+  return (
+    <section id="pillars" className="section pillars-section">
+      <div className="pillars-head">
+        <Eyebrow>What we hold to</Eyebrow>
+        <h2>Not slogans. Commitments.</h2>
       </div>
-    </div>
-    <small>
-      © {new Date().getFullYear()} Rangvanat · Khadi Art by Rangvesh.
-      <span>Your address stays in Bardoli. No lists are sold, ever.</span>
-      <span>Handwoven in Bardoli</span>
-    </small>
-  </footer>
-)
+      <div className="pillars-grid" ref={gridRef}>
+        {[
+          ['Heritage Inspired', 'Every design begins with a story worth remembering. Not every story. Ours.', Sparkles],
+          ['Empowering Women Artisans', 'Behind every thread, a livelihood. Behind every weave, a future. Not as cause. As craft dignity.', HandHeart],
+          ['Sustainable Fashion', 'Made slow, made to last. Khadi was sustainable before the word existed.', Leaf, 'green'],
+          ['Global Vision', 'From Bardoli to the world, without losing an inch of who we are.', Globe2],
+        ].map(([title, body, Icon, tone], index) => (
+          <article className={`pillar ${tone || ''}`} key={title}>
+            <span className="pillar-num" aria-hidden="true">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+            <Icon size={26} aria-hidden="true" />
+            <h3>{title}</h3>
+            <p>{body}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+const Faq = () => {
+  const [openIndex, setOpenIndex] = useState(null)
+  const panelsRef = useRef([])
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    panelsRef.current.forEach((panel, i) => {
+      if (!panel) return
+      const open = openIndex === i
+      if (reduced) {
+        panel.style.height = open ? 'auto' : '0px'
+        return
+      }
+      animate(panel, {
+        height: open ? panel.scrollHeight : 0,
+        duration: 380,
+        ease: open ? 'outCubic' : 'inCubic',
+      })
+    })
+  }, [openIndex, reduced])
+
+  return (
+    <section id="faq" className="section faq-section">
+      <div className="faq-head">
+        <Eyebrow>Before you write</Eyebrow>
+        <h2>Questions, answered plainly.</h2>
+      </div>
+      <div className="faq-list">
+        {[
+          ['What is khadi?', 'Cloth whose thread is spun by hand and woven on a handloom. No stage is mechanised. The slight irregularity is not a flaw. It is the signature.'],
+          ['How is Rangvanat different from a khadi store?', 'A khadi store sells cloth. Rangvanat designs garments as edits. Each piece begins with a story and ends in a seam.'],
+          ['Can I buy a piece?', 'Yes, by enquiry, not cart. Write to hello@rangvanat.com or use the Enquire button. Edits are made in small numbers, and each begins with a conversation.'],
+          ['Where do you ship?', 'Anywhere a courier reaches. Timings and duties are confirmed during enquiry.'],
+          ['How are the artisans paid?', 'Directly, per piece, at rates set with the collective, not against a factory clock.'],
+          ['What do I get as a custodian?', 'One letter when a story is ready. New edits, artisan profiles, process notes. No promotions. Unsubscribing stays one click.'],
+        ].map(([question, answer], index) => {
+          const open = openIndex === index
+          return (
+            <div className={`faq-item${open ? ' is-open' : ''}`} key={question}>
+              <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={`faq-panel-${index}`}
+                onClick={() => setOpenIndex((prev) => (prev === index ? null : index))}
+              >
+                {question}
+                <span className="faq-plus" aria-hidden="true">
+                  +
+                </span>
+              </button>
+              <div
+                className="faq-answer"
+                id={`faq-panel-${index}`}
+                ref={(el) => {
+                  panelsRef.current[index] = el
+                }}
+              >
+                <p>{answer}</p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+const Closing = () => {
+  const [status, setStatus] = useState('idle')
+  const [errorMessage, setErrorMessage] = useState('')
+  const sectionRef = useRef(null)
+  const underlineRef = useRef(null)
+  const buttonRef = useRef(null)
+  const inputRef = useRef(null)
+  const statusRef = useRef(null)
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    const section = sectionRef.current
+    const targets = section?.querySelectorAll('.closing-reveal')
+    if (!section || !targets?.length || reduced) return undefined
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        observer.disconnect()
+        animate(targets, {
+          opacity: [0, 1],
+          translateY: [24, 0],
+          duration: 700,
+          ease: 'outQuad',
+          delay: stagger(110),
+        })
+      },
+      { threshold: 0.2 },
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [reduced])
+
+  useEffect(() => {
+    const el = statusRef.current
+    if (!el || !status || reduced) return undefined
+    animate(el, { opacity: [0, 1], translateY: [8, 0], duration: 400, ease: 'outQuad' })
+    return undefined
+  }, [status, errorMessage, reduced])
+
+  const growUnderline = (open) => {
+    if (reduced || !underlineRef.current) return
+    animate(underlineRef.current, {
+      scaleX: open ? 1 : 0,
+      duration: open ? 400 : 300,
+      ease: open ? 'outCubic' : 'inCubic',
+    })
+  }
+
+  const shake = () => {
+    if (reduced || !inputRef.current) return
+    animate(inputRef.current, {
+      translateX: [
+        { to: -5, duration: 70 },
+        { to: 5, duration: 70 },
+        { to: -4, duration: 70 },
+        { to: 4, duration: 70 },
+        { to: 0, duration: 70 },
+      ],
+      ease: 'outQuad',
+    })
+  }
+
+  const fail = (message) => {
+    setErrorMessage(message)
+    setStatus('error')
+    inputRef.current?.focus()
+    shake()
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault()
+    const input = event.currentTarget.elements['newsletter-email']
+    if (input.validity.valueMissing) {
+      fail('Please enter your email address.')
+      return
+    }
+    if (input.validity.typeMismatch) {
+      fail('That doesn’t look like a valid email address. One more try?')
+      return
+    }
+    input.value = ''
+    setErrorMessage('')
+    setStatus('joined')
+    if (!reduced && buttonRef.current) {
+      animate(buttonRef.current, {
+        scale: [
+          { to: 0.94, duration: 180 },
+          { to: 1, duration: 320 },
+        ],
+        ease: 'outQuad',
+      })
+    }
+  }
+
+  return (
+    <section id="contact" className="closing-section grain" ref={sectionRef}>
+      <div className="closing-head">
+        <div className="closing-reveal">
+          <Eyebrow>Become a custodian</Eyebrow>
+        </div>
+        <h2 className="closing-reveal">From Bardoli to the World.</h2>
+        <p className="closing-intro closing-reveal">
+          Not a subscriber. Not a follower. A custodian. Someone who looks after something worth
+          looking after. Be the first to hear when a new Rangvanat story is ready to be told.
+        </p>
+      </div>
+      <div className="closing-form-wrap closing-reveal">
+        <form
+          className={`closing-form${status === 'error' ? ' has-error' : ''}`}
+          noValidate
+          onSubmit={handleSubmit}
+        >
+          <label htmlFor="newsletter-email">Email address</label>
+          <div className="closing-field">
+            <input
+              id="newsletter-email"
+              name="newsletter-email"
+              type="email"
+              placeholder="Your email address"
+              required
+              ref={inputRef}
+              aria-invalid={status === 'error'}
+              aria-describedby="closing-status"
+              onFocus={() => growUnderline(true)}
+              onBlur={() => growUnderline(false)}
+              onChange={() => {
+                if (status === 'error') {
+                  setStatus('idle')
+                  setErrorMessage('')
+                }
+              }}
+            />
+            <span className="closing-underline" aria-hidden="true" />
+          </div>
+          <button type="submit" ref={buttonRef}>
+            Join the Journey
+          </button>
+        </form>
+        <p className="form-helper">One letter when a story is ready. Nothing else.</p>
+        <p
+          id="closing-status"
+          className={`form-status${status === 'joined' ? ' is-success' : ''}${status === 'error' ? ' is-error' : ''}`}
+          aria-live="polite"
+          ref={statusRef}
+        >
+          {status === 'joined' && <span aria-hidden="true">✓</span>}
+          {status === 'joined' ? 'Thank you. Welcome to the journey.' : ''}
+          {status === 'error' ? errorMessage : ''}
+        </p>
+      </div>
+    </section>
+  )
+}
+
+const Footer = () => {
+  const reduced = useReducedMotion()
+  const labelRef = useRef(null)
+
+  useEffect(() => {
+    const el = labelRef.current
+    if (!el || reduced) return
+
+    const items = el.querySelectorAll('.care-item')
+    const thread = el.querySelector('.care-thread')
+    thread.style.transform = 'scaleY(0)'
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return
+        animate(items, {
+          opacity: [0, 1],
+          translateY: [24, 0],
+          duration: 700,
+          ease: 'outQuad',
+          delay: stagger(90),
+        })
+        animate(thread, {
+          scaleY: [0, 1],
+          duration: 600,
+          ease: 'outCubic',
+          delay: stagger(90)(items.length),
+        })
+        io.disconnect()
+      },
+      { threshold: 0.2 },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [reduced])
+
+  return (
+    <footer className="footer grain">
+      <div className="care-label" ref={labelRef}>
+        <span className="care-tag care-item">100% Handwoven Khadi · Made in Bardoli</span>
+        <p className="care-brand care-item">Rangvanat</p>
+        <p className="care-origin care-item">
+          The art of weaving colours into fabric, and fabric into stories.
+        </p>
+        <p className="care-promise care-item">Your address stays in Bardoli. No lists are sold, ever.</p>
+        <div className="care-grid">
+          <nav className="care-item" aria-label="Footer navigation">
+            <h3>Explore</h3>
+            {navLinks.map((link) => (
+              <a key={link} href={`#${link.toLowerCase()}`}>
+                {link}
+              </a>
+            ))}
+          </nav>
+          <div className="care-info care-item">
+            <div>
+              <h3>Reach Us</h3>
+              <p>Bardoli, Gujarat, India</p>
+              <a href="mailto:hello@rangvanat.com">hello@rangvanat.com</a>
+            </div>
+            <div>
+              <h3>Follow Us</h3>
+              <div className="socials">
+                <a href="https://instagram.com" aria-label="Instagram">
+                  <Camera size={18} />
+                </a>
+                <a href="https://instagram.com" aria-label="Rangvanat social profile">
+                  <AtSign size={18} />
+                </a>
+                <a href="mailto:hello@rangvanat.com" aria-label="Email">
+                  <Mail size={18} />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p className="care-wash care-item">
+          <span>Wash: by hand</span>
+          <span>Dry: in the sun</span>
+          <span>Wear: anywhere</span>
+        </p>
+        <span className="care-thread" aria-hidden="true" />
+      </div>
+      <div className="care-legal">
+        <span>© {new Date().getFullYear()} Rangvanat · Khadi Art by Rangvesh</span>
+        <span>Handwoven in Bardoli</span>
+      </div>
+    </footer>
+  )
+}
 
 const App = () => {
   const [isLoading, setIsLoading] = useState(true)
@@ -685,8 +975,8 @@ const App = () => {
         <Artisans />
         <Collections />
         <Questions />
-        <Pillars />
         <Faq />
+        {/* <Pillars /> */}
         <Closing />
       </main>
       <Footer />
