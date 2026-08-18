@@ -57,9 +57,13 @@ const Asset = ({ src, label, className = '', children, alt = assetAlt(label) }) 
   </div>
 )
 
-const Eyebrow = ({ children }) => <p className="eyebrow">{children}</p>
+const Eyebrow = ({ children, style }) => (
+  <p className="eyebrow" style={style}>
+    {children}
+  </p>
+)
 
-const Cta = ({ children, href = '#collections', size = 'md', as, btnRef }) => {
+const Cta = ({ children, href = '#collections', size = 'md', as, btnRef, style }) => {
   const chars = String(children)
     .split('')
     .map((ch, i) => (
@@ -80,13 +84,13 @@ const Cta = ({ children, href = '#collections', size = 'md', as, btnRef }) => {
   )
   if (as === 'button') {
     return (
-      <button type="submit" className={`cta cta-${size}`} ref={btnRef}>
+      <button type="submit" className={`cta cta-${size}`} ref={btnRef} style={style}>
         {inner}
       </button>
     )
   }
   return (
-    <a className={`cta cta-${size}`} href={href}>
+    <a className={`cta cta-${size}`} href={href} style={style}>
       {inner}
     </a>
   )
@@ -156,7 +160,7 @@ const Header = ({ menuOpen, setMenuOpen }) => (
   </>
 )
 
-const Hero = () => {
+const Hero = ({ entered }) => {
   const videoRef = useRef(null)
   const isMobile = window.matchMedia('(max-width: 768px)').matches
   const saveData = navigator.connection?.saveData === true
@@ -176,7 +180,7 @@ const Hero = () => {
   }, [])
 
   return (
-    <section id="top" className="hero grain">
+    <section id="top" className={`hero grain${entered ? ' is-live' : ''}`}>
       {HERO_VIDEO_URL &&
         (saveData ? (
           <img className="hero-video" src={imagePaths.hero} alt="" aria-hidden="true" />
@@ -194,10 +198,10 @@ const Hero = () => {
           />
         ))}
       <div className="hero-content">
-        <Eyebrow>Khadi Art by Rangvesh</Eyebrow>
-        <h1>Every Thread Remembers.</h1>
-        <p>Hand-spun khadi, patient colour, and stories made wearable.</p>
-        <Cta href="#collections" size="lg">
+        <Eyebrow style={{ '--h': 0 }}>Khadi Art by Rangvesh</Eyebrow>
+        <h1 style={{ '--h': 1 }}>Every Thread Remembers.</h1>
+        <p style={{ '--h': 2 }}>Hand-spun khadi, patient colour, and stories made wearable.</p>
+        <Cta href="#collections" size="lg" style={{ '--h': 3 }}>
           Discover Rangvanat
         </Cta>
       </div>
@@ -205,19 +209,24 @@ const Hero = () => {
   )
 }
 
-const Story = () => (
-  <section id="story" className="section story-section">
-    <div>
-      <Eyebrow>Before it was fashion</Eyebrow>
-      <h2>It was freedom.</h2>
-    </div>
-    <p>
-      Long before khadi was commodified, it was a covenant. Spun by hand, worn as resistance,
-      passed down as pride. Rangvanat starts there. The same thread, the same patient hands, given
-      a new stage to stand on. One that does not ask it to forget where it came from.
-    </p>
-  </section>
-)
+const Story = () => {
+  const headRef = useReveal({ variant: 'mask', delay: 0 })
+  const copyRef = useReveal({ variant: 'fadeUp', delay: 0.15 })
+
+  return (
+    <section id="story" className="section story-section">
+      <div ref={headRef}>
+        <Eyebrow>Before it was fashion</Eyebrow>
+        <h2>It was freedom.</h2>
+      </div>
+      <p ref={copyRef}>
+        Long before khadi was commodified, it was a covenant. Spun by hand, worn as resistance,
+        passed down as pride. Rangvanat starts there. The same thread, the same patient hands, given
+        a new stage to stand on. One that does not ask it to forget where it came from.
+      </p>
+    </section>
+  )
+}
 
 const Heritage = () => {
   const headRef = useReveal({ variant: 'mask', delay: 0 })
@@ -410,6 +419,8 @@ const PROCESS_STEPS = [
 
 const Craft = () => {
   const gridRef = useRef(null)
+  const valuesRef = useRef(null)
+  const headRef = useReveal({ variant: 'fadeUp', delay: 0 })
   const reduced = useReducedMotion()
 
   useEffect(() => {
@@ -429,13 +440,28 @@ const Craft = () => {
           scrollTrigger: { trigger: gridRef.current, start: 'top 82%', once: true },
         },
       )
+      const values = valuesRef.current?.querySelectorAll('.value-block')
+      if (values?.length) {
+        gsap.fromTo(
+          values,
+          { opacity: 0, y: 28 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.7,
+            ease: 'power3.out',
+            stagger: 0.1,
+            scrollTrigger: { trigger: valuesRef.current, start: 'top 85%', once: true },
+          },
+        )
+      }
     }, gridRef)
     return () => ctx.revert()
   }, [reduced])
 
   return (
     <section id="craft" className="section process-section">
-      <div className="process-head">
+      <div className="process-head" ref={headRef}>
         <Eyebrow>The process</Eyebrow>
         <h2>Spun slow. Woven with intention.</h2>
         <p>
@@ -459,7 +485,7 @@ const Craft = () => {
           </article>
         ))}
       </div>
-      <div className="value-blocks">
+      <div className="value-blocks" ref={valuesRef}>
         {[
           ['The thread sets the pace.', 'A charkha spins where a mill would rush.'],
           ['Colour settles; it is not applied.', 'Natural dye settles into the fibre and becomes one with it.'],
@@ -477,10 +503,11 @@ const Craft = () => {
 
 const Artisans = () => {
   const collageRef = useReveal({ variant: 'scaleIn', delay: 0.1 })
+  const copyRef = useReveal({ variant: 'fadeUp', delay: 0 })
 
   return (
     <section id="artisans" className="dark-section artisans-section">
-      <div className="artisan-copy">
+      <div className="artisan-copy" ref={copyRef}>
         <Eyebrow>Who we weave for</Eyebrow>
         <h2>Behind every weave, a woman rewriting her own story.</h2>
         <p>
@@ -511,9 +538,35 @@ const Artisans = () => {
   )
 }
 
-const Collections = () => (
-  <section id="collections" className="section collections-section">
-    <div className="section-title">
+const Collections = () => {
+  const gridRef = useRef(null)
+  const titleRef = useReveal({ variant: 'fadeUp', delay: 0 })
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    if (reduced) return
+    const cards = gridRef.current?.querySelectorAll('.collection-card')
+    if (!cards?.length) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        cards,
+        { opacity: 0, y: 36 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.12,
+          scrollTrigger: { trigger: gridRef.current, start: 'top 82%', once: true },
+        },
+      )
+    }, gridRef)
+    return () => ctx.revert()
+  }, [reduced])
+
+  return (
+    <section id="collections" className="section collections-section">
+      <div className="section-title" ref={titleRef}>
       <div>
         <Eyebrow>The collection</Eyebrow>
         <h2>Where heritage meets the runway.</h2>
@@ -524,7 +577,7 @@ const Collections = () => (
       </div>
       <Cta href="#contact">Explore the Collection</Cta>
     </div>
-    <div className="collection-grid">
+    <div className="collection-grid" ref={gridRef}>
       <article className="collection-card">
         <Asset src={imagePaths.collectionLarge} label="collection-everyday-edit.jpg" alt="Everyday khadi edit" />
         <div className="collection-meta">
@@ -551,7 +604,8 @@ const Collections = () => (
       </article>
     </div>
   </section>
-)
+  )
+}
 
 const Questions = () => {
   const listRef = useRef(null)
@@ -675,7 +729,29 @@ const Pillars = () => {
 const Faq = () => {
   const [openIndex, setOpenIndex] = useState(null)
   const panelsRef = useRef([])
+  const listRef = useRef(null)
   const reduced = useReducedMotion()
+
+  useEffect(() => {
+    if (reduced) return
+    const items = listRef.current?.querySelectorAll('.faq-item')
+    if (!items?.length) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        items,
+        { opacity: 0, y: 24 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.6,
+          ease: 'power3.out',
+          stagger: 0.07,
+          scrollTrigger: { trigger: listRef.current, start: 'top 85%', once: true },
+        },
+      )
+    }, listRef)
+    return () => ctx.revert()
+  }, [reduced])
 
   useEffect(() => {
     panelsRef.current.forEach((panel, i) => {
@@ -699,7 +775,7 @@ const Faq = () => {
         <Eyebrow>Before you write</Eyebrow>
         <h2>Questions, answered plainly.</h2>
       </div>
-      <div className="faq-list">
+      <div className="faq-list" ref={listRef}>
         {[
           ['What is khadi?', 'Cloth whose thread is spun by hand and woven on a handloom. No stage is mechanised. The slight irregularity is not a flaw. It is the signature.'],
           ['How is Rangvanat different from a khadi store?', 'A khadi store sells cloth. Rangvanat designs garments as edits. Each piece begins with a story and ends in a seam.'],
@@ -1061,7 +1137,7 @@ const App = () => {
       <div className="grain-overlay" aria-hidden />
       <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
       <main>
-        <Hero />
+        <Hero entered={!showPreloader} />
         <Story />
         <Heritage />
         <FounderNote />

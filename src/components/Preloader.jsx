@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { createTimeline } from 'animejs'
+import { animate, createTimeline, stagger } from 'animejs'
 
 const Charkha = () => (
   <svg viewBox="0 0 100 100" className="h-24 w-24 sm:h-28 sm:w-28" aria-hidden>
@@ -22,32 +22,85 @@ const Charkha = () => (
   </svg>
 )
 
+const BRAND = 'RANGVANAT'
+
 const Preloader = ({ isLoading, onDone }) => {
   const overlayRef = useRef(null)
   const wheelRef = useRef(null)
+  const brandRef = useRef(null)
+  const idleSpin = useRef(null)
+  const mountedAt = useRef(0)
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  useEffect(() => {
+    mountedAt.current = performance.now()
+    const spokes = wheelRef.current.querySelector('[data-spokes]')
+    const letters = brandRef.current.querySelectorAll('span')
+    if (reduced) {
+      animate(letters, { opacity: [0, 1], duration: 400, ease: 'outQuad' })
+      return undefined
+    }
+    idleSpin.current = animate(spokes, {
+      rotate: 360,
+      duration: 3200,
+      ease: 'linear',
+      loop: true,
+    })
+    animate(letters, {
+      opacity: [0, 1],
+      translateY: [12, 0],
+      duration: 550,
+      ease: 'outQuad',
+      delay: stagger(50, { start: 300 }),
+    })
+    return () => idleSpin.current?.pause()
+  }, [reduced])
 
   useEffect(() => {
     if (isLoading) return undefined
-
-    const tl = createTimeline({
-      defaults: { ease: 'inOutCubic' },
-      onComplete: onDone,
-    })
-    tl.add(wheelRef.current.querySelector('[data-spokes]'), { rotate: 360, duration: 1400 })
-      .add(overlayRef.current, { opacity: 0, duration: 700 }, '+=150')
-    return () => tl.pause?.()
-  }, [isLoading, onDone])
+    const overlay = overlayRef.current
+    // Hold the loader until the brand reveal has fully played out (~1.25s) plus a reading beat.
+    const elapsed = performance.now() - mountedAt.current
+    const wait = Math.max(0, (reduced ? 600 : 1700) - elapsed)
+    let tl
+    const timer = setTimeout(() => {
+      if (reduced) {
+        tl = createTimeline({ onComplete: onDone })
+        tl.add(overlay, { opacity: 0, duration: 300, ease: 'outQuad' })
+        return
+      }
+      idleSpin.current?.pause()
+      const spokes = wheelRef.current.querySelector('[data-spokes]')
+      tl = createTimeline({ onComplete: onDone })
+      tl.add(spokes, { rotate: '+=540', duration: 850, ease: 'inQuad' })
+        .add(brandRef.current, { opacity: 0, translateY: -10, duration: 260, ease: 'inQuad' }, '-=420')
+        .add(wheelRef.current, { opacity: 0, scale: 0.9, duration: 240, ease: 'inQuad' }, '-=320')
+        .add(overlay, { translateY: '-100%', duration: 1100, ease: 'outExpo' }, '-=140')
+    }, wait)
+    return () => {
+      clearTimeout(timer)
+      tl?.pause?.()
+    }
+  }, [isLoading, onDone, reduced])
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-oxblood grain"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-oxblood"
     >
+      <div className="preloader-grain" aria-hidden />
       <div ref={wheelRef}>
         <Charkha />
       </div>
-      <p className="preloader-brand font-subhead text-[12px] font-semibold uppercase tracking-[0.5em] text-brass">
-        RANGVANAT
+      <p
+        ref={brandRef}
+        className="preloader-brand font-subhead text-[12px] font-semibold uppercase tracking-[0.5em] text-brass"
+      >
+        {BRAND.split('').map((ch, i) => (
+          <span key={i} className="inline-block opacity-0">
+            {ch}
+          </span>
+        ))}
       </p>
     </div>
   )
