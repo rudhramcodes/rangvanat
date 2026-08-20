@@ -1148,13 +1148,13 @@ const Footer = () => {
                 </span>
               </a>
               <a href="tel:+919825573657">
-                98255 73657
+                +91 98255 73657
                 <span className="care-link-arrow" aria-hidden="true">
                   →
                 </span>
               </a>
               <a href="tel:+919825219730">
-                98252 19730
+                +91 98252 19730
                 <span className="care-link-arrow" aria-hidden="true">
                   →
                 </span>
@@ -1169,16 +1169,17 @@ const Footer = () => {
             <div>
               <h3>Follow Us</h3>
               <div className="socials">
-                <a href="https://instagram.com/rangvanatbardoli" aria-label="Rangvanat on Instagram">
+                <a href="https://instagram.com/rangvanat" target="_blank" aria-label="Rangvanat on Instagram">
                   <Camera size={18} />
                 </a>
                 <a
-                  href="https://instagram.com/rangvanatbardoli"
+                  href="https://instagram.com/rangvanat"
+                  target="_blank" 
                   aria-label="Rangvanat social profile"
                 >
                   <AtSign size={18} />
                 </a>
-                <a href="mailto:rangvanat@gmail.com" aria-label="Email">
+                <a href="mailto:rangvanat@gmail.com" target="_blank" aria-label="Email">
                   <Mail size={18} />
                 </a>
               </div>
