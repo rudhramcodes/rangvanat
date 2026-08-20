@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import Lenis from 'lenis'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -19,23 +18,6 @@ export const useReducedMotion = () => {
     return () => mq.removeEventListener('change', onChange)
   }, [])
   return reduced
-}
-
-export const initLenis = (reduced) => {
-  if (reduced) {
-    window.__lenis = null
-    return () => {}
-  }
-  const lenis = new Lenis({ lerp: 0.09, wheelMultiplier: 1 })
-  window.__lenis = lenis
-  lenis.on('scroll', ScrollTrigger.update)
-  gsap.ticker.add((time) => lenis.raf(time * 1000))
-  gsap.ticker.lagSmoothing(0)
-  return () => {
-    gsap.ticker.remove((time) => lenis.raf(time * 1000))
-    lenis.destroy()
-    window.__lenis = null
-  }
 }
 
 const VARIANTS = {

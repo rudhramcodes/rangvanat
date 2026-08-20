@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AtSign,
   Camera,
@@ -11,8 +11,11 @@ import {
   X,
 } from 'lucide-react'
 import Preloader from './components/Preloader'
+import CollectionsPage from './components/CollectionsPage'
+import ProductPage from './components/ProductPage'
 import { animate, stagger } from 'animejs'
-import { gsap, ScrollTrigger, initLenis, useReducedMotion, useReveal } from './lib/motion'
+import { gsap, ScrollTrigger, useReducedMotion, useReveal } from './lib/motion'
+import { COLLECTIONS, BRAND_STORY } from './lib/lookbook'
 
 const imagePaths = {
   hero: '/images/hero.png',
@@ -37,7 +40,18 @@ const HERO_VIDEO_URL = 'https://res.cloudinary.com/dvsrgdyi7/video/upload/rangva
 const HERO_VIDEO_MOBILE_URL =
   'https://res.cloudinary.com/dvsrgdyi7/video/upload/ac_none,q_auto:good,w_1080,c_limit/rangvanat-hero.mp4'
 
-const navLinks = ['Story', 'Craft', 'Artisans', 'Collections', 'Contact']
+const navLinks = ['Home', 'Story', 'Craft', 'Artisans', 'Collections', 'Contact']
+
+// URL contract: ?page=collections[&collection=flora] | ?page=product&id=rvf-01
+const parseRoute = () => {
+  const params = new URLSearchParams(window.location.search)
+  const page = params.get('page')
+  if (page === 'product') {
+    return { page: 'product', id: params.get('id') || '' }
+  }
+  if (page !== 'collections') return { page: 'home' }
+  return { page: 'collections', collection: params.get('collection') || 'all' }
+}
 
 const windowLoaded = () =>
   document.readyState === 'complete'
@@ -96,69 +110,78 @@ const Cta = ({ children, href = '#collections', size = 'md', as, btnRef, style }
   )
 }
 
-const Header = ({ menuOpen, setMenuOpen }) => (
-  <>
-    <header className="site-header">
-      <a className="logo-link" href="#top" aria-label="Rangvanat home">
-        <img src="/images/logo-only.svg" alt="Rangvanat" />
-      </a>
+const Header = ({ menuOpen, setMenuOpen }) => {
+  const navHref = (link) => {
+    if (link === 'Home') return '/'
+    if (link === 'Collections') return '/?page=collections'
+    return `/#${link.toLowerCase()}`
+  }
+  return (
+    <>
+      <header className="site-header">
+        <a className="logo-link" href="/" aria-label="Rangvanat home">
+          <img src="/images/logo-only.svg" alt="Rangvanat" />
+        </a>
 
-      <nav className="desktop-nav" aria-label="Primary navigation">
-        {navLinks.map((link, index) => (
-          <a key={link} href={`#${link.toLowerCase()}`}>
-            <span className="nav-index">{String(index + 1).padStart(2, '0')}</span>
-            {link}
-          </a>
-        ))}
-      </nav>
+        <nav className="desktop-nav" aria-label="Primary navigation">
+          {navLinks.map((link, index) => (
+            <a key={link} href={navHref(link)}>
+              <span className="nav-index">{String(index + 1).padStart(2, '0')}</span>
+              {link}
+            </a>
+          ))}
+        </nav>
 
-      <div className="header-actions">
-        <Cta href="#collections" size="sm">Explore</Cta>
-        <button
-          className="menu-toggle"
-          onClick={() => setMenuOpen(true)}
-          aria-controls="mobile-menu"
-          aria-expanded={menuOpen}
-          aria-label="Open menu"
-        >
-          <Menu size={22} />
-        </button>
-      </div>
-    </header>
-
-    <div
-      id="mobile-menu"
-      className={`mobile-menu ${menuOpen ? 'is-open' : ''}`}
-      aria-hidden={!menuOpen}
-    >
-      <div className="mobile-menu-top">
-        <img src="/images/logo-only.svg" alt="Rangvanat" />
-        <button onClick={() => setMenuOpen(false)} aria-label="Close menu">
-          <X size={28} />
-        </button>
-      </div>
-      <nav aria-label="Mobile navigation">
-        {navLinks.map((link, index) => (
-          <a
-            key={link}
-            href={`#${link.toLowerCase()}`}
-            style={{ '--i': index }}
-            onClick={() => setMenuOpen(false)}
+        <div className="header-actions">
+          <Cta href="/?page=collections" size="sm">Explore</Cta>
+          <button
+            className="menu-toggle"
+            onClick={() => setMenuOpen(true)}
+            aria-controls="mobile-menu"
+            aria-expanded={menuOpen}
+            aria-label="Open menu"
           >
-            <span className="nav-index">{String(index + 1).padStart(2, '0')}</span>
-            {link}
+            <Menu size={22} />
+          </button>
+        </div>
+      </header>
+
+      <div
+        id="mobile-menu"
+        className={`mobile-menu ${menuOpen ? 'is-open' : ''}`}
+        aria-hidden={!menuOpen}
+      >
+        <div className="mobile-menu-top">
+          <a href="/" onClick={() => setMenuOpen(false)} aria-label="Rangvanat home">
+            <img src="/images/logo-only.svg" alt="Rangvanat" />
           </a>
-        ))}
-      </nav>
-      <div className="mobile-menu-foot">
-        <p>Bardoli · Gujarat · India</p>
-        <Cta href="#contact" size="sm">
-          Join the Journey
-        </Cta>
+          <button onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            <X size={28} />
+          </button>
+        </div>
+        <nav aria-label="Mobile navigation">
+          {navLinks.map((link, index) => (
+            <a
+              key={link}
+              href={navHref(link)}
+              style={{ '--i': index }}
+              onClick={() => setMenuOpen(false)}
+            >
+              <span className="nav-index">{String(index + 1).padStart(2, '0')}</span>
+              {link}
+            </a>
+          ))}
+        </nav>
+        <div className="mobile-menu-foot">
+          <p>Bardoli · Gujarat · India</p>
+          <Cta href="#contact" size="sm">
+            Join the Journey
+          </Cta>
+        </div>
       </div>
-    </div>
-  </>
-)
+    </>
+  )
+}
 
 const Hero = ({ entered }) => {
   const videoRef = useRef(null)
@@ -538,6 +561,80 @@ const Artisans = () => {
   )
 }
 
+const WhyRangvanaat = () => {
+  const headRef = useReveal({ variant: 'fadeUp', delay: 0 })
+  const copyRef = useReveal({ variant: 'fadeUp', delay: 0.1 })
+  const gridRef = useRef(null)
+  const reduced = useReducedMotion()
+
+  useEffect(() => {
+    if (reduced) return
+    const blocks = gridRef.current?.querySelectorAll('.why-block')
+    if (!blocks?.length) return
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        blocks,
+        { opacity: 0, y: 28 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power3.out',
+          stagger: 0.12,
+          scrollTrigger: { trigger: gridRef.current, start: 'top 82%', once: true },
+        },
+      )
+    }, gridRef)
+    return () => ctx.revert()
+  }, [reduced])
+
+  return (
+    <section id="why" className="section why-section">
+      <div className="why-head" ref={headRef}>
+        <Eyebrow>Why Rangvanaat</Eyebrow>
+        <h2>{BRAND_STORY.tagline}</h2>
+      </div>
+
+      <div className="why-body" ref={copyRef}>
+        <p className="why-intro">{BRAND_STORY.intro}</p>
+      </div>
+
+      <div className="why-grid" ref={gridRef}>
+        <article className="why-block why-block--rang">
+          <span className="why-word">{BRAND_STORY.rang.title}</span>
+          <p>{BRAND_STORY.rang.body}</p>
+        </article>
+        <article className="why-block why-block--vanat">
+          <span className="why-word">{BRAND_STORY.vanat.title}</span>
+          <p>{BRAND_STORY.vanat.body}</p>
+        </article>
+        <article className="why-block why-block--union">
+          <p className="why-union">{BRAND_STORY.union}</p>
+        </article>
+      </div>
+
+      <div className="why-bottom">
+        <div className="why-mission">
+          <h3>Our Vision</h3>
+          <p>{BRAND_STORY.vision}</p>
+        </div>
+        <div className="why-mission">
+          <h3>Our Mission</h3>
+          <p>{BRAND_STORY.mission}</p>
+        </div>
+        <div className="why-crafts">
+          <h3>The Crafts</h3>
+          <ul>
+            {BRAND_STORY.crafts.map((craft) => (
+              <li key={craft}>{craft}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 const Collections = () => {
   const gridRef = useRef(null)
   const titleRef = useReveal({ variant: 'fadeUp', delay: 0 })
@@ -567,43 +664,50 @@ const Collections = () => {
   return (
     <section id="collections" className="section collections-section">
       <div className="section-title" ref={titleRef}>
-      <div>
-        <Eyebrow>The collection</Eyebrow>
-        <h2>Where heritage meets the runway.</h2>
-        <p className="collections-intro">
-          Not in the fast sense. In the sense that every piece carries a lineage, and every
-          collection is curated, not compiled.
-        </p>
+        <div>
+          <Eyebrow>The collection</Eyebrow>
+          <h2>Where heritage meets the runway.</h2>
+          <p className="collections-intro">
+            Six curated edits, thirty-six pieces, one lineage. Not in the fast sense — every
+            piece carries a story, and every collection is curated, not compiled.
+          </p>
+        </div>
+        <Cta href="/?page=collections">View All Pieces</Cta>
       </div>
-      <Cta href="#contact">Explore the Collection</Cta>
-    </div>
-    <div className="collection-grid" ref={gridRef}>
-      <article className="collection-card">
-        <Asset src={imagePaths.collectionLarge} label="collection-everyday-edit.jpg" alt="Everyday khadi edit" />
-        <div className="collection-meta">
-          <span className="collection-num" aria-hidden="true">01</span>
-          <h3>The Everyday Edit</h3>
-          <p>Khadi for daily life, elevated. Pieces that feel special without being precious.</p>
-        </div>
-      </article>
-      <article className="collection-card">
-        <Asset src={imagePaths.collectionTop} label="collection-statement-edit.jpg" alt="Statement khadi edit" />
-        <div className="collection-meta">
-          <span className="collection-num" aria-hidden="true">02</span>
-          <h3>The Statement Edit</h3>
-          <p>Not loud, but significant. Khadi that commands attention through presence, not print.</p>
-        </div>
-      </article>
-      <article className="collection-card">
-        <Asset src={imagePaths.collectionBottom} label="collection-bridal-edit.jpg" alt="Bridal khadi edit" />
-        <div className="collection-meta">
-          <span className="collection-num" aria-hidden="true">03</span>
-          <h3>The Bridal Edit</h3>
-          <p>Not as costume, but as commitment.</p>
-        </div>
-      </article>
-    </div>
-  </section>
+      <div className="collection-grid collection-grid--lookbook" ref={gridRef}>
+        {COLLECTIONS.map((collection, index) => (
+          <article className="collection-card" key={collection.id}>
+            <a
+              href={`/?page=collections&collection=${collection.id}`}
+              className="collection-card-link"
+              aria-label={`Explore ${collection.name}`}
+            >
+              <div
+                className="asset-frame collection-card-media"
+                style={{ '--asset': `url(${collection.image})` }}
+              >
+                {!collection.image && (
+                  <span className="asset-placeholder-tag">Image coming soon</span>
+                )}
+                <span className="collection-num-overlay" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span className="collection-piece-count" aria-hidden="true">
+                  {collection.count} pieces
+                </span>
+              </div>
+              <div className="collection-meta">
+                <span className="collection-num" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <h3>{collection.name}</h3>
+                <p>{collection.mood}</p>
+              </div>
+            </a>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }
 
@@ -779,7 +883,7 @@ const Faq = () => {
         {[
           ['What is khadi?', 'Cloth whose thread is spun by hand and woven on a handloom. No stage is mechanised. The slight irregularity is not a flaw. It is the signature.'],
           ['How is Rangvanat different from a khadi store?', 'A khadi store sells cloth. Rangvanat designs garments as edits. Each piece begins with a story and ends in a seam.'],
-          ['Can I buy a piece?', 'Yes, by enquiry, not cart. Write to hello@rangvanat.com or use the Enquire button. Edits are made in small numbers, and each begins with a conversation.'],
+          ['Can I buy a piece?', 'Yes, by enquiry, not cart. Write to rangvanat@gmail.com or use the Enquire button. Edits are made in small numbers, and each begins with a conversation.'],
           ['Where do you ship?', 'Anywhere a courier reaches. Timings and duties are confirmed during enquiry.'],
           ['How are the artisans paid?', 'Directly, per piece, at rates set with the collective, not against a factory clock.'],
           ['What do I get as a custodian?', 'One letter when a story is ready. New edits, artisan profiles, process notes. No promotions. Unsubscribing stays one click.'],
@@ -994,7 +1098,7 @@ const Footer = () => {
           scaleY: [0, 1],
           duration: 600,
           ease: 'outCubic',
-          delay: stagger(90)(items.length),
+          delay: 90 * items.length,
         })
         io.disconnect()
       },
@@ -1030,9 +1134,33 @@ const Footer = () => {
           <div className="care-info care-item">
             <div>
               <h3>Reach Us</h3>
-              <p>Bardoli, Gujarat, India</p>
-              <a href="mailto:hello@rangvanat.com">
-                hello@rangvanat.com
+              <p>
+                Laxmi Gopal Complex - B, H-1, 2nd Floor
+                <br />
+                Dhamdod Naka, Kadod Road
+                <br />
+                Bardoli - 394601, Dist. Surat, Gujarat
+              </p>
+              <a href="tel:+918780572069">
+                +91 87805 72069
+                <span className="care-link-arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+              <a href="tel:+919825573657">
+                98255 73657
+                <span className="care-link-arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+              <a href="tel:+919825219730">
+                98252 19730
+                <span className="care-link-arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+              <a href="mailto:rangvanat@gmail.com">
+                rangvanat@gmail.com
                 <span className="care-link-arrow" aria-hidden="true">
                   →
                 </span>
@@ -1041,13 +1169,16 @@ const Footer = () => {
             <div>
               <h3>Follow Us</h3>
               <div className="socials">
-                <a href="https://instagram.com" aria-label="Instagram">
+                <a href="https://instagram.com/rangvanatbardoli" aria-label="Rangvanat on Instagram">
                   <Camera size={18} />
                 </a>
-                <a href="https://instagram.com" aria-label="Rangvanat social profile">
+                <a
+                  href="https://instagram.com/rangvanatbardoli"
+                  aria-label="Rangvanat social profile"
+                >
                   <AtSign size={18} />
                 </a>
-                <a href="mailto:hello@rangvanat.com" aria-label="Email">
+                <a href="mailto:rangvanat@gmail.com" aria-label="Email">
                   <Mail size={18} />
                 </a>
               </div>
@@ -1079,6 +1210,21 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [showPreloader, setShowPreloader] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [route, setRoute] = useState(() => parseRoute())
+
+  // Disable browser auto-restore of scroll position on back/forward so the app
+  // controls it deterministically (scrollToTop in the popstate handler)
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) history.scrollRestoration = 'manual'
+  }, [])
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
+  // When a nav link targets a home-page section (/#story) from another page,
+  // we land on home first, then scroll to the section once it renders.
+  const pendingSectionRef = useRef(null)
 
   useEffect(() => {
     Promise.race([
@@ -1088,68 +1234,135 @@ const App = () => {
   }, [])
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : ''
-    if (window.__lenis) {
-      menuOpen ? window.__lenis.stop() : window.__lenis.start()
+    const onPopState = () => {
+      setRoute(parseRoute())
+      scrollToTop()
     }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [scrollToTop])
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
     const onEscape = (e) => e.key === 'Escape' && setMenuOpen(false)
     if (menuOpen) window.addEventListener('keydown', onEscape)
     return () => {
       document.body.style.overflow = ''
-      window.__lenis?.start()
       window.removeEventListener('keydown', onEscape)
     }
   }, [menuOpen])
 
   const reduced = useReducedMotion()
 
+  // Scroll to top whenever the route changes (page switch, product switch, not anchor scroll)
   useEffect(() => {
-    return initLenis(reduced)
-  }, [reduced])
+    scrollToTop()
+  }, [route.page, route.id, route.collection, scrollToTop])
+
+  // After switching to home for a pending /#section nav, scroll there once it renders
+  useEffect(() => {
+    if (route.page !== 'home' || !pendingSectionRef.current) return
+    const hash = pendingSectionRef.current
+    const scroll = () => {
+      const target = document.getElementById(hash)
+      if (!target) return false
+      const headerH = document.querySelector('.site-header')?.getBoundingClientRect().height || 0
+      const targetY = target.getBoundingClientRect().top + window.scrollY - headerH
+      window.scrollTo({ top: targetY, behavior: 'smooth' })
+      pendingSectionRef.current = null
+      return true
+    }
+    if (scroll()) return
+    const timer = setInterval(scroll, 100)
+    return () => clearInterval(timer)
+  }, [route.page])
 
   useEffect(() => {
     if (reduced) return
     const onClick = (e) => {
-      const anchor = e.target.closest('a[href^="#"]')
+      const anchor = e.target.closest('a[href]')
       if (!anchor) return
-      const hash = anchor.getAttribute('href')
-      if (hash === '#') return
-      const lenis = window.__lenis
-      if (hash === '#top') {
+      const href = anchor.getAttribute('href')
+
+      // Route link (lookbook page) — pushState instead of full navigation
+      if (href.startsWith('/?page=') || href === '/') {
+        const target = new URL(href, window.location.origin)
         e.preventDefault()
-        if (lenis) lenis.scrollTo(0, { duration: 1.4 })
-        else window.scrollTo({ top: 0, behavior: 'smooth' })
+        if (target.pathname + target.search !== window.location.pathname + window.location.search) {
+          const params = target.searchParams
+          const page = params.get('page')
+          const next =
+            page === 'product'
+              ? { page: 'product', id: params.get('id') || '' }
+              : page === 'collections'
+                ? { page: 'collections', collection: params.get('collection') || 'all' }
+                : { page: 'home' }
+          window.history.pushState({}, '', target.pathname + target.search)
+          setRoute(next)
+          setMenuOpen(false)
+          scrollToTop()
+        } else {
+          scrollToTop()
+        }
         return
       }
-      const target = document.querySelector(hash)
-      if (!target) return
+
+      // Home-page section link: `/#story` (from any page) or `#story` (when home).
+      // The section only exists on the home page, so if it's not in the DOM we
+      // must switch to home first, then scroll once the section has rendered.
+      const isSectionLink = href.startsWith('/#')
+      const isHashOnlyLink = href.startsWith('#') && href !== '#'
+      if (!isSectionLink && !isHashOnlyLink) return
+      const hash = (isSectionLink ? href.slice(2) : href.slice(1)).toLowerCase()
+      if (hash === 'top') {
+        e.preventDefault()
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
       e.preventDefault()
-      if (lenis) lenis.scrollTo(target, { offset: -78, duration: 1.4 })
-      else target.scrollIntoView({ behavior: 'smooth' })
+      const target = document.getElementById(hash)
+      if (target) {
+        const headerH = document.querySelector('.site-header')?.getBoundingClientRect().height || 0
+        const targetY = target.getBoundingClientRect().top + window.scrollY - headerH
+        window.scrollTo({ top: targetY, behavior: 'smooth' })
+        return
+      }
+      if (parseRoute().page === 'home') return
+      window.history.pushState({}, '', `/#${hash}`)
+      setRoute({ page: 'home' })
+      setMenuOpen(false)
+      pendingSectionRef.current = hash
     }
     document.addEventListener('click', onClick)
     return () => document.removeEventListener('click', onClick)
-  }, [reduced])
+  }, [reduced, scrollToTop])
 
   return (
     <>
       {showPreloader && <Preloader isLoading={isLoading} onDone={() => setShowPreloader(false)} />}
       <div className="grain-overlay" aria-hidden />
       <Header menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-      <main>
-        <Hero entered={!showPreloader} />
-        <Story />
-        <Heritage />
-        <FounderNote />
-        <Timeline />
-        <Craft />
-        <Artisans />
-        <Collections />
-        <Questions />
-        <Faq />
-        {/* <Pillars /> */}
-        <Closing />
-      </main>
+      {route.page === 'collections' ? (
+        <CollectionsPage key={route.collection} initialCollection={route.collection} />
+      ) : route.page === 'product' ? (
+        <ProductPage key={route.id} productId={route.id} />
+      ) : (
+        <main>
+          <Hero entered={!showPreloader} />
+          <Story />
+          <Heritage />
+          <FounderNote />
+          <Timeline />
+          <Craft />
+          <Artisans />
+          <WhyRangvanaat />
+          <Collections />
+          <Questions />
+          <Faq />
+          {/* <Pillars /> */}
+          <Closing />
+        </main>
+      )}
       <Footer />
     </>
   )
