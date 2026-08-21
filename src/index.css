@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Dark editorial luxury — oxblood paper #5E1B10, champagne ink #E8D9AE */
+  /* Light editorial luxury — ivory paper #FBF6EC, espresso ink #2A0E06 */
   --color-oxblood: #5e1b10;
   --color-heritage: #b34a1a;
   --color-brass: #cfa158;
@@ -40,10 +40,10 @@
   }
 
   body {
-    @apply bg-oxblood text-champagne antialiased;
+    @apply bg-ivory text-espresso antialiased;
     letter-spacing: 0;
     overflow-x: clip;
-    background-color: var(--color-oxblood);
+    background-color: var(--color-ivory);
   }
 
   em {
