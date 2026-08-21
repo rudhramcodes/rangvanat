@@ -406,7 +406,7 @@ const Timeline = () => {
   }
 
   return (
-    <section id="timeline" className="timeline-marquee" aria-label="Rangvanat heritage timeline" ref={sectionRef}>
+    <section id="timeline" className="timeline-marquee relative grid gap-2 py-12 overflow-clip bg-ivory text-espresso max-lg:gap-1 max-lg:py-10" aria-label="Rangvanat heritage timeline" ref={sectionRef}>
       <MarqueeRow />
       <MarqueeRow ghost />
     </section>
@@ -491,8 +491,8 @@ const Craft = () => {
   }, [reduced])
 
   return (
-    <section id="craft" className="section process-section">
-      <div className="process-head" ref={headRef}>
+    <section id="craft" className="process-section bg-parchment px-[5vw] py-[120px] border-b border-brass/15 max-lg:px-6 max-lg:py-[72px]">
+      <div className="process-head max-w-[680px] mb-16 max-lg:mb-11 max-sm:mb-9" ref={headRef}>
         <Eyebrow>The process</Eyebrow>
         <h2>Spun slow. Woven with intention.</h2>
         <p>
@@ -500,12 +500,12 @@ const Craft = () => {
           someone who has spent a lifetime learning what the thread wants to become.
         </p>
       </div>
-      <div className="process-grid" ref={gridRef}>
+      <div className="process-grid grid grid-cols-4 gap-7 max-lg:grid-cols-2 max-lg:gap-5 max-sm:grid-cols-1 max-sm:gap-7" ref={gridRef}>
         {PROCESS_STEPS.map(({ num, title, body, src, label, alt }) => (
           <article className="process-card" key={title}>
-            <div className="process-card-media">
+            <div className="process-card-media relative">
               <Asset src={src} label={label} className="process-card-image" alt={alt} />
-              <span className="process-card-num" aria-hidden="true">
+              <span className="process-card-num absolute top-[14px] left-[14px] z-[2] font-display text-[46px] leading-[0.8] text-ivory drop-shadow-[0_2px_8px_rgba(42,14,6,0.45)] max-sm:text-[40px]" aria-hidden="true">
                 {num}
               </span>
             </div>
@@ -516,15 +516,15 @@ const Craft = () => {
           </article>
         ))}
       </div>
-      <div className="value-blocks" ref={valuesRef}>
+      <div className="value-blocks grid grid-cols-3 gap-9 mt-[72px] max-lg:grid-cols-1 max-lg:gap-7 max-lg:mt-14 max-sm:mt-12" ref={valuesRef}>
         {[
           ['The thread sets the pace.', 'A charkha spins where a mill would rush.'],
           ['Colour settles; it is not applied.', 'Natural dye settles into the fibre and becomes one with it.'],
           ['The hands have names.', '200+ women in and around Bardoli spin and weave for Rangvanat. Three generations teach the thread.'],
         ].map(([claim, proof]) => (
           <article className="value-block" key={claim}>
-            <h3>{claim}</h3>
-            <p>{proof}</p>
+            <h3 className="mb-1.5 text-[21px] italic">{claim}</h3>
+            <p className="text-[14px]">{proof}</p>
           </article>
         ))}
       </div>
@@ -537,7 +537,7 @@ const Artisans = () => {
   const copyRef = useReveal({ variant: 'fadeUp', delay: 0 })
 
   return (
-    <section id="artisans" className="dark-section artisans-section">
+    <section id="artisans" className="dark-section artisans-section bg-ivory text-espresso grid grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] gap-[clamp(48px,7vw,110px)] items-center px-[5vw] py-[120px] border-b border-brass/15 max-lg:grid-cols-1 max-lg:gap-10 max-lg:px-6 max-lg:py-[72px]">
       <div className="artisan-copy" ref={copyRef}>
         <Eyebrow>Who we weave for</Eyebrow>
         <h2>Behind every weave, a woman rewriting her own story.</h2>
@@ -545,23 +545,23 @@ const Artisans = () => {
           Rangvanat exists because of the women who sit at the wheel before sunrise. Rural artisans
           for whom every thread spun is also a step toward standing on their own.
         </p>
-        <div className="counters">
-          <strong>200+<span>Women Artisans</span></strong>
-          <strong>3<span>Generations of Craft</span></strong>
-          <strong>1<span>Shared Dream</span></strong>
+        <div className="counters grid grid-cols-3 gap-7 mt-[46px] text-brass max-lg:gap-5">
+          <strong className="font-display text-[56px] leading-[0.95] max-lg:text-[48px]">200+<span className="block max-w-[130px] mt-2.5 text-espresso/80 font-sans text-[11px] font-semibold leading-[1.3]">Women Artisans</span></strong>
+          <strong className="font-display text-[56px] leading-[0.95] max-lg:text-[48px]">3<span className="block max-w-[130px] mt-2.5 text-espresso/80 font-sans text-[11px] font-semibold leading-[1.3]">Generations of Craft</span></strong>
+          <strong className="font-display text-[56px] leading-[0.95] max-lg:text-[48px]">1<span className="block max-w-[130px] mt-2.5 text-espresso/80 font-sans text-[11px] font-semibold leading-[1.3]">Shared Dream</span></strong>
         </div>
       </div>
-      <div className="artisan-collage" ref={collageRef}>
+      <div className="artisan-collage relative w-[min(460px,100%)] justify-self-center max-lg:w-[min(440px,86%)] max-lg:mx-auto max-sm:w-full" ref={collageRef}>
         <Asset
           src={imagePaths.artisanOne}
           label="artisan1.jpg"
-          className="artisan-portrait"
+          className="artisan-portrait aspect-[2/3] min-h-0"
           alt="Rangvanat artisan portrait"
         />
         <Asset
           src={imagePaths.artisanTwo}
           label="artisan2.jpg"
-          className="artisan-landscape"
+          className="artisan-landscape absolute -right-[12%] -bottom-[9%] w-[62%] aspect-[4/3] min-h-0 shadow-[0_24px_48px_rgba(0,0,0,0.35)] max-lg:right-[-8%] max-lg:bottom-[-8%] max-lg:w-[60%] max-sm:right-0 max-sm:bottom-0 max-sm:w-[62%]"
           alt="Rangvanat artisan at the loom"
         />
       </div>
