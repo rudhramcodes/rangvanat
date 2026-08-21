@@ -1255,7 +1255,7 @@
   .collection-meta p {
     max-width: 380px;
     margin: 0;
-    color: rgba(232, 217, 174, 0.72);
+    color: rgba(42, 14, 6, 0.72);
     font-size: 13px;
   }
 
@@ -1289,19 +1289,19 @@
     align-items: flex-start;
     min-height: 300px;
     padding: 40px 38px;
-    background: var(--color-oxblood);
+    background: var(--color-parchment);
     transition: background-color 0.35s ease;
   }
 
   .pillar:hover {
-    background: #6a2114;
+    background: var(--color-champagne);
   }
 
   .pillar-num {
     position: absolute;
     top: 32px;
     right: 34px;
-    color: rgba(232, 217, 174, 0.5);
+    color: rgba(42, 14, 6, 0.5);
     font-family: var(--font-display);
     font-size: 64px;
     font-weight: 400;
@@ -1311,7 +1311,7 @@
   }
 
   .pillar:hover .pillar-num {
-    color: var(--color-champagne);
+    color: var(--color-espresso);
   }
 
   .pillar svg {
@@ -1333,7 +1333,7 @@
     margin: 0;
     font-size: 14px;
     line-height: 1.7;
-    color: rgba(232, 217, 174, 0.72);
+    color: rgba(42, 14, 6, 0.72);
   }
 
   .closing-section {
@@ -1341,8 +1341,8 @@
     grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
     gap: clamp(48px, 7vw, 110px);
     align-items: start;
-    background: var(--color-oxblood);
-    color: var(--color-champagne);
+    background: var(--color-parchment);
+    color: var(--color-espresso);
   }
 
   .closing-head {
@@ -1350,7 +1350,7 @@
   }
 
   .closing-section h2 {
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-size: clamp(52px, 6.5vw, 68px);
     line-height: 0.98;
   }
@@ -1358,7 +1358,7 @@
   .closing-intro {
     max-width: 380px;
     margin: 22px 0 0;
-    color: rgba(233, 217, 174, 0.84);
+    color: rgba(42, 14, 6, 0.84);
     font-size: 14px;
     line-height: 1.7;
   }
@@ -1385,7 +1385,7 @@
 
   .closing-field {
     position: relative;
-    border-bottom: 1px solid rgba(233, 217, 174, 0.4);
+    border-bottom: 1px solid rgba(42, 14, 6, 0.4);
   }
 
   .closing-form input {
@@ -1393,13 +1393,13 @@
     padding: 12px 0;
     border: 0;
     background: transparent;
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-size: 17px;
     outline: 0;
   }
 
   .closing-form input::placeholder {
-    color: rgba(233, 217, 174, 0.6);
+    color: rgba(42, 14, 6, 0.6);
   }
 
   .closing-underline {
@@ -1438,7 +1438,7 @@
   .form-status {
     min-height: 25px;
     margin: 14px 0 0;
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-size: 13px;
   }
 
@@ -1458,8 +1458,8 @@
     grid-template-columns: 1fr;
     gap: 34px;
     overflow: hidden;
-    background: var(--color-espresso);
-    color: var(--color-champagne);
+    background: var(--color-ivory);
+    color: var(--color-espresso);
   }
 
   .care-label {
@@ -1518,7 +1518,7 @@
 
   .care-label h3 {
     margin: 0 0 18px;
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-size: 12px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -1541,7 +1541,7 @@
   .care-label nav a,
   .care-info a:not(.socials a) {
     position: relative;
-    color: rgba(232, 217, 174, 0.72);
+    color: rgba(42, 14, 6, 0.72);
     font-size: 13px;
     text-decoration: none;
     transition: color 0.25s ease;
@@ -1590,7 +1590,7 @@
 
   .care-info p {
     margin: 0 0 10px;
-    color: rgba(232, 217, 174, 0.72);
+    color: rgba(42, 14, 6, 0.72);
     font-size: 13px;
   }
 
@@ -1626,7 +1626,7 @@
     margin: 40px 0 0;
     padding-top: 16px;
     border-top: 1px solid rgba(207, 161, 88, 0.35);
-    color: rgba(232, 217, 174, 0.5);
+    color: rgba(42, 14, 6, 0.5);
     font-size: 10px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
@@ -1634,7 +1634,7 @@
 
   .care-wash b {
     font-weight: 700;
-    color: rgba(232, 217, 174, 0.78);
+    color: rgba(42, 14, 6, 0.78);
   }
 
   .care-wash b::after {
@@ -1667,7 +1667,7 @@
     justify-content: space-between;
     gap: 24px;
     flex-wrap: wrap;
-    color: rgba(232, 217, 174, 0.5);
+    color: rgba(42, 14, 6, 0.5);
     font-size: 12px;
   }
 
@@ -1736,7 +1736,7 @@
     grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
     gap: clamp(48px, 7vw, 110px);
     align-items: start;
-    background: var(--color-oxblood);
+    background: var(--color-ivory);
   }
 
   .faq-head {
@@ -1763,7 +1763,7 @@
     padding: 20px 0;
     background: none;
     border: 0;
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-family: var(--font-subhead);
     font-size: 18px;
     font-weight: 600;
@@ -1797,6 +1797,7 @@
     max-width: 640px;
     margin-bottom: 20px;
     font-size: 14px;
+    color: var(--color-espresso);
   }
 
   .form-helper {
@@ -2320,7 +2321,7 @@
      Why Rangvanaat — brand story from the booklet
      ───────────────────────────────────────────────────────────── */
   .why-section {
-    background: var(--color-espresso);
+    background: var(--color-parchment);
     border-bottom: none;
   }
 

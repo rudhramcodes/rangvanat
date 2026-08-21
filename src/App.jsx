@@ -597,44 +597,46 @@ const WhyRangvanaat = () => {
   }, [reduced])
 
   return (
-    <section id="why" className="section why-section">
-      <div className="why-head" ref={headRef}>
+    <section id="why" className="why-section bg-parchment px-[5vw] py-[120px] border-b border-brass/15 max-lg:px-6 max-lg:py-[72px]">
+      <div className="why-head max-w-[860px] mb-10" ref={headRef}>
         <Eyebrow>Why Rangvanaat</Eyebrow>
-        <h2>{BRAND_STORY.tagline}</h2>
+        <h2 className="text-[clamp(44px,5.4vw,78px)] leading-[1.02] mb-0">{BRAND_STORY.tagline}</h2>
       </div>
 
-      <div className="why-body" ref={copyRef}>
-        <p className="why-intro">{BRAND_STORY.intro}</p>
+      <div className="why-body max-w-[620px] mb-14" ref={copyRef}>
+        <p className="why-intro text-[17px] leading-[1.7] m-0">{BRAND_STORY.intro}</p>
       </div>
 
-      <div className="why-grid" ref={gridRef}>
-        <article className="why-block why-block--rang">
-          <span className="why-word">{BRAND_STORY.rang.title}</span>
+      <div className="why-grid grid grid-cols-2 gap-px bg-brass/20 border border-brass/20 max-sm:grid-cols-1" ref={gridRef}>
+        <article className="why-block why-block--rang p-[44px_40px] bg-parchment max-sm:p-[32px_26px]">
+          <span className="why-word block mb-3 text-brass font-display text-[42px] leading-none tracking-[0.04em]">{BRAND_STORY.rang.title}</span>
           <p>{BRAND_STORY.rang.body}</p>
         </article>
-        <article className="why-block why-block--vanat">
-          <span className="why-word">{BRAND_STORY.vanat.title}</span>
+        <article className="why-block why-block--vanat p-[44px_40px] bg-parchment max-sm:p-[32px_26px]">
+          <span className="why-word block mb-3 text-brass font-display text-[42px] leading-none tracking-[0.04em]">{BRAND_STORY.vanat.title}</span>
           <p>{BRAND_STORY.vanat.body}</p>
         </article>
-        <article className="why-block why-block--union">
-          <p className="why-union">{BRAND_STORY.union}</p>
+        <article className="why-block why-block--union col-span-2 p-[52px_40px] max-sm:p-[40px_26px]" style={{ background: 'linear-gradient(135deg,rgba(179,74,26,0.10),transparent 55%), var(--color-parchment)' }}>
+          <p className="why-union font-display text-[clamp(24px,2.6vw,34px)] leading-[1.25] text-espresso">{BRAND_STORY.union}</p>
         </article>
       </div>
 
-      <div className="why-bottom">
+      <div className="why-bottom grid grid-cols-[1fr_1fr_1.2fr] gap-12 mt-16 max-lg:grid-cols-1 max-lg:gap-9">
         <div className="why-mission">
-          <h3>Our Vision</h3>
-          <p>{BRAND_STORY.vision}</p>
+          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-brass">Our Vision</h3>
+          <p className="text-[14px] m-0">{BRAND_STORY.vision}</p>
         </div>
         <div className="why-mission">
-          <h3>Our Mission</h3>
-          <p>{BRAND_STORY.mission}</p>
+          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-brass">Our Mission</h3>
+          <p className="text-[14px] m-0">{BRAND_STORY.mission}</p>
         </div>
         <div className="why-crafts">
-          <h3>The Crafts</h3>
-          <ul>
+          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-brass">The Crafts</h3>
+          <ul className="flex flex-wrap gap-2.5 m-0 p-0 list-none">
             {BRAND_STORY.crafts.map((craft) => (
-              <li key={craft}>{craft}</li>
+              <li key={craft} className="p-[8px_14px] border border-brass/30 rounded-full text-[12px] tracking-[0.08em] uppercase text-espresso">
+                {craft}
+              </li>
             ))}
           </ul>
         </div>
@@ -670,46 +672,46 @@ const Collections = () => {
   }, [reduced])
 
   return (
-    <section id="collections" className="section collections-section">
-      <div className="section-title" ref={titleRef}>
+    <section id="collections" className="section collections-section bg-ivory px-[5vw] py-[120px] border-b border-brass/15 max-lg:px-6 max-lg:py-[72px]">
+      <div className="section-title flex items-end justify-between gap-7 mb-[46px] max-sm:flex-col max-sm:items-start max-sm:gap-[18px]" ref={titleRef}>
         <div>
           <Eyebrow>The collection</Eyebrow>
           <h2>Where heritage meets the runway.</h2>
-          <p className="collections-intro">
+          <p className="collections-intro max-w-[570px] mt-[20px]">
             Six curated edits, thirty-six pieces, one lineage. Not in the fast sense — every
             piece carries a story, and every collection is curated, not compiled.
           </p>
         </div>
-        <Cta href="/?page=collections">View All Pieces</Cta>
+        <Cta href="/?page=collections" className="max-sm:w-fit">View All Pieces</Cta>
       </div>
-      <div className="collection-grid collection-grid--lookbook" ref={gridRef}>
+      <div className="collection-grid collection-grid--lookbook grid grid-cols-3 gap-y-14 max-lg:grid-cols-2 max-sm:grid-cols-1" ref={gridRef}>
         {COLLECTIONS.map((collection, index) => (
           <article className="collection-card" key={collection.id}>
             <a
               href={`/?page=collections&collection=${collection.id}`}
-              className="collection-card-link"
+              className="collection-card-link flex flex-col no-underline text-inherit"
               aria-label={`Explore ${collection.name}`}
             >
               <div
-                className="asset-frame collection-card-media"
+                className="asset-frame collection-card-media aspect-[4/5] min-h-0 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:scale-[1.02]"
                 style={{ '--asset': `url(${collection.image})` }}
               >
                 {!collection.image && (
-                  <span className="asset-placeholder-tag">Image coming soon</span>
+                  <span className="asset-placeholder-tag absolute inset-0 grid place-items-center text-espresso/55 text-[11px] italic tracking-[0.1em] uppercase">Image coming soon</span>
                 )}
-                <span className="collection-num-overlay" aria-hidden="true">
+                <span className="collection-num-overlay absolute top-4 left-4 z-[2] font-display text-[42px] leading-[0.8] text-ivory [text-shadow:0_2px_10px_rgba(42,14,6,0.5)]" aria-hidden="true">
                   {String(index + 1).padStart(2, '0')}
                 </span>
-                <span className="collection-piece-count" aria-hidden="true">
+                <span className="collection-piece-count absolute right-[14px] bottom-[14px] z-[2] p-[6px_10px] bg-espresso/70 border border-brass/40 rounded-[2px] text-champagne text-[10px] tracking-[0.14em] uppercase" aria-hidden="true">
                   {collection.count} pieces
                 </span>
               </div>
-              <div className="collection-meta">
-                <span className="collection-num" aria-hidden="true">
+              <div className="collection-meta pt-[18px]">
+                <span className="collection-num block mb-2 text-brass font-display text-[30px] leading-none" aria-hidden="true">
                   {String(index + 1).padStart(2, '0')}
                 </span>
-                <h3>{collection.name}</h3>
-                <p>{collection.mood}</p>
+                <h3 className="mb-2 text-[23px]">{collection.name}</h3>
+                <p className="max-w-[380px] m-0 text-espresso/70 text-[13px]">{collection.mood}</p>
               </div>
             </a>
           </article>
@@ -753,30 +755,30 @@ const Questions = () => {
     animate(q, { translateX: amount, duration: 300, ease: 'outQuad' })
   }
 
-  return (
-    <section id="questions" className="section questions-section">
-      <div className="questions-head">
+return (
+    <section id="questions" className="questions-section bg-parchment text-espresso grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-[clamp(48px,7vw,110px)] items-start px-[5vw] py-[120px] border-b border-brass/15 max-lg:grid-cols-1 max-lg:gap-10 max-lg:px-6 max-lg:py-[72px]">
+      <div className="questions-head max-w-[460px] sticky top-24 max-lg:static">
         <Eyebrow>Fair doubts</Eyebrow>
-        <h2>Three honest questions.</h2>
-        <p className="questions-intro">
+        <h2 className="text-oxblood">Three honest questions.</h2>
+        <p className="questions-intro max-w-[380px] mt-[22px] text-espresso/60 text-[14px]">
           Asked at every market stall. Answered here, once, without a script.
         </p>
       </div>
-      <div className="questions-list" ref={listRef}>
+      <div className="questions-list grid" ref={listRef}>
         {[
-          ['Isn’t khadi coarse, more government emporium than luxury?', 'Khadi earned that reputation when it was sold as duty. Spun fine and woven slow, it drapes with the best of them. The difference is the hand, not the standard.'],
+          ['Isn\'t khadi coarse, more government emporium than luxury?', 'Khadi earned that reputation when it was sold as duty. Spun fine and woven slow, it drapes with the best of them. The difference is the hand, not the standard.'],
           ['Is this a charity project wearing a fashion label?', 'No. The women who weave for Rangvanat are paid for mastery, not pitied for circumstance. Craft dignity is the business model, not the marketing.'],
-          ['If I can’t buy it here, what am I joining?', 'A letter, and a front-row seat. Custodians hear first when an edit opens. Every piece begins with an enquiry, not a cart.'],
+          ['If I can\'t buy it here, what am I joining?', 'A letter, and a front-row seat. Custodians hear first when an edit opens. Every piece begins with an enquiry, not a cart.'],
         ].map(([doubt, answer]) => (
           <article
-            className="question-item"
+            className="question-item py-[30px] border-t border-brass/35"
             key={doubt}
             onMouseEnter={(e) => nudge(e, 6)}
             onMouseLeave={(e) => nudge(e, 0)}
           >
             <div className="question-body">
-              <h3 className="question-q">{doubt}</h3>
-              <p>{answer}</p>
+              <h3 className="question-q mb-2.5 text-[clamp(18px,1.8vw,20px)] font-semibold leading-[1.45] text-oxblood max-sm:text-[16px]">{doubt}</h3>
+              <p className="max-w-[560px] m-0 text-[14px] leading-[1.7] text-espresso/70">{answer}</p>
             </div>
           </article>
         ))}
@@ -882,12 +884,12 @@ const Faq = () => {
   }, [openIndex, reduced])
 
   return (
-    <section id="faq" className="section faq-section">
-      <div className="faq-head">
+    <section id="faq" className="faq-section bg-ivory grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-[clamp(48px,7vw,110px)] items-start px-[5vw] py-[120px] border-b border-brass/15 max-lg:grid-cols-1 max-lg:gap-10 max-lg:px-6 max-lg:py-[72px]">
+      <div className="faq-head max-w-[460px] sticky top-24 max-lg:static">
         <Eyebrow>Before you write</Eyebrow>
-        <h2>Questions, answered plainly.</h2>
+        <h2 className="text-oxblood">Questions, answered plainly.</h2>
       </div>
-      <div className="faq-list" ref={listRef}>
+      <div className="faq-list max-w-[860px]" ref={listRef}>
         {[
           ['What is khadi?', 'Cloth whose thread is spun by hand and woven on a handloom. No stage is mechanised. The slight irregularity is not a flaw. It is the signature.'],
           ['How is Rangvanat different from a khadi store?', 'A khadi store sells cloth. Rangvanat designs garments as edits. Each piece begins with a story and ends in a seam.'],
@@ -898,26 +900,27 @@ const Faq = () => {
         ].map(([question, answer], index) => {
           const open = openIndex === index
           return (
-            <div className={`faq-item${open ? ' is-open' : ''}`} key={question}>
+            <div className={`faq-item${open ? ' is-open' : ''} border-b border-brass/35`} key={question}>
               <button
                 type="button"
+                className="flex items-center justify-between gap-[18px] w-full p-5 bg-transparent border-0 text-espresso font-subhead text-[18px] font-semibold tracking-[0.01em] cursor-pointer text-left max-sm:text-[15px] max-sm:p-4"
                 aria-expanded={open}
                 aria-controls={`faq-panel-${index}`}
                 onClick={() => setOpenIndex((prev) => (prev === index ? null : index))}
               >
                 {question}
-                <span className="faq-plus" aria-hidden="true">
+                <span className="faq-plus shrink-0 text-brass text-[24px] leading-none transition-transform duration-300" aria-hidden="true">
                   +
                 </span>
               </button>
               <div
-                className="faq-answer"
+                className="faq-answer overflow-hidden"
                 id={`faq-panel-${index}`}
                 ref={(el) => {
                   panelsRef.current[index] = el
                 }}
               >
-                <p>{answer}</p>
+                <p className="max-w-[640px] mb-5 text-[14px] max-sm:text-[13px] max-sm:mb-4">{answer}</p>
               </div>
             </div>
           )
@@ -1023,25 +1026,25 @@ const Closing = () => {
   }
 
   return (
-    <section id="contact" className="closing-section grain" ref={sectionRef}>
-      <div className="closing-head">
+    <section id="contact" className="closing-section grain bg-parchment text-espresso grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-[clamp(48px,7vw,110px)] items-start px-[5vw] py-[120px] border-b border-brass/15 max-lg:grid-cols-1 max-lg:gap-10 max-lg:px-6 max-lg:py-[72px]" ref={sectionRef}>
+      <div className="closing-head max-w-[460px]">
         <div className="closing-reveal">
           <Eyebrow>Become a custodian</Eyebrow>
         </div>
-        <h2 className="closing-reveal">From Bardoli to the World.</h2>
-        <p className="closing-intro closing-reveal">
+        <h2 className="closing-reveal text-[clamp(52px,6.5vw,68px)] leading-[0.98] max-lg:text-[50px]">From Bardoli to the World.</h2>
+        <p className="closing-intro closing-reveal max-w-[380px] mt-[22px] text-espresso/80 text-[14px] leading-[1.7]">
           Not a subscriber. Not a follower. A custodian. Someone who looks after something worth
           looking after. Be the first to hear when a new Rangvanat story is ready to be told.
         </p>
       </div>
-      <div className="closing-form-wrap closing-reveal">
+      <div className="closing-form-wrap closing-reveal max-w-[560px]">
         <form
-          className={`closing-form${status === 'error' ? ' has-error' : ''}`}
+          className={`closing-form flex flex-col gap-[22px] mt-2${status === 'error' ? ' has-error' : ''}`}
           noValidate
           onSubmit={handleSubmit}
         >
-          <label htmlFor="newsletter-email">Email address</label>
-          <div className="closing-field">
+          <label className="text-brass font-subhead text-[11px] font-bold tracking-[0.18em] uppercase" htmlFor="newsletter-email">Email address</label>
+          <div className="closing-field relative border-b border-espresso/40">
             <input
               id="newsletter-email"
               name="newsletter-email"
@@ -1049,6 +1052,7 @@ const Closing = () => {
               placeholder="Your email address"
               required
               ref={inputRef}
+              className="w-full py-3 border-0 bg-transparent text-espresso text-[17px] outline-0 placeholder:text-espresso/60 max-sm:min-h-12"
               aria-invalid={status === 'error'}
               aria-describedby="closing-status"
               onFocus={() => growUnderline(true)}
@@ -1060,18 +1064,18 @@ const Closing = () => {
                 }
               }}
             />
-            <span className="closing-underline" aria-hidden="true" />
+            <span className="closing-underline absolute left-0 bottom-[-1px] w-full h-[2px] bg-brass transform scale-x-0 origin-left transition-transform" aria-hidden="true" />
           </div>
-          <Cta as="button" btnRef={buttonRef}>Join the Journey</Cta>
+          <Cta as="button" btnRef={buttonRef} className="self-start min-h-12 max-sm:w-full">Join the Journey</Cta>
         </form>
-        <p className="form-helper">One letter when a story is ready. Nothing else.</p>
+        <p className="form-helper mt-[14px] text-[12px]">One letter when a story is ready. Nothing else.</p>
         <p
           id="closing-status"
-          className={`form-status${status === 'joined' ? ' is-success' : ''}${status === 'error' ? ' is-error' : ''}`}
+          className={`form-status min-h-[25px] mt-[14px] text-espresso text-[13px]${status === 'joined' ? ' is-success' : ''}${status === 'error' ? ' is-error' : ''}`}
           aria-live="polite"
           ref={statusRef}
         >
-          {status === 'joined' && <span aria-hidden="true">✓</span>}
+          {status === 'joined' && <span className="text-brass font-bold mr-2" aria-hidden="true">✓</span>}
           {status === 'joined' ? 'Thank you. Welcome to the journey.' : ''}
           {status === 'error' ? errorMessage : ''}
         </p>
@@ -1117,23 +1121,23 @@ const Footer = () => {
   }, [reduced])
 
   return (
-    <footer className="footer grain">
-      <div className="care-label" ref={labelRef}>
-        <span className="care-tag care-item">
+    <footer className="footer grain bg-ivory text-espresso grid grid-cols-1 gap-[34px] overflow-hidden px-[5vw] pt-[104px] pb-16 max-lg:px-6 max-lg:py-[72px]">
+      <div className="care-label relative border-[1.5px] border-dashed border-brass/50 rounded-lg p-[48px_clamp(28px,4vw,56px)_44px] max-sm:p-[40px_20px_34px]" ref={labelRef}>
+        <span className="care-tag absolute -top-px -right-px p-[8px_16px] bg-brass text-espresso text-[9px] font-bold tracking-[0.14em] uppercase rounded-[0_7px_0_6px] max-sm:text-[8px] max-sm:p-[7px_12px]">
           <span className="care-tag-full">100% </span>Handwoven Khadi · Made in Bardoli
         </span>
-        <img src="/images/full-logo.svg" alt="Rangvanat" className="care-brand care-item" />
-        <p className="care-origin care-item my-10">
+        <img src="/images/full-logo.svg" alt="Rangvanat" className="care-brand care-item block w-[clamp(140px,15vw,190px)] h-auto max-sm:w-[115px]" />
+        <p className="care-origin care-item mt-2 text-brass text-[13px] tracking-[0.14em] uppercase">
           The art of weaving colours into fabric, and fabric into stories.
         </p>
-        <p className="care-promise care-item">Your address stays in Bardoli. No lists are sold, ever.</p>
-        <div className="care-grid">
+        <p className="care-promise care-item mt-[14px] max-w-[420px] text-espresso/65 text-[13px]">Your address stays in Bardoli. No lists are sold, ever.</p>
+        <div className="care-grid grid grid-cols-2 gap-[clamp(32px,5vw,72px)] mt-10 max-sm:grid-cols-1 max-sm:gap-[30px] max-sm:mt-7">
           <nav className="care-item" aria-label="Footer navigation">
-            <h3>Explore</h3>
+            <h3 className="mb-[18px] text-espresso text-[12px] tracking-[0.2em] uppercase">Explore</h3>
             {navLinks.map((link) => (
-              <a key={link} href={`#${link.toLowerCase()}`}>
+              <a key={link} href={`#${link.toLowerCase()}`} className="w-fit text-espresso/70 text-[13px] no-underline max-sm:flex max-sm:items-center max-sm:justify-between max-sm:w-full max-sm:p-[14px_0] max-sm:border-b max-sm:border-brass/15 max-sm:text-[14px]">
                 {link}
-                <span className="care-link-arrow" aria-hidden="true">
+                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
                   →
                 </span>
               </a>
@@ -1141,73 +1145,76 @@ const Footer = () => {
           </nav>
           <div className="care-info care-item">
             <div>
-              <h3>Reach Us</h3>
-              <p>
+              <h3 className="mb-[18px] text-espresso text-[12px] tracking-[0.2em] uppercase">Reach Us</h3>
+              <p className="mb-[10px] text-espresso/65 text-[13px]">
                 Laxmi Gopal Complex - B, H-1, 2nd Floor
                 <br />
                 Dhamdod Naka, Kadod Road
                 <br />
                 Bardoli - 394601, Dist. Surat, Gujarat
               </p>
-              <a href="tel:+918780572069">
+              <a href="tel:+918780572069" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
                 +91 87805 72069
-                <span className="care-link-arrow" aria-hidden="true">
+                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
                   →
                 </span>
               </a>
-              <a href="tel:+919825573657">
+              <a href="tel:+919825573657" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
                 +91 98255 73657
-                <span className="care-link-arrow" aria-hidden="true">
+                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
                   →
                 </span>
               </a>
-              <a href="tel:+919825219730">
+              <a href="tel:+919825219730" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
                 +91 98252 19730
-                <span className="care-link-arrow" aria-hidden="true">
+                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
                   →
                 </span>
               </a>
-              <a href="mailto:rangvanat@gmail.com">
+              <a href="mailto:rangvanat@gmail.com" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
                 rangvanat@gmail.com
-                <span className="care-link-arrow" aria-hidden="true">
+                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
                   →
                 </span>
               </a>
             </div>
             <div>
-              <h3>Follow Us</h3>
-              <div className="socials">
-                <a href="https://instagram.com/rangvanat" target="_blank" aria-label="Rangvanat on Instagram">
+              <h3 className="mb-[18px] text-espresso text-[12px] tracking-[0.2em] uppercase">Follow Us</h3>
+              <div className="socials flex gap-4">
+                <a href="https://instagram.com/rangvanat" target="_blank" aria-label="Rangvanat on Instagram" className="grid place-items-center w-9 h-9 border border-brass/50 text-espresso transition-colors duration-250 hover:bg-brass hover:border-brass hover:text-espresso">
                   <Camera size={18} />
                 </a>
                 <a
                   href="https://instagram.com/rangvanat"
                   target="_blank" 
                   aria-label="Rangvanat social profile"
+                  className="grid place-items-center w-9 h-9 border border-brass/50 text-espresso transition-colors duration-250 hover:bg-brass hover:border-brass hover:text-espresso"
                 >
                   <AtSign size={18} />
                 </a>
-                <a href="mailto:rangvanat@gmail.com" target="_blank" aria-label="Email">
+                <a href="mailto:rangvanat@gmail.com" target="_blank" aria-label="Email" className="grid place-items-center w-9 h-9 border border-brass/50 text-espresso transition-colors duration-250 hover:bg-brass hover:border-brass hover:text-espresso">
                   <Mail size={18} />
                 </a>
               </div>
             </div>
           </div>
         </div>
-        <p className="care-wash care-item">
+        <p className="care-wash flex justify-between gap-4 flex-wrap mt-[40px] pt-[16px] border-t border-brass/35 text-espresso/5 text-[10px] letter-spacing-[0.2em] uppercase max-sm:grid max-sm:grid-cols-3 max-sm:gap-4 max-sm:mt-[26px] max-sm:text-[8px] max-sm:letter-spacing-[0.1em] max-sm:border-t-[1.5px] max-sm:border-dashed max-sm:border-brass/40">
           <span>
-            <b>Wash</b> by hand
+            <b className="text-espresso/78 font-bold">Wash</b> by hand
           </span>
           <span>
-            <b>Dry</b> in the sun
+            <b className="text-espresso/78 font-bold">Dry</b> in the sun
           </span>
           <span>
-            <b>Wear</b> anywhere
+            <b className="text-espresso/78 font-bold">Wear</b> anywhere
           </span>
         </p>
-        <span className="care-thread" aria-hidden="true" />
+        <span className="care-thread absolute left-[22%] bottom-[-18px] w-px h-[18px] bg-brass/70 origin-top" aria-hidden="true">
+          <span className="absolute -left-[1.5px] -bottom-[2px] w-[4px] h-[4px] rounded-full bg-brass" />
+        </span>
       </div>
-      <div className="care-legal">
+      <div className="care-legal flex justify-between gap-24 flex-wrap text-espresso/5 text-[12px]">
         <span>© {new Date().getFullYear()} Rangvanat · Khadi Art by Rangvesh</span>
         <span>Handwoven in Bardoli</span>
       </div>
