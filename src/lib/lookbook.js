@@ -1,7 +1,7 @@
 /**
  * Rangvanat Lookbook — all products & collections from the official booklet.
  *
- * 📸 IMAGE LINKS:
+ * IMAGE LINKS:
  * Paste your Cloudinary URLs into the `image` field of each product below.
  * Empty ("") shows the styled khadi-weave placeholder frame automatically.
  * This is the ONLY file you need to edit to swap in images.
