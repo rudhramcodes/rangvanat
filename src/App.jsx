@@ -207,7 +207,10 @@ const Hero = ({ entered }) => {
   }, [])
 
   return (
-    <section id="top" className={`hero grain${entered ? ' is-live' : ''}`}>
+    <section
+      id="top"
+      className={`hero grain${entered ? ' is-live' : ''} relative grid place-items-stretch min-h-[100svh] mt-[-62px] overflow-hidden max-lg:grid-cols-1 max-lg:min-h-[100svh] max-lg:mt-[-58px]`}
+    >
       {HERO_VIDEO_URL &&
         (saveData ? (
           <img className="hero-video" src={imagePaths.hero} alt="" aria-hidden="true" />

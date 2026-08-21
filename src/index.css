@@ -586,9 +586,9 @@
     min-height: 100svh;
     margin-top: -62px;
     background:
-      radial-gradient(120% 90% at 78% 8%, rgba(179, 74, 26, 0.28), transparent 55%),
-      radial-gradient(100% 80% at 12% 100%, rgba(207, 161, 88, 0.14), transparent 60%),
-      linear-gradient(180deg, #3a120a 0%, var(--color-oxblood) 55%, #240a05 100%);
+      radial-gradient(120% 90% at 78% 8%, rgba(179, 74, 26, 0.10), transparent 55%),
+      radial-gradient(100% 80% at 12% 100%, rgba(207, 161, 88, 0.16), transparent 60%),
+      linear-gradient(180deg, var(--color-parchment) 0%, var(--color-ivory) 55%, var(--color-champagne) 100%);
     overflow: hidden;
   }
 
@@ -607,9 +607,9 @@
     inset: 0;
     z-index: 1;
     background:
-      linear-gradient(180deg, rgba(42, 14, 6, 0.5) 0%, rgba(42, 14, 6, 0.12) 30%, transparent 60%),
-      linear-gradient(90deg, rgba(42, 14, 6, 0.66) 0%, rgba(42, 14, 6, 0.22) 45%, transparent 78%),
-      linear-gradient(0deg, rgba(42, 14, 6, 0.6) 0%, transparent 45%);
+      linear-gradient(180deg, rgba(251, 246, 236, 0.72) 0%, rgba(251, 246, 236, 0.25) 35%, transparent 62%),
+      linear-gradient(90deg, rgba(251, 246, 236, 0.68) 0%, rgba(251, 246, 236, 0.28) 45%, transparent 80%),
+      linear-gradient(0deg, rgba(251, 246, 236, 0.55) 0%, transparent 48%);
     pointer-events: none;
   }
 
@@ -624,7 +624,7 @@
     gap: 22px;
     padding: 0 5vw max(84px, 9vh);
     text-align: left;
-    color: var(--color-ivory);
+    color: var(--color-espresso);
   }
 
   .hero-content .eyebrow {
@@ -668,10 +668,10 @@
     overflow: hidden;
     min-height: 280px;
     background-image:
-      linear-gradient(135deg, rgba(94, 27, 16, 0.36), rgba(42, 14, 6, 0.2)),
+      linear-gradient(135deg, rgba(94, 27, 16, 0.10), rgba(42, 14, 6, 0.05)),
       var(--asset),
-      repeating-linear-gradient(90deg, rgba(94, 27, 16, 0.12) 0 1px, transparent 1px 8px),
-      repeating-linear-gradient(0deg, rgba(232, 217, 174, 0.16) 0 1px, transparent 1px 12px),
+      repeating-linear-gradient(90deg, rgba(94, 27, 16, 0.06) 0 1px, transparent 1px 8px),
+      repeating-linear-gradient(0deg, rgba(207, 161, 88, 0.12) 0 1px, transparent 1px 12px),
       linear-gradient(135deg, var(--color-parchment), var(--color-champagne));
     background-position: center;
     background-size: cover;
@@ -687,7 +687,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(180deg, transparent 35%, rgba(42, 14, 6, 0.6));
+    background: linear-gradient(180deg, transparent 35%, rgba(42,14,6,0.18));
   }
 
   .hero-copy {
@@ -696,7 +696,7 @@
     bottom: calc(76px - 28px);
     z-index: 2;
     max-width: 620px;
-    color: var(--color-ivory);
+    color: var(--color-espresso);
   }
 
   @media (max-width: 1023px) {
@@ -748,7 +748,7 @@
   }
 
   h2 {
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-size: 54px;
     font-weight: 400;
     line-height: 1;
@@ -757,7 +757,7 @@
   }
 
   h3 {
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-family: var(--font-subhead);
     font-size: 24px;
     font-weight: 600;
@@ -766,7 +766,7 @@
 
   p {
     max-width: 62ch;
-    color: rgba(232, 217, 174, 0.76);
+    color: rgba(42, 14, 6, 0.75);
     font-size: 15px;
     line-height: 1.6;
   }
@@ -781,8 +781,8 @@
     flex-direction: column;
     justify-content: center;
     padding: 72px 5vw;
-    background: var(--color-oxblood);
-    color: var(--color-champagne);
+    background: var(--color-parchment);
+    color: var(--color-espresso);
   }
 
   .hero-panel h2,
