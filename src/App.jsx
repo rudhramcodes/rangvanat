@@ -244,7 +244,7 @@ const Story = () => {
   const copyRef = useReveal({ variant: 'fadeUp', delay: 0.15 })
 
   return (
-    <section id="story" className="section story-section">
+    <section id="story" className="bg-parchment text-espresso grid grid-cols-[0.9fr_1.1fr] gap-[9vw] items-start min-h-[360px] px-[5vw] py-[120px] border-b border-brass/15 max-lg:grid-cols-1 max-lg:gap-10 max-lg:gap-7 max-lg:px-6 max-lg:py-[72px]">
       <div ref={headRef}>
         <Eyebrow>Before it was fashion</Eyebrow>
         <h2>It was freedom.</h2>
@@ -264,9 +264,9 @@ const Heritage = () => {
   const copyRef = useReveal({ variant: 'fadeUp', delay: 0.2 })
 
   return (
-    <section id="heritage" className="section heritage-section">
-      <div className="heritage-body">
-        <div className="heritage-text">
+    <section id="heritage" className="bg-ivory px-[5vw] py-[120px] border-b border-brass/15 max-lg:px-6 max-lg:py-[72px]">
+      <div className="heritage-body grid grid-cols-[minmax(0,1fr)_minmax(320px,0.9fr)] gap-[8vw] items-center max-lg:grid-cols-1 max-lg:gap-10 max-lg:gap-9">
+        <div className="heritage-text flex flex-col gap-9">
           <div className="heritage-head" ref={headRef}>
             <Eyebrow>Where we come from</Eyebrow>
             <h2>A legacy woven in Bardoli.</h2>
@@ -280,17 +280,17 @@ const Heritage = () => {
             <Cta href="#craft">Read the Story</Cta>
           </div>
         </div>
-        <div className="heritage-media" ref={mediaRef}>
+        <div className="heritage-media relative pb-16 pl-12 max-lg:pb-12 max-lg:pl-7 max-sm:pb-10 max-sm:pl-5" ref={mediaRef}>
           <Asset
             src={imagePaths.heritageMain}
             label="heritage-bardoli-charkha.jpg"
-            className="framed-image"
+            className="framed-image min-h-[460px] max-lg:min-h-[360px] max-sm:min-h-[320px]"
             alt="Bardoli heritage charkha illustration"
           />
           <Asset
             src={imagePaths.heritageDetail}
             label="heritage-cotton-thread.jpg"
-            className="heritage-detail"
+            className="heritage-detail absolute left-0 bottom-0 w-[42%] min-h-[200px] rotate-2 origin-bottom-left shadow-[0_18px_40px_rgba(0,0,0,0.35)] max-lg:w-[46%] max-lg:min-h-[150px] max-sm:w-1/2 max-sm:min-h-[120px]"
             alt="Cotton thread texture detail"
           />
         </div>
@@ -300,30 +300,31 @@ const Heritage = () => {
 }
 
 const FounderNote = () => (
-  <section id="founder" className="quote-section">
-    <div className="founder-panel">
+  <section id="founder" className="quote-section relative grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] items-center gap-[clamp(48px,6vw,96px)] min-h-[560px] px-[6vw] py-[120px] bg-parchment text-espresso overflow-clip border-b border-brass/15 max-lg:grid-cols-1 max-lg:place-items-center max-lg:text-center max-lg:gap-11 max-lg:min-h-0 max-lg:px-6 max-lg:py-[72px] max-sm:px-5 max-sm:py-14 max-sm:gap-9">
+    <div className="founder-panel justify-self-end w-[min(420px,100%)] pt-6 px-6 bg-terracotta rounded-t-[210px] max-lg:justify-self-center max-lg:w-[min(320px,100%)] max-sm:w-[min(260px,100%)] max-sm:p-[18px_18px_0] max-sm:rounded-t-[150px]">
       <div className="founder-arch">
         <Asset
           src="/images/founder-rachana-kapadia.jpg"
           label="founder-rachana-kapadia.jpg"
           alt="Rachana Kapadia portrait"
+          className="w-full h-[440px] min-h-0 rounded-t-[190px] shadow-none max-lg:h-[340px] max-sm:h-[280px] max-lg:rounded-t-[135px] max-sm:rounded-t-[100px]"
         />
       </div>
     </div>
-    <div className="founder-quote">
-      <p className="founder-eyebrow">From the Founder</p>
-      <blockquote className="tracking-tight">
+    <div className="founder-quote relative z-[1] p-0">
+      <p className="founder-eyebrow mb-[18px] text-heritage font-subhead text-[12px] font-bold tracking-[0.22em] uppercase">From the Founder</p>
+      <blockquote className="tracking-tight max-w-[660px] m-0 text-oxblood font-subhead text-[34px] leading-[1.28] tracking-[0.01em] max-lg:text-[30px] max-sm:text-[26px] max-sm:leading-[1.3]">
         "I did not want to just make clothes. I wanted to fold a piece of Bardoli's soil, a piece of my
         grandmother's stories, into every seam I send out into the world. Khadi taught me that slow is
         not a weakness. It is where the meaning actually lives."
       </blockquote>
-      <div className="founder">
+      <div className="founder flex items-center justify-start gap-[18px] mt-[34px] max-lg:justify-center max-sm:mt-7">
         <p>
-          <strong>Rachana Kapadia</strong>
-          <span>Designer, Founder & Managing Director</span>
+          <strong className="text-oxblood font-subhead text-[13px] font-bold tracking-[0.14em] uppercase">Rachana Kapadia</strong>
+          <span className="block text-espresso/70 text-[12px]">Designer, Founder & Managing Director</span>
         </p>
       </div>
-      <Cta href="#craft">
+      <Cta href="#craft" className="mt-9 max-lg:mt-8">
         Begin with the Story
       </Cta>
     </div>
