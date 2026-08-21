@@ -118,24 +118,24 @@ const Header = ({ menuOpen, setMenuOpen }) => {
   }
   return (
     <>
-      <header className="site-header">
-        <a className="logo-link" href="/" aria-label="Rangvanat home">
-          <img src="/images/logo-only.svg" alt="Rangvanat" />
+      <header className="sticky top-0 z-40 grid grid-cols-[1fr_auto_1fr] items-center min-h-[62px] px-[6vw] border-b border-brass/30 bg-ivory/90 text-espresso backdrop-blur-[16px] max-lg:grid-cols-[1fr_auto] max-lg:min-h-[58px] max-lg:px-5">
+        <a className="logo-link flex items-center gap-3 text-espresso no-underline" href="/" aria-label="Rangvanat home">
+          <img src="/images/logo-only.svg" alt="Rangvanat" className="w-10 h-10" />
         </a>
 
-        <nav className="desktop-nav" aria-label="Primary navigation">
+        <nav className="desktop-nav flex items-center justify-center w-full gap-[34px] max-lg:hidden" aria-label="Primary navigation">
           {navLinks.map((link, index) => (
-            <a key={link} href={navHref(link)}>
-              <span className="nav-index">{String(index + 1).padStart(2, '0')}</span>
+            <a key={link} href={navHref(link)} className="relative inline-flex items-baseline px-0 py-1 text-[11px] tracking-[0.18em] uppercase no-underline transition-colors duration-200 hover:text-brass">
+              <span className="nav-index hidden">{String(index + 1).padStart(2, '0')}</span>
               {link}
             </a>
           ))}
         </nav>
 
-        <div className="header-actions">
+        <div className="header-actions flex items-center justify-end max-lg:hidden">
           <Cta href="/?page=collections" size="sm">Explore</Cta>
           <button
-            className="menu-toggle"
+            className="menu-toggle hidden w-11 h-11 mr-[-11px] max-lg:grid grid place-items-center border-0 bg-transparent text-inherit cursor-pointer active:scale-[0.88]"
             onClick={() => setMenuOpen(true)}
             aria-controls="mobile-menu"
             aria-expanded={menuOpen}
@@ -167,7 +167,7 @@ const Header = ({ menuOpen, setMenuOpen }) => {
               style={{ '--i': index }}
               onClick={() => setMenuOpen(false)}
             >
-              <span className="nav-index">{String(index + 1).padStart(2, '0')}</span>
+              <span className="nav-index font-sans text-[11px] font-semibold align-super">{String(index + 1).padStart(2, '0')}</span>
               {link}
             </a>
           ))}

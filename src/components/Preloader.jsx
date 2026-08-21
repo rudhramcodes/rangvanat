@@ -86,7 +86,7 @@ const Preloader = ({ isLoading, onDone }) => {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-oxblood"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-8 bg-ivory"
     >
       <div className="preloader-grain" aria-hidden />
       <div ref={wheelRef}>
@@ -94,7 +94,7 @@ const Preloader = ({ isLoading, onDone }) => {
       </div>
       <p
         ref={brandRef}
-        className="preloader-brand font-subhead text-[12px] font-semibold uppercase tracking-[0.5em] text-brass"
+        className="preloader-brand font-subhead text-[12px] font-semibold uppercase tracking-[0.5em] text-espresso"
       >
         {BRAND.split('').map((ch, i) => (
           <span key={i} className="inline-block opacity-0">
