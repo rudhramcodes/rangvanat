@@ -2507,6 +2507,7 @@
   .lookbook-page {
     min-height: 100svh;
     padding: 64px 5vw 96px;
+    background: var(--color-ivory);
   }
 
   .lookbook-hero {
@@ -2531,8 +2532,9 @@
     z-index: 30;
     margin: 0 -5vw;
     padding: 16px 5vw 14px;
-    background: var(--color-oxblood);
+    background: var(--color-ivory);
     border-bottom: 1px solid rgba(207, 161, 88, 0.22);
+    backdrop-filter: blur(16px);
   }
 
   .lookbook-fab {
@@ -2546,9 +2548,9 @@
     height: 54px;
     border: 1px solid rgba(207, 161, 88, 0.55);
     border-radius: 50%;
-    background: var(--color-oxblood);
-    color: var(--color-champagne);
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45);
+    background: var(--color-espresso);
+    color: var(--color-ivory);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     opacity: 0;
     transform: scale(0.6);
@@ -2558,7 +2560,7 @@
 
   .lookbook-fab:hover {
     background: var(--color-champagne);
-    color: var(--color-oxblood);
+    color: var(--color-espresso);
     border-color: var(--color-champagne);
   }
 
@@ -2575,7 +2577,7 @@
     height: 10px;
     border-radius: 50%;
     background: var(--color-brass);
-    border: 2px solid var(--color-oxblood);
+    border: 2px solid var(--color-espresso);
   }
 
   .lookbook-toolbar-row {
@@ -2590,7 +2592,7 @@
     align-items: center;
     flex: 1;
     max-width: 420px;
-    color: rgba(232, 217, 174, 0.55);
+    color: rgba(42, 14, 6, 0.55);
   }
 
   .lookbook-search > svg {
@@ -2603,10 +2605,10 @@
     width: 100%;
     min-height: 42px;
     padding: 0 38px 0 42px;
-    border: 1px solid rgba(207, 161, 88, 0.28);
+    border: 1px solid rgba(207, 161, 88, 0.4);
     border-radius: 2px;
-    background: rgba(42, 14, 6, 0.4);
-    color: var(--color-champagne);
+    background: var(--color-ivory);
+    color: var(--color-espresso);
     font-size: 14px;
     outline: none;
     transition: border-color 0.25s ease;
@@ -2617,7 +2619,7 @@
   }
 
   .lookbook-search input::placeholder {
-    color: rgba(232, 217, 174, 0.45);
+    color: rgba(42, 14, 6, 0.45);
   }
 
   .lookbook-search input::-webkit-search-cancel-button {
@@ -2633,7 +2635,7 @@
     height: 26px;
     border: 0;
     background: none;
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     cursor: pointer;
     border-radius: 50%;
   }
@@ -2646,7 +2648,7 @@
     display: flex;
     gap: 4px;
     margin-left: auto;
-    border: 1px solid rgba(207, 161, 88, 0.28);
+    border: 1px solid rgba(207, 161, 88, 0.3);
     border-radius: 2px;
     padding: 3px;
   }
@@ -2658,15 +2660,15 @@
     height: 34px;
     border: 0;
     background: none;
-    color: rgba(232, 217, 174, 0.55);
+    color: rgba(42, 14, 6, 0.55);
     cursor: pointer;
     border-radius: 1px;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   .lookbook-layout-toggle button.is-active {
-    background: var(--color-champagne);
-    color: var(--color-oxblood);
+    background: var(--color-espresso);
+    color: var(--color-ivory);
   }
 
   .lookbook-mobile-filters-toggle {
@@ -2675,10 +2677,10 @@
     gap: 8px;
     min-height: 42px;
     padding: 0 14px;
-    border: 1px solid rgba(207, 161, 88, 0.28);
+    border: 1px solid rgba(207, 161, 88, 0.3);
     border-radius: 2px;
     background: none;
-    color: var(--color-champagne);
+    color: var(--color-espresso);
     font-size: 12px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -2732,7 +2734,7 @@
     border: 1px solid rgba(207, 161, 88, 0.3);
     border-radius: 999px;
     background: none;
-    color: rgba(232, 217, 174, 0.72);
+    color: rgba(42, 14, 6, 0.7);
     font-size: 12px;
     letter-spacing: 0.06em;
     cursor: pointer;
@@ -2744,13 +2746,13 @@
 
   .filter-chip:hover {
     border-color: var(--color-brass);
-    color: var(--color-champagne);
+    color: var(--color-espresso);
   }
 
   .filter-chip.is-active {
-    background: var(--color-champagne);
-    border-color: var(--color-champagne);
-    color: var(--color-oxblood);
+    background: var(--color-espresso);
+    border-color: var(--color-espresso);
+    color: var(--color-ivory);
   }
 
   .filter-chip-count {
@@ -2772,7 +2774,7 @@
   }
 
   .lookbook-clear:hover {
-    color: var(--color-champagne);
+    color: var(--color-heritage);
   }
 
   .lookbook-results-meta {
@@ -2785,7 +2787,7 @@
     font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: rgba(232, 217, 174, 0.55);
+    color: rgba(42, 14, 6, 0.55);
   }
 
   .lookbook-results-collection {
@@ -2856,7 +2858,7 @@
   }
 
   .lookbook-card-col {
-    color: rgba(232, 217, 174, 0.5);
+    color: rgba(42, 14, 6, 0.5);
   }
 
   .lookbook-card h3 {
@@ -2868,7 +2870,7 @@
     margin: 0 0 10px;
     font-size: 13px;
     font-style: italic;
-    color: rgba(232, 217, 174, 0.62);
+    color: rgba(42, 14, 6, 0.6);
   }
 
   .lookbook-card-enquire {
@@ -2896,13 +2898,13 @@
     align-items: center;
     padding: 20px;
     border: 1px solid rgba(207, 161, 88, 0.18);
-    background: rgba(42, 14, 6, 0.25);
+    background: var(--color-ivory);
     transition: border-color 0.25s ease, background-color 0.25s ease;
   }
 
   .lookbook-layout-list .lookbook-card:hover {
     border-color: rgba(207, 161, 88, 0.5);
-    background: rgba(42, 14, 6, 0.4);
+    background: var(--color-champagne);
   }
 
   .lookbook-layout-list .lookbook-card-asset {

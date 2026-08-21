@@ -177,13 +177,13 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
   const hasFilters = query !== '' || collection !== 'all' || category !== 'all'
 
   return (
-    <div className="lookbook-page">
+    <div className="lookbook-page min-h-[100svh] p-[64px_5vw_96px] bg-ivory max-lg:p-[48px_24px_72px] max-sm:p-[40px_20px_72px]">
       {/* Page header */}
       <header className="lookbook-hero">
         <div className="lookbook-hero-inner">
           <p className="eyebrow">The Rangvanat Lookbook</p>
-          <h1>Where Heritage Meets the Runway.</h1>
-          <p className="lookbook-hero-intro">
+          <h1 className="mt-[22px] m-0 text-[clamp(56px,7.5vw,96px)] leading-[0.92]">Where Heritage Meets the Runway.</h1>
+          <p className="lookbook-hero-intro m-0 max-w-[540px] max-sm:mb-[36px]">
             Every piece carries a lineage. Every thread speaks of heritage. Browse the
             collections, filter by craft, and find the story you want to wear.
           </p>
@@ -191,16 +191,17 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
       </header>
 
       {/* Filter bar */}
-      <div className="lookbook-toolbar" ref={toolbarRef} inert={toolbarHidden}>
-        <div className="lookbook-toolbar-row">
-          <label className="lookbook-search">
-            <Search size={16} aria-hidden="true" />
+      <div className="lookbook-toolbar sticky top-[62px] z-30 m-0-[-5vw] p-[16px_5vw_14px] bg-ivory border-b border-brass/20 backdrop-blur-[16px] max-lg:top-[58px] max-lg:mx-[-24px] max-lg:px-6 max-lg:py-3 max-sm:top-[58px]" ref={toolbarRef} inert={toolbarHidden}>
+        <div className="lookbook-toolbar-row flex items-center gap-4 max-sm:flex-wrap">
+          <label className="lookbook-search relative flex items-center flex-1 max-w-[420px] text-espresso/55 max-sm:max-w-none max-sm:flex-[1_1_100%] max-sm:order-1">
+            <Search size={16} aria-hidden="true" className="absolute left-[14px] pointer-events-none" />
             <input
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search pieces, codes, crafts…"
               aria-label="Search the lookbook"
+              className="w-full min-h-[42px] p-[0_38px_0_42px] border border-brass/40 rounded-[2px] bg-ivory text-espresso text-[14px] outline-none transition-colors duration-200 placeholder:text-espresso/45 [&::-webkit-search-cancel-button]:hidden"
             />
             {query && (
               <button
@@ -209,13 +210,14 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
                   scrollToResults()
                 }}
                 aria-label="Clear search"
+                className="absolute right-[10px] grid place-items-center w-[26px] h-[26px] border-0 bg-none text-espresso cursor-pointer rounded-full hover:bg-brass/20"
               >
                 <X size={14} />
               </button>
             )}
           </label>
 
-          <div className="lookbook-layout-toggle" role="group" aria-label="View layout">
+          <div className="lookbook-layout-toggle flex gap-1 ml-auto border border-brass/30 rounded-[2px] p-[3px] max-sm:order-2" role="group" aria-label="View layout">
             <button
               type="button"
               className={layout === 'grid' ? 'is-active' : ''}
@@ -238,24 +240,24 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
 
           <button
             type="button"
-            className="lookbook-mobile-filters-toggle"
+            className="lookbook-mobile-filters-toggle hidden max-sm:inline-flex items-center gap-2 min-h-[42px] p-0-[14px] border border-brass/30 rounded-[2px] bg-none text-espresso text-[12px] tracking-[0.1em] uppercase cursor-pointer relative max-sm:order-3"
             onClick={() => setMobileFiltersOpen((v) => !v)}
             aria-expanded={mobileFiltersOpen}
             aria-controls="lookbook-filters"
           >
             <SlidersHorizontal size={15} />
             Filters
-            {hasFilters && <span className="lookbook-filter-dot" aria-hidden="true" />}
+            {hasFilters && <span className="lookbook-filter-dot absolute -top-1 -right-1 w-[9px] h-[9px] rounded-full bg-brass" aria-hidden="true" />}
           </button>
         </div>
 
         <div
           id="lookbook-filters"
-          className={`lookbook-filters${mobileFiltersOpen ? ' is-open' : ''}`}
+          className={`lookbook-filters grid gap-[18px] mt-[14px] ${mobileFiltersOpen ? 'is-open' : ''} max-sm:hidden max-sm:is-open:grid`}
         >
-          <div className="lookbook-filter-group">
-            <span className="lookbook-filter-label">Collection</span>
-            <div className="filter-chips">
+          <div className="lookbook-filter-group grid grid-cols-[110px_1fr] gap-4 items-start max-sm:grid-cols-1 max-sm:gap-2.5">
+            <span className="lookbook-filter-label pt-[9px] text-[10px] tracking-[0.22em] uppercase text-brass">Collection</span>
+            <div className="filter-chips flex flex-wrap gap-2">
               <FilterChip
                 active={collection === 'all'}
                 onClick={() => selectCollection('all')}
@@ -276,9 +278,9 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
             </div>
           </div>
 
-          <div className="lookbook-filter-group">
-            <span className="lookbook-filter-label">Category</span>
-            <div className="filter-chips">
+          <div className="lookbook-filter-group grid grid-cols-[110px_1fr] gap-4 items-start max-sm:grid-cols-1 max-sm:gap-2.5">
+            <span className="lookbook-filter-label pt-[9px] text-[10px] tracking-[0.22em] uppercase text-brass">Category</span>
+            <div className="filter-chips flex flex-wrap gap-2">
               <FilterChip active={category === 'all'} onClick={() => selectCategory('all')}>
                 All
               </FilterChip>
@@ -296,7 +298,7 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
           </div>
 
           {hasFilters && (
-            <button type="button" className="lookbook-clear" onClick={clearFilters}>
+            <button type="button" className="lookbook-clear justify-self-end border-0 bg-none text-brass text-[12px] tracking-[0.08em] uppercase underline underline-offset-4 cursor-pointer hover:text-heritage" onClick={clearFilters}>
               Clear all filters
             </button>
           )}
@@ -304,10 +306,10 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
       </div>
 
       {/* Results meta */}
-      <div className="lookbook-results-meta">
+      <div className="lookbook-results-meta flex items-baseline justify-between gap-4 flex-wrap p-[22px_0_8px] text-[11px] tracking-[0.18em] uppercase text-espresso/55">
         <span>{resultLabel}</span>
         {collection !== 'all' && getCollection(collection) && (
-          <span className="lookbook-results-collection">
+          <span className="lookbook-results-collection text-brass text-[12px] tracking-[0.04em] normal-case">
             {getCollection(collection).mood}
           </span>
         )}
@@ -317,34 +319,37 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
       {filtered.length > 0 ? (
         <div
           ref={gridRef}
-          className={`lookbook-results lookbook-layout-${layout}`}
+          className={`lookbook-results grid gap-7 mt-3 ${layout === 'grid' ? 'lookbook-layout-grid grid-cols-3 items-start max-lg:grid-cols-2 max-sm:grid-cols-1' : 'lookbook-layout-list grid-cols-1 gap-5'}`}
         >
           {filtered.map((product) => {
             const col = getCollection(product.collection)
             return (
               <a
-                className="lookbook-card"
+                className={`lookbook-card flex flex-col cursor-pointer ${layout === 'list' ? 'grid grid-cols-[220px_1fr] gap-[28px] items-center p-[20px] border border-brass/18 bg-ivory transition-colors duration-250 hover:border-brass/50 hover:bg-champagne' : ''}`}
                 key={product.id}
                 href={`/?page=product&id=${product.id}`}
                 aria-label={`View ${product.name}`}
               >
-                <Asset product={product} />
-                <div className="lookbook-card-body">
-                  <span className="lookbook-card-cat">{product.category}</span>
-                  {col && <span className="lookbook-card-col">{col.name}</span>}
-                  <h3>{product.name}</h3>
-                  <p>{product.tagline}</p>
-                  <span className="lookbook-card-enquire">View details →</span>
+                <Asset
+                  product={product}
+                  className={layout === 'grid' ? 'aspect-[3/4]' : 'aspect-[4/5]'}
+                />
+                <div className="lookbook-card-body pt-4 max-sm:pt-0">
+                  <span className="lookbook-card-cat inline-block text-[10px] tracking-[0.16em] uppercase text-brass mr-2.5">{product.category}</span>
+                  {col && <span className="lookbook-card-col inline-block text-[10px] tracking-[0.16em] uppercase text-espresso/50">{col.name}</span>}
+                  <h3 className="mt-[10px] mb-[6px] text-[22px] max-sm:text-[28px]">{product.name}</h3>
+                  <p className="m-0 mb-[10px] text-[13px] italic text-espresso/60 max-sm:text-[14px] max-sm:max-w-[520px]">{product.tagline}</p>
+                  <span className="lookbook-card-enquire text-[11px] tracking-[0.14em] uppercase text-brass transition-[letter-spacing] duration-200 group-hover:tracking-[0.2em] max-sm:text-[14px]">View details →</span>
                 </div>
               </a>
             )
           })}
         </div>
       ) : (
-        <div className="lookbook-empty">
+        <div className="lookbook-empty grid justify-items-start gap-[14px] p-[72px_0]">
           <p className="eyebrow">No matches</p>
-          <h2>Nothing wove its way in.</h2>
-          <p>
+          <h2 className="m-0 text-[clamp(40px,4.5vw,60px)]">Nothing wove its way in.</h2>
+          <p className="max-w-[460px] m-0 mb-[12px]">
             No pieces match your search. Try a different keyword, or clear the filters to see
             the full lookbook.
           </p>
@@ -357,7 +362,7 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
       <button
         type="button"
         ref={fabRef}
-        className="lookbook-fab"
+        className="lookbook-fab fixed right-6 bottom-6 z-50 grid place-items-center w-13.5 h-13.5 border border-brass/55 rounded-full bg-espresso text-ivory shadow-[0_14px_34px_rgba(0,0,0,0.15)] cursor-pointer opacity-0 scale-[0.6] pointer-events-none transition-all duration-200 max-sm:right-[18px] max-sm:bottom-[calc(18px+env(safe-area-inset-bottom))] max-sm:w-[50px] max-sm:h-[50px]"
         onClick={() => {
           lastScrollYRef.current = window.scrollY
           suppressHideUntilRef.current = performance.now() + 700
@@ -369,7 +374,7 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
         aria-controls="lookbook-filters"
       >
         <SlidersHorizontal size={18} aria-hidden="true" />
-        {hasFilters && <span className="lookbook-fab-dot" aria-hidden="true" />}
+        {hasFilters && <span className="lookbook-fab-dot absolute top-[4px] right-[4px] w-[10px] h-[10px] rounded-full bg-brass border-2 border-espresso" aria-hidden="true" />}
       </button>
     </div>
   )
