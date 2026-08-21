@@ -453,10 +453,10 @@
   }
 
   .cta {
-    --cta-fg: var(--color-oxblood);
-    --cta-border: var(--color-champagne);
-    --cta-fill: var(--color-champagne);
-    --cta-fill-fg: var(--color-oxblood);
+    --cta-fg: var(--color-ivory);
+    --cta-border: var(--color-espresso);
+    --cta-fill: var(--color-espresso);
+    --cta-fill-fg: var(--color-ivory);
 
     position: relative;
     isolation: isolate;

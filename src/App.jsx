@@ -85,26 +85,30 @@ const Cta = ({ children, href = '#collections', size = 'md', as, btnRef, style }
         {ch === ' ' ? '\u00A0' : ch}
       </span>
     ))
+  const sizeClass = {
+    md: 'min-h-[44px] px-[26px] text-[14px] tracking-[0.14em] gap-3',
+    lg: 'min-h-[56px] px-[36px] text-[16px] tracking-[0.16em] max-sm:min-h-[48px] max-sm:px-[26px] max-sm:text-[14px]',
+    sm: 'min-h-[36px] px-[18px] text-[12px] tracking-[0.12em] max-sm:min-h-[34px] max-sm:px-[14px] max-sm:text-[11px]',
+  }
   const inner = (
     <>
       <span className="cta-sheen" aria-hidden="true" />
       <span className="cta-label">
         <span className="cta-text">{chars}</span>
-        <span className="cta-text cta-text--ghost" aria-hidden="true">
-          {chars}
-        </span>
+        <span className="cta-text cta-text--ghost" aria-hidden="true">{chars}</span>
       </span>
     </>
   )
+  const baseClass = `cta ${sizeClass[size]} relative inline-flex items-center justify-center border border-[var(--cta-border)] rounded-[1px] bg-[var(--cta-fill)] text-[var(--cta-fg)] font-display font-semibold tracking-[0.14em] uppercase whitespace-nowrap cursor-pointer overflow-hidden will-change-transform active:translate-y-px transition-transform duration-100 max-sm:min-h-[40px] max-sm:px-5 max-sm:gap-2.5 max-sm:text-[12px] max-sm:tracking-[0.12em]`
   if (as === 'button') {
     return (
-      <button type="submit" className={`cta cta-${size}`} ref={btnRef} style={style}>
+      <button type="submit" className={baseClass} ref={btnRef} style={style}>
         {inner}
       </button>
     )
   }
   return (
-    <a className={`cta cta-${size}`} href={href} style={style}>
+    <a className={baseClass} href={href} style={style}>
       {inner}
     </a>
   )
