@@ -77,7 +77,7 @@ const Eyebrow = ({ children, style }) => (
   </p>
 )
 
-const Cta = ({ children, href = '#collections', size = 'md', as, btnRef, style }) => {
+const Cta = ({ children, href = '#collections', size = 'md', as, btnRef, style, className, onClick }) => {
   const chars = String(children)
     .split('')
     .map((ch, i) => (
@@ -93,22 +93,24 @@ const Cta = ({ children, href = '#collections', size = 'md', as, btnRef, style }
   const inner = (
     <>
       <span className="cta-sheen" aria-hidden="true" />
-      <span className="cta-label">
+      <span className="cta-label font-subhead tracking-[1.2px] font-semibold text-[var(--cta-fill-fg)]">
         <span className="cta-text">{chars}</span>
         <span className="cta-text cta-text--ghost" aria-hidden="true">{chars}</span>
       </span>
     </>
   )
   const baseClass = `cta ${sizeClass[size]} relative inline-flex items-center justify-center border border-[var(--cta-border)] rounded-[1px] bg-[var(--cta-fill)] text-[var(--cta-fg)] font-display font-semibold tracking-[0.14em] uppercase whitespace-nowrap cursor-pointer overflow-hidden will-change-transform active:translate-y-px transition-transform duration-100 max-sm:min-h-[40px] max-sm:px-5 max-sm:gap-2.5 max-sm:text-[12px] max-sm:tracking-[0.12em]`
+  const mergedStyle = { ...style }
+  const fullClass = `${baseClass} ${className || ''}`
   if (as === 'button') {
     return (
-      <button type="submit" className={baseClass} ref={btnRef} style={style}>
+      <button type="submit" className={fullClass} ref={btnRef} style={mergedStyle} onClick={onClick}>
         {inner}
       </button>
     )
   }
   return (
-    <a className={baseClass} href={href} style={style}>
+    <a className={fullClass} href={href} style={mergedStyle} onClick={onClick}>
       {inner}
     </a>
   )
@@ -136,8 +138,8 @@ const Header = ({ menuOpen, setMenuOpen }) => {
           ))}
         </nav>
 
-        <div className="header-actions flex items-center justify-end max-lg:hidden">
-          <Cta href="/?page=collections" size="sm">Explore</Cta>
+        <div className="header-actions flex items-center justify-end max-lg:flex">
+          <Cta href="/?page=collections" size="sm" className="max-lg:hidden">Explore</Cta>
           <button
             className="menu-toggle hidden w-11 h-11 mr-[-11px] max-lg:grid grid place-items-center border-0 bg-transparent text-inherit cursor-pointer active:scale-[0.88]"
             onClick={() => setMenuOpen(true)}
@@ -178,7 +180,7 @@ const Header = ({ menuOpen, setMenuOpen }) => {
         </nav>
         <div className="mobile-menu-foot">
           <p>Bardoli · Gujarat · India</p>
-          <Cta href="#contact" size="sm">
+          <Cta href="#contact" size="sm" onClick={() => setMenuOpen(false)}>
             Join the Journey
           </Cta>
         </div>
@@ -227,11 +229,11 @@ const Hero = ({ entered }) => {
             aria-hidden="true"
           />
         ))}
-      <div className="hero-content">
+<div className="hero-content">
         <Eyebrow style={{ '--h': 0 }}>Khadi Art by Rangvesh</Eyebrow>
-        <h1 style={{ '--h': 1 }}>Every Thread Remembers.</h1>
-        <p style={{ '--h': 2 }}>Hand-spun khadi, patient colour, and stories made wearable.</p>
-        <Cta href="#collections" size="lg" style={{ '--h': 3 }}>
+        <h1 style={{ '--h': 1 }} className="text-ivory">Every Thread Remembers.</h1>
+        <p style={{ '--h': 2 }} className="text-ivory">Hand-spun khadi, patient colour, and stories made wearable.</p>
+        <Cta href="#collections" size="lg" style={{ '--h': 3, '--cta-fill': 'var(--color-ivory)', '--cta-fg': 'var(--color-oxblood)', '--cta-border': 'var(--color-ivory)', '--cta-fill-fg': 'var(--color-oxblood)' }}>
           Discover Rangvanat
         </Cta>
       </div>
@@ -277,7 +279,7 @@ const Heritage = () => {
               was once the loudest thing a person could say here. We did not inherit khadi as a
               fabric. We inherited it as a vow to finish.
             </p>
-            <Cta href="#craft">Read the Story</Cta>
+            <Cta href="#craft" className="mt-5">Read the Story</Cta>
           </div>
         </div>
         <div className="heritage-media relative pb-16 pl-12 max-lg:pb-12 max-lg:pl-7 max-sm:pb-10 max-sm:pl-5" ref={mediaRef}>
@@ -290,7 +292,7 @@ const Heritage = () => {
           <Asset
             src={imagePaths.heritageDetail}
             label="heritage-cotton-thread.jpg"
-            className="heritage-detail absolute left-0 bottom-0 w-[42%] min-h-[200px] rotate-2 origin-bottom-left shadow-[0_18px_40px_rgba(0,0,0,0.35)] max-lg:w-[46%] max-lg:min-h-[150px] max-sm:w-1/2 max-sm:min-h-[120px]"
+            className="heritage-detail absolute left-0 bottom-0 w-[42%] min-h-[200px] origin-bottom-left shadow-[0_18px_40px_rgba(0,0,0,0.35)] max-lg:w-[46%] max-lg:min-h-[150px] max-sm:w-1/2 max-sm:min-h-[120px]"
             alt="Cotton thread texture detail"
           />
         </div>
