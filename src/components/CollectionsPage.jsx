@@ -132,6 +132,7 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
   const [collection, setCollection] = useState(initialCollection)
   const [category, setCategory] = useState('all')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [desktopFiltersOpen, setDesktopFiltersOpen] = useState(false)
   const gridRef = useRef(null)
   const toolbarRef = useRef(null)
   const reduced = useReducedMotion()
@@ -212,6 +213,19 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
 
   const hasFilters = query !== '' || collection !== 'all' || category !== 'all'
 
+  // Close desktop dropdown when clicking outside
+  useEffect(() => {
+    if (!desktopFiltersOpen) return
+    const handleClickOutside = (e) => {
+      const toolbar = toolbarRef.current
+      if (toolbar && !toolbar.contains(e.target)) {
+        setDesktopFiltersOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [desktopFiltersOpen])
+
   return (
     <div className="lookbook-page min-h-[100svh] p-[64px_5vw_96px] bg-ivory max-lg:p-[48px_24px_72px] max-sm:p-[40px_20px_72px]">
       {/* Page header */}
@@ -226,7 +240,7 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
         </div>
       </header>
 
-      {/* Filter bar - Desktop: inline filters. Mobile: search only + FAB */}
+      {/* Filter bar - Desktop: dropdown filters. Mobile: search only + FAB */}
       <div className="lookbook-toolbar sticky top-[62px] z-30 m-0-[-5vw] p-[16px_5vw_14px] bg-ivory border-b border-brass/20 backdrop-blur-[16px] max-lg:top-[58px] max-lg:mx-[-24px] max-lg:px-6 max-lg:py-3 max-sm:top-[58px]" ref={toolbarRef}>
         <div className="lookbook-toolbar-row flex items-center gap-4 max-sm:flex-wrap">
           <label className="lookbook-search relative flex items-center flex-1 max-w-[420px] text-espresso/55 max-sm:max-w-none max-sm:flex-[1_1_100%] max-sm:order-1">
@@ -253,73 +267,75 @@ const CollectionsPage = ({ initialCollection = 'all' }) => {
             )}
           </label>
 
-          {/* Desktop filter toggle - shows/hides inline filters */}
-          <button
-            type="button"
-            className="hidden lg:inline-flex items-center gap-2 min-h-[42px] px-[14px] border border-brass/30 rounded-[2px] bg-none text-espresso text-[12px] tracking-[0.1em] uppercase cursor-pointer relative"
-            onClick={() => setMobileFiltersOpen((v) => !v)}
-            aria-expanded={mobileFiltersOpen}
-            aria-controls="lookbook-filters"
-          >
-            <SlidersHorizontal size={15} />
-            Filters
-            {hasFilters && <span className="lookbook-filter-dot absolute -top-1 -right-1 w-[9px] h-[9px] rounded-full bg-brass" aria-hidden="true" />}
-            <ChevronDown size={14} className={`transition-transform ${mobileFiltersOpen ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-
-        {/* Desktop inline filters panel - only on lg+ */}
-        <div
-          id="lookbook-filters"
-          className={`lookbook-filters grid gap-[18px] mt-[14px] hidden lg:grid ${mobileFiltersOpen ? 'is-open' : ''}`}
-        >
-          <div className="lookbook-filter-group grid grid-cols-[110px_1fr] gap-4 items-start max-sm:grid-cols-1 max-sm:gap-2.5">
-            <span className="lookbook-filter-label pt-[9px] text-[10px] tracking-[0.22em] uppercase text-brass">Collection</span>
-            <div className="filter-chips flex flex-wrap gap-2">
-              <FilterChip
-                active={collection === 'all'}
-                onClick={() => selectCollection('all')}
-                count={PRODUCTS.length}
-              >
-                All
-              </FilterChip>
-              {COLLECTIONS.map((c) => (
-                <FilterChip
-                  key={c.id}
-                  active={collection === c.id}
-                  onClick={() => selectCollection(c.id)}
-                  count={c.count}
-                >
-                  {c.name}
-                </FilterChip>
-              ))}
-            </div>
-          </div>
-
-          <div className="lookbook-filter-group grid grid-cols-[110px_1fr] gap-4 items-start max-sm:grid-cols-1 max-sm:gap-2.5">
-            <span className="lookbook-filter-label pt-[9px] text-[10px] tracking-[0.22em] uppercase text-brass">Category</span>
-            <div className="filter-chips flex flex-wrap gap-2">
-              <FilterChip active={category === 'all'} onClick={() => selectCategory('all')}>
-                All
-              </FilterChip>
-              {CATEGORIES.map((c) => (
-                <FilterChip
-                  key={c}
-                  active={category === c}
-                  onClick={() => selectCategory(c)}
-                  count={PRODUCTS.filter((p) => p.category === c).length}
-                >
-                  {c}
-                </FilterChip>
-              ))}
-            </div>
-          </div>
-
-          {hasFilters && (
-            <button type="button" className="lookbook-clear justify-self-end border-0 bg-none text-brass text-[12px] tracking-[0.08em] uppercase underline underline-offset-4 cursor-pointer hover:text-heritage" onClick={clearFilters}>
-              Clear all filters
+          {/* Desktop filter dropdown */}
+          <div className="hidden lg:flex lg:items-center lg:relative">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 min-h-[42px] px-[14px] border border-brass/30 rounded-[2px] bg-ivory text-espresso text-[12px] tracking-[0.1em] uppercase cursor-pointer relative hover:bg-champagne transition-colors"
+              onClick={() => setDesktopFiltersOpen((v) => !v)}
+              aria-expanded={desktopFiltersOpen}
+              aria-haspopup="true"
+            >
+              <SlidersHorizontal size={15} />
+              Filters
+              {hasFilters && <span className="lookbook-filter-dot absolute -top-1 -right-1 w-[9px] h-[9px] rounded-full bg-brass" aria-hidden="true" />}
+              <ChevronDown size={14} className={`transition-transform ${desktopFiltersOpen ? 'rotate-180' : ''}`} />
             </button>
-          )}
+
+            {desktopFiltersOpen && (
+              <div className="absolute right-0 top-full mt-2 z-40 w-[320px] bg-ivory border border-brass/30 rounded-[4px] p-4 shadow-[0_14px_34px_rgba(0,0,0,0.12)] animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                <div className="space-y-5">
+                  <div>
+                    <label className="lookbook-filter-label pt-[9px] text-[10px] tracking-[0.22em] uppercase text-brass block mb-3">Collection</label>
+                    <div className="filter-chips flex flex-wrap gap-2">
+                      <FilterChip
+                        active={collection === 'all'}
+                        onClick={() => { selectCollection('all'); setDesktopFiltersOpen(false); }}
+                        count={PRODUCTS.length}
+                      >
+                        All
+                      </FilterChip>
+                      {COLLECTIONS.map((c) => (
+                        <FilterChip
+                          key={c.id}
+                          active={collection === c.id}
+                          onClick={() => { selectCollection(c.id); setDesktopFiltersOpen(false); }}
+                          count={c.count}
+                        >
+                          {c.name}
+                        </FilterChip>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="lookbook-filter-label pt-[9px] text-[10px] tracking-[0.22em] uppercase text-brass block mb-3">Category</label>
+                    <div className="filter-chips flex flex-wrap gap-2">
+                      <FilterChip active={category === 'all'} onClick={() => { selectCategory('all'); setDesktopFiltersOpen(false); }}>
+                        All
+                      </FilterChip>
+                      {CATEGORIES.map((c) => (
+                        <FilterChip
+                          key={c}
+                          active={category === c}
+                          onClick={() => { selectCategory(c); setDesktopFiltersOpen(false); }}
+                          count={PRODUCTS.filter((p) => p.category === c).length}
+                        >
+                          {c}
+                        </FilterChip>
+                      ))}
+                    </div>
+                  </div>
+
+                  {hasFilters && (
+                    <button type="button" className="w-full lookbook-clear border-0 bg-none text-brass text-[12px] tracking-[0.08em] uppercase underline underline-offset-4 cursor-pointer hover:text-heritage py-2" onClick={() => { clearFilters(); setDesktopFiltersOpen(false); }}>
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
