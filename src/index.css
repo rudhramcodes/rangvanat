@@ -807,10 +807,6 @@
     scroll-margin-top: 78px;
   }
 
-  .footer {
-    padding: 104px 5vw 64px;
-  }
-
   .story-section {
     display: grid;
     grid-template-columns: 0.9fr 1.1fr;
@@ -1452,107 +1448,15 @@
     color: var(--color-terracotta);
   }
 
-  .footer {
+  .foot-link {
     position: relative;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 34px;
-    overflow: hidden;
-    background: var(--color-ivory);
-    color: var(--color-espresso);
   }
 
-  .care-label {
-    position: relative;
-    border: 1.5px dashed rgba(207, 161, 88, 0.5);
-    border-radius: 8px;
-    padding: 48px clamp(28px, 4vw, 56px) 44px;
-  }
-
-  .care-tag {
-    position: absolute;
-    top: -1px;
-    right: -1px;
-    padding: 8px 16px;
-    background: var(--color-brass);
-    color: var(--color-espresso);
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    border-radius: 0 7px 0 6px;
-  }
-
-  .care-brand {
-    display: block;
-    width: clamp(140px, 15vw, 190px);
-    height: auto;
-    filter: brightness(1.15);
-  }
-
-  .care-tag-full {
-    display: inline;
-  }
-
-  .care-origin {
-    margin: 8px 0 0;
-    color: var(--color-brass);
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  .care-promise {
-    margin: 14px 0 0;
-    max-width: 420px;
-    color: rgba(232, 217, 174, 0.66);
-    font-size: 13px;
-  }
-
-  .care-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(32px, 5vw, 72px);
-    margin-top: 40px;
-  }
-
-  .care-label h3 {
-    margin: 0 0 18px;
-    color: var(--color-espresso);
-    font-size: 12px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  .care-label nav {
-    display: grid;
-    gap: 12px;
-    align-content: start;
-  }
-
-  .care-label nav a {
-    width: fit-content;
-  }
-
-  .care-link-arrow {
-    display: none;
-  }
-
-  .care-label nav a,
-  .care-info a:not(.socials a) {
-    position: relative;
-    color: rgba(42, 14, 6, 0.72);
-    font-size: 13px;
-    text-decoration: none;
-    transition: color 0.25s ease;
-  }
-
-  .care-label nav a::after,
-  .care-info a:not(.socials a)::after {
+  .foot-link::after {
     content: "";
     position: absolute;
     left: 0;
-    bottom: -3px;
+    bottom: 2px;
     width: 100%;
     height: 1px;
     background: var(--color-brass);
@@ -1561,92 +1465,19 @@
     transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1);
   }
 
-  .care-label nav a:hover,
-  .care-label nav a:focus-visible,
-  .care-info a:not(.socials a):hover,
-  .care-info a:not(.socials a):focus-visible {
-    color: var(--color-brass);
-  }
-
-  .care-label nav a:hover::after,
-  .care-label nav a:focus-visible::after,
-  .care-info a:not(.socials a):hover::after,
-  .care-info a:not(.socials a):focus-visible::after {
+  .foot-link:hover::after,
+  .foot-link:focus-visible::after {
     transform: scaleX(1);
     transform-origin: left center;
   }
 
-  .care-info {
-    display: grid;
-    gap: 28px;
-    align-content: start;
-  }
-
-  .care-info a:not(.socials a) {
-    display: block;
-    width: fit-content;
-    margin-bottom: 8px;
-  }
-
-  .care-info p {
-    margin: 0 0 10px;
-    color: rgba(42, 14, 6, 0.72);
-    font-size: 13px;
-  }
-
-  .care-info .socials {
-    gap: 12px;
-  }
-
-  .care-info .socials a {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid rgba(207, 161, 88, 0.5);
-    color: var(--color-champagne);
-    transition:
-      background 0.25s ease,
-      border-color 0.25s ease,
-      color 0.25s ease;
-  }
-
-  .care-info .socials a:hover,
-  .care-info .socials a:focus-visible {
-    background: var(--color-brass);
-    border-color: var(--color-brass);
-    color: var(--color-espresso);
-  }
-
-  .care-wash {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin: 40px 0 0;
-    padding-top: 16px;
-    border-top: 1px solid rgba(207, 161, 88, 0.35);
-    color: rgba(42, 14, 6, 0.5);
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-  }
-
-  .care-wash b {
-    font-weight: 700;
-    color: rgba(42, 14, 6, 0.78);
-  }
-
-  .care-wash b::after {
-    content: ":";
-  }
-
   .care-thread {
     position: absolute;
-    left: 22%;
-    bottom: -18px;
+    left: 50%;
+    top: 0;
     width: 1px;
-    height: 18px;
+    height: 44px;
+    margin-left: -0.5px;
     background: rgba(207, 161, 88, 0.7);
     transform-origin: top center;
   }
@@ -1655,20 +1486,53 @@
     content: "";
     position: absolute;
     left: -1.5px;
-    bottom: -2px;
+    top: -2px;
     width: 4px;
     height: 4px;
     border-radius: 50%;
     background: var(--color-brass);
   }
 
-  .care-legal {
+  .foot-run {
     display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    flex-wrap: wrap;
-    color: rgba(42, 14, 6, 0.5);
-    font-size: 12px;
+    align-items: center;
+  }
+
+  .foot-marquee-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: foot-marquee 38s linear infinite;
+  }
+
+  @keyframes foot-marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  .foot-mq-text {
+    white-space: nowrap;
+    color: rgba(42, 14, 6, 0.55);
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .foot-mq-text b {
+    font-weight: 600;
+    color: rgba(42, 14, 6, 0.85);
+  }
+
+  .foot-mq-sep {
+    margin: 0 clamp(22px, 3vw, 46px);
+    width: 5px;
+    height: 5px;
+    border: 1px solid var(--color-brass);
+    transform: rotate(45deg);
   }
 
   .collections-intro {
@@ -1890,8 +1754,7 @@
     .section,
     .quote-section,
     .dark-section,
-    .closing-section,
-    .footer {
+    .closing-section {
       padding: 72px 24px;
     }
 
@@ -2122,8 +1985,7 @@
     }
 
     .section-title,
-    .pillars-section,
-    .footer {
+    .pillars-section {
       grid-template-columns: 1fr;
     }
 
@@ -2169,101 +2031,6 @@
 
     .section-title .cta {
       width: fit-content;
-    }
-
-    .care-legal {
-      display: grid;
-      gap: 8px;
-    }
-
-    .care-label {
-      padding: 40px 20px 34px;
-    }
-
-    .care-tag-full {
-      display: none;
-    }
-
-    .care-brand {
-      width: 115px;
-    }
-
-    .care-grid {
-      grid-template-columns: 1fr;
-      gap: 30px;
-      margin-top: 28px;
-    }
-
-    .care-label nav {
-      gap: 0;
-    }
-
-    .care-label nav a {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      padding: 14px 0;
-      border-bottom: 1px solid rgba(207, 161, 88, 0.16);
-      font-size: 14px;
-    }
-
-    .care-link-arrow {
-      display: inline-block;
-      color: var(--color-brass);
-      font-size: 14px;
-      transition: transform 0.25s ease;
-    }
-
-    .care-label nav a:active .care-link-arrow {
-      transform: translateX(4px);
-    }
-
-    .care-info a:not(.socials a) {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .care-info .socials a {
-      width: 44px;
-      height: 44px;
-    }
-
-    .care-info {
-      gap: 24px;
-    }
-
-    .care-wash {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      margin-top: 26px;
-      font-size: 8px;
-      letter-spacing: 0.1em;
-      text-align: center;
-      border-top: 1.5px dashed rgba(207, 161, 88, 0.4);
-    }
-
-    .care-wash span {
-      display: grid;
-      gap: 3px;
-      align-content: start;
-    }
-
-    .care-wash b {
-      display: block;
-      font-size: 10px;
-      letter-spacing: 0.2em;
-    }
-
-    .care-wash b::after {
-      content: none;
-    }
-
-    .care-tag {
-      font-size: 8px;
-      padding: 7px 12px;
     }
 
     .closing-form input {
@@ -2325,114 +2092,10 @@
     border-bottom: none;
   }
 
-  .why-head {
-    max-width: 860px;
-    margin-bottom: 40px;
-  }
-
-  .why-head h2 {
-    margin-bottom: 0;
-    font-size: clamp(44px, 5.4vw, 78px);
-    line-height: 1.02;
-  }
-
-  .why-body {
-    max-width: 620px;
-    margin-bottom: 56px;
-  }
-
-  .why-intro {
-    margin: 0;
-    font-size: 17px;
-    line-height: 1.7;
-  }
-
-  .why-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1px;
-    background: rgba(207, 161, 88, 0.22);
-    border: 1px solid rgba(207, 161, 88, 0.22);
-  }
-
-  .why-block {
-    padding: 44px 40px;
-    background: var(--color-espresso);
-  }
-
-  .why-block--union {
-    grid-column: 1 / -1;
-    padding: 52px 40px;
-    background:
-      linear-gradient(135deg, rgba(179, 74, 26, 0.18), transparent 55%),
-      var(--color-espresso);
-  }
-
-  .why-word {
-    display: block;
-    margin-bottom: 12px;
-    color: var(--color-brass);
-    font-family: var(--font-display);
-    font-size: 42px;
-    line-height: 1;
-    letter-spacing: 0.04em;
-  }
-
-  .why-block p {
-    margin: 0;
-    font-size: 15px;
-  }
-
-  .why-union {
-    font-family: var(--font-display);
-    font-size: clamp(24px, 2.6vw, 34px) !important;
-    line-height: 1.25 !important;
-    color: var(--color-champagne) !important;
-  }
-
-  .why-bottom {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1.2fr;
-    gap: 48px;
-    margin-top: 64px;
-  }
-
-  .why-mission h3,
-  .why-crafts h3 {
-    margin-bottom: 12px;
-    font-size: 16px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-brass);
-  }
-
-  .why-mission p {
-    margin: 0;
-    font-size: 14px;
-  }
-
-  .why-crafts ul {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .why-crafts li {
-    padding: 8px 14px;
-    border: 1px solid rgba(207, 161, 88, 0.32);
-    border-radius: 999px;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--color-champagne);
-  }
-
   /* ─────────────────────────────────────────────────────────────
-     Home collections — the six curated edits
-     ───────────────────────────────────────────────────────────── */
+      Why section — all styling now expressed via Tailwind utilities
+      in App.jsx (see the #why / Why component). No custom CSS needed.
+      ───────────────────────────────────────────────────────────── */
   .collection-grid--lookbook {
     grid-template-columns: repeat(3, 1fr);
     row-gap: 56px;
@@ -3150,11 +2813,6 @@
       gap: 24px;
     }
 
-    .why-bottom {
-      grid-template-columns: 1fr;
-      gap: 36px;
-    }
-
     .collection-grid--lookbook {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -3236,19 +2894,6 @@
 
     .product-related-grid {
       grid-template-columns: 1fr;
-    }
-
-    .why-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .why-block {
-      padding: 32px 26px;
-    }
-
-    .why-block--union {
-      grid-column: 1 / -1;
-      padding: 40px 26px;
     }
 
     .collection-grid--lookbook {

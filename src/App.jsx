@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
+  ArrowUp,
   AtSign,
   Camera,
   Globe2,
@@ -72,7 +73,7 @@ const Asset = ({ src, label, className = '', children, alt = assetAlt(label) }) 
 )
 
 const Eyebrow = ({ children, style }) => (
-  <p className="eyebrow" style={style}>
+  <p className="eyebrow text-oxblood" style={style}>
     {children}
   </p>
 )
@@ -542,7 +543,7 @@ const Artisans = () => {
     <section id="artisans" className="dark-section artisans-section bg-ivory text-espresso grid grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)] gap-[clamp(48px,7vw,110px)] items-center px-[5vw] py-[120px] border-b border-brass/15 max-lg:grid-cols-1 max-lg:gap-10 max-lg:px-6 max-lg:py-[72px]">
       <div className="artisan-copy" ref={copyRef}>
         <Eyebrow>Who we weave for</Eyebrow>
-        <h2>Behind every weave, a woman rewriting her own story.</h2>
+        <h2 className="mb-6 max-lg:mb-5">Behind every weave, a woman rewriting her own story.</h2>
         <p>
           Rangvanat exists because of the women who sit at the wheel before sunrise. Rural artisans
           for whom every thread spun is also a step toward standing on their own.
@@ -563,7 +564,7 @@ const Artisans = () => {
         <Asset
           src={imagePaths.artisanTwo}
           label="artisan2.jpg"
-          className="artisan-landscape absolute -right-[12%] -bottom-[9%] w-[62%] aspect-[4/3] min-h-0 shadow-[0_24px_48px_rgba(0,0,0,0.35)] max-lg:right-[-8%] max-lg:bottom-[-8%] max-lg:w-[60%] max-sm:right-0 max-sm:bottom-0 max-sm:w-[62%]"
+          className="artisan-landscape absolute -right-[12%] -bottom-[9%] w-[62%] aspect-[4/3] min-h-0 shadow-[0_24px_48px_rgba(0,0,0,0.35)] max-lg:right-[-8%] max-lg:bottom-[-8%] max-lg:w-[60%] max-sm:static max-sm:mt-5 max-sm:ml-auto max-sm:mr-auto max-sm:w-full max-sm:aspect-[4/3] max-sm:shadow-[0_16px_32px_rgba(0,0,0,0.25)]"
           alt="Rangvanat artisan at the loom"
         />
       </div>
@@ -599,44 +600,44 @@ const WhyRangvanaat = () => {
   }, [reduced])
 
   return (
-    <section id="why" className="why-section bg-parchment px-[5vw] py-[120px] border-b border-brass/15 max-lg:px-6 max-lg:py-[72px]">
+    <section id="why" className="why-section bg-parchment text-espresso px-[5vw] py-[120px] border-b border-brass/15 max-lg:px-6 max-lg:py-[72px] max-sm:px-5 max-sm:py-14">
       <div className="why-head max-w-[860px] mb-10" ref={headRef}>
         <Eyebrow>Why Rangvanaat</Eyebrow>
-        <h2 className="text-[clamp(44px,5.4vw,78px)] leading-[1.02] mb-0">{BRAND_STORY.tagline}</h2>
+        <h2 className="text-[clamp(44px,5.4vw,78px)] leading-[1.02] mb-0 text-espresso">{BRAND_STORY.tagline}</h2>
       </div>
 
       <div className="why-body max-w-[620px] mb-14" ref={copyRef}>
-        <p className="why-intro text-[17px] leading-[1.7] m-0">{BRAND_STORY.intro}</p>
+        <p className="why-intro text-[17px] leading-[1.7] m-0 text-espresso/75">{BRAND_STORY.intro}</p>
       </div>
 
-      <div className="why-grid grid grid-cols-2 gap-px bg-brass/20 border border-brass/20 max-sm:grid-cols-1" ref={gridRef}>
+      <div className="why-grid grid grid-cols-1 gap-px bg-brass/20 border border-brass/20 sm:grid-cols-2" ref={gridRef}>
         <article className="why-block why-block--rang p-[44px_40px] bg-parchment max-sm:p-[32px_26px]">
-          <span className="why-word block mb-3 text-brass font-display text-[42px] leading-none tracking-[0.04em]">{BRAND_STORY.rang.title}</span>
-          <p>{BRAND_STORY.rang.body}</p>
+          <span className="why-word block mb-3 text-heritage font-display text-[42px] leading-none tracking-[0.04em]">{BRAND_STORY.rang.title}</span>
+          <p className="text-[15px] text-espresso/75 leading-[1.7]">{BRAND_STORY.rang.body}</p>
         </article>
         <article className="why-block why-block--vanat p-[44px_40px] bg-parchment max-sm:p-[32px_26px]">
-          <span className="why-word block mb-3 text-brass font-display text-[42px] leading-none tracking-[0.04em]">{BRAND_STORY.vanat.title}</span>
-          <p>{BRAND_STORY.vanat.body}</p>
+          <span className="why-word block mb-3 text-heritage font-display text-[42px] leading-none tracking-[0.04em]">{BRAND_STORY.vanat.title}</span>
+          <p className="text-[15px] text-espresso/75 leading-[1.7]">{BRAND_STORY.vanat.body}</p>
         </article>
-        <article className="why-block why-block--union col-span-2 p-[52px_40px] max-sm:p-[40px_26px]" style={{ background: 'linear-gradient(135deg,rgba(179,74,26,0.10),transparent 55%), var(--color-parchment)' }}>
-          <p className="why-union font-display text-[clamp(24px,2.6vw,34px)] leading-[1.25] text-espresso">{BRAND_STORY.union}</p>
+        <article className="why-block why-block--union sm:col-span-2 p-[52px_40px] max-sm:p-[40px_26px]" style={{ background: 'linear-gradient(135deg,rgba(179,74,26,0.10),transparent 55%), var(--color-parchment)' }}>
+          <p className="why-union font-display text-[clamp(24px,2.6vw,34px)] leading-[1.25] text-oxblood">{BRAND_STORY.union}</p>
         </article>
       </div>
 
-      <div className="why-bottom grid grid-cols-[1fr_1fr_1.2fr] gap-12 mt-16 max-lg:grid-cols-1 max-lg:gap-9">
+      <div className="why-bottom grid grid-cols-[1fr_1fr_1.2fr] gap-12 mt-16 max-lg:grid-cols-1 max-lg:gap-9 max-sm:gap-7 max-sm:mt-10">
         <div className="why-mission">
-          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-brass">Our Vision</h3>
-          <p className="text-[14px] m-0">{BRAND_STORY.vision}</p>
+          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-heritage">Our Vision</h3>
+          <p className="text-[14px] m-0 text-espresso/75 leading-[1.7]">{BRAND_STORY.vision}</p>
         </div>
         <div className="why-mission">
-          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-brass">Our Mission</h3>
-          <p className="text-[14px] m-0">{BRAND_STORY.mission}</p>
+          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-heritage">Our Mission</h3>
+          <p className="text-[14px] m-0 text-espresso/75 leading-[1.7]">{BRAND_STORY.mission}</p>
         </div>
         <div className="why-crafts">
-          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-brass">The Crafts</h3>
+          <h3 className="mb-3 text-[16px] tracking-[0.12em] uppercase text-heritage">The Crafts</h3>
           <ul className="flex flex-wrap gap-2.5 m-0 p-0 list-none">
             {BRAND_STORY.crafts.map((craft) => (
-              <li key={craft} className="p-[8px_14px] border border-brass/30 rounded-full text-[12px] tracking-[0.08em] uppercase text-espresso">
+              <li key={craft} className="p-[8px_14px] border border-brass/30 rounded-full bg-[#F9F4EA] text-[12px] tracking-[0.08em] uppercase text-espresso/75">
                 {craft}
               </li>
             ))}
@@ -1088,10 +1089,10 @@ const Closing = () => {
 
 const Footer = () => {
   const reduced = useReducedMotion()
-  const labelRef = useRef(null)
+  const rootRef = useRef(null)
 
   useEffect(() => {
-    const el = labelRef.current
+    const el = rootRef.current
     if (!el || reduced) return
 
     const items = el.querySelectorAll('.care-item')
@@ -1116,109 +1117,137 @@ const Footer = () => {
         })
         io.disconnect()
       },
-      { threshold: 0.2 },
+      { threshold: 0.15 },
     )
     io.observe(el)
     return () => io.disconnect()
   }, [reduced])
 
-  return (
-    <footer className="footer grain bg-ivory text-espresso grid grid-cols-1 gap-[34px] overflow-hidden px-[5vw] pt-[104px] pb-16 max-lg:px-6 max-lg:py-[72px]">
-      <div className="care-label relative border-[1.5px] border-dashed border-brass/50 rounded-lg p-[48px_clamp(28px,4vw,56px)_44px] max-sm:p-[40px_20px_34px]" ref={labelRef}>
-        <span className="care-tag absolute -top-px -right-px p-[8px_16px] bg-brass text-espresso text-[9px] font-bold tracking-[0.14em] uppercase rounded-[0_7px_0_6px] max-sm:text-[8px] max-sm:p-[7px_12px]">
-          <span className="care-tag-full">100% </span>Handwoven Khadi · Made in Bardoli
+  const toTop = () => window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
+
+  // One repeating unit of the care-label marquee (rendered twice for a seamless loop)
+  const careRun = (
+    <>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <span key={i} className="foot-run">
+          <span className="foot-mq-text">
+            <b>Wash</b>&thinsp;by hand
+          </span>
+          <span className="foot-mq-sep" aria-hidden="true" />
+          <span className="foot-mq-text">
+            <b>Dry</b>&thinsp;in the sun
+          </span>
+          <span className="foot-mq-sep" aria-hidden="true" />
+          <span className="foot-mq-text">
+            <b>Wear</b>&thinsp;anywhere
+          </span>
+          <span className="foot-mq-sep" aria-hidden="true" />
         </span>
-        <img src="/images/full-logo.svg" alt="Rangvanat" className="care-brand care-item block w-[clamp(140px,15vw,190px)] h-auto max-sm:w-[115px]" />
-        <p className="care-origin care-item mt-2 text-brass text-[13px] tracking-[0.14em] uppercase">
-          The art of weaving colours into fabric, and fabric into stories.
-        </p>
-        <p className="care-promise care-item mt-[14px] max-w-[420px] text-espresso/65 text-[13px]">Your address stays in Bardoli. No lists are sold, ever.</p>
-        <div className="care-grid grid grid-cols-2 gap-[clamp(32px,5vw,72px)] mt-10 max-sm:grid-cols-1 max-sm:gap-[30px] max-sm:mt-7">
-          <nav className="care-item" aria-label="Footer navigation">
-            <h3 className="mb-[18px] text-espresso text-[12px] tracking-[0.2em] uppercase">Explore</h3>
+      ))}
+    </>
+  )
+
+  const linkBase =
+    'foot-link block w-fit py-[7px] text-[13px] text-espresso/70 transition-colors duration-300 hover:text-heritage max-sm:flex max-sm:w-full max-sm:max-w-none max-sm:items-center max-sm:justify-between max-sm:border-b max-sm:border-brass/15 max-sm:py-[13px] max-sm:text-[14px]'
+
+  return (
+    <footer className="footer grain relative bg-ivory text-espresso px-[5vw] pt-16 pb-10 max-lg:px-6 max-lg:pt-14 max-sm:px-5 max-sm:pt-12">
+      <div ref={rootRef}>
+        <div className="relative mb-14 border-t border-dashed border-brass/40" aria-hidden="true">
+          <span className="care-thread" />
+        </div>
+
+        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-8">
+          <div className="care-item flex flex-col gap-3">
+            <img src="/images/full-logo.svg" alt="Rangvanat" className="block h-auto w-[clamp(150px,15vw,200px)] max-sm:w-[130px]" />
+            <p className="mt-2 max-w-[46ch] text-[13px] uppercase tracking-[0.16em] text-heritage">
+              The art of weaving colours into fabric, and fabric into stories.
+            </p>
+            <p className="max-w-[420px] text-[14px] leading-relaxed text-espresso/70">
+              Your address stays in Bardoli. No lists are sold, ever.
+            </p>
+          </div>
+          <span className="care-item inline-flex items-center gap-2.5 self-start rounded-full border border-dashed border-brass px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-espresso max-sm:text-[9px]">
+            <span className="h-[5px] w-[5px] rotate-45 border border-brass bg-brass/30" aria-hidden="true" />
+            100% Handwoven Khadi · Made in Bardoli
+          </span>
+        </div>
+
+        <div className="care-item mt-16 grid grid-cols-1 gap-x-[clamp(36px,6vw,110px)] gap-y-12 sm:grid-cols-2 lg:grid-cols-[0.9fr_1.35fr_0.75fr]">
+          <nav aria-label="Footer navigation">
+            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso">Explore</h3>
             {navLinks.map((link) => (
-              <a key={link} href={`#${link.toLowerCase()}`} className="w-fit text-espresso/70 text-[13px] no-underline max-sm:flex max-sm:items-center max-sm:justify-between max-sm:w-full max-sm:p-[14px_0] max-sm:border-b max-sm:border-brass/15 max-sm:text-[14px]">
+              <a key={link} href={`#${link.toLowerCase()}`} className={linkBase}>
                 {link}
-                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
+                <span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">
                   →
                 </span>
               </a>
             ))}
           </nav>
-          <div className="care-info care-item">
-            <div>
-              <h3 className="mb-[18px] text-espresso text-[12px] tracking-[0.2em] uppercase">Reach Us</h3>
-              <p className="mb-[10px] text-espresso/65 text-[13px]">
-                Laxmi Gopal Complex - B, H-1, 2nd Floor
-                <br />
-                Dhamdod Naka, Kadod Road
-                <br />
-                Bardoli - 394601, Dist. Surat, Gujarat
-              </p>
-              <a href="tel:+918780572069" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
-                +91 87805 72069
-                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
-                  →
-                </span>
+
+          <div>
+            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso">Reach Us</h3>
+            <p className="mb-3 max-w-[34ch] text-[13px] leading-relaxed text-espresso/70">
+              Laxmi Gopal Complex - B, H-1, 2nd Floor
+              <br />
+              Dhamdod Naka, Kadod Road
+              <br />
+              Bardoli - 394601, Dist. Surat, Gujarat
+            </p>
+            <a href="tel:+918780572069" className={linkBase}>+91 87805 72069<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
+            <a href="tel:+919825573657" className={linkBase}>+91 98255 73657<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
+            <a href="tel:+919825219730" className={linkBase}>+91 98252 19730<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
+            <a href="mailto:rangvanat@gmail.com" className={linkBase}>rangvanat@gmail.com<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
+          </div>
+
+          <div>
+            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso">Follow Us</h3>
+            <div className="flex gap-3.5">
+              <a href="https://instagram.com/rangvanat" target="_blank" rel="noreferrer" aria-label="Rangvanat on Instagram" className="grid h-10 w-10 place-items-center rounded-full border border-brass/60 text-espresso transition-colors duration-300 hover:border-brass hover:bg-brass">
+                <Camera size={17} strokeWidth={1.75} />
               </a>
-              <a href="tel:+919825573657" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
-                +91 98255 73657
-                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
-                  →
-                </span>
+              <a href="https://instagram.com/rangvanat" target="_blank" rel="noreferrer" aria-label="Rangvanat social profile" className="grid h-10 w-10 place-items-center rounded-full border border-brass/60 text-espresso transition-colors duration-300 hover:border-brass hover:bg-brass">
+                <AtSign size={17} strokeWidth={1.75} />
               </a>
-              <a href="tel:+919825219730" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
-                +91 98252 19730
-                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
-                  →
-                </span>
+              <a href="mailto:rangvanat@gmail.com" target="_blank" rel="noreferrer" aria-label="Email Rangvanat" className="grid h-10 w-10 place-items-center rounded-full border border-brass/60 text-espresso transition-colors duration-300 hover:border-brass hover:bg-brass">
+                <Mail size={17} strokeWidth={1.75} />
               </a>
-              <a href="mailto:rangvanat@gmail.com" className="block w-fit text-espresso/70 text-[13px] no-underline max-sm:inline-flex max-sm:items-center max-sm:gap-8 max-sm:border-none max-sm:p-0">
-                rangvanat@gmail.com
-                <span className="care-link-arrow hidden max-sm:inline-block text-brass text-[14px]" aria-hidden="true">
-                  →
-                </span>
-              </a>
-            </div>
-            <div>
-              <h3 className="mb-[18px] text-espresso text-[12px] tracking-[0.2em] uppercase">Follow Us</h3>
-              <div className="socials flex gap-4">
-                <a href="https://instagram.com/rangvanat" target="_blank" aria-label="Rangvanat on Instagram" className="grid place-items-center w-9 h-9 border border-brass/50 text-espresso transition-colors duration-250 hover:bg-brass hover:border-brass hover:text-espresso">
-                  <Camera size={18} />
-                </a>
-                <a
-                  href="https://instagram.com/rangvanat"
-                  target="_blank" 
-                  aria-label="Rangvanat social profile"
-                  className="grid place-items-center w-9 h-9 border border-brass/50 text-espresso transition-colors duration-250 hover:bg-brass hover:border-brass hover:text-espresso"
-                >
-                  <AtSign size={18} />
-                </a>
-                <a href="mailto:rangvanat@gmail.com" target="_blank" aria-label="Email" className="grid place-items-center w-9 h-9 border border-brass/50 text-espresso transition-colors duration-250 hover:bg-brass hover:border-brass hover:text-espresso">
-                  <Mail size={18} />
-                </a>
-              </div>
             </div>
           </div>
         </div>
-        <p className="care-wash flex justify-between gap-4 flex-wrap mt-[40px] pt-[16px] border-t border-brass/35 text-espresso/5 text-[10px] letter-spacing-[0.2em] uppercase max-sm:grid max-sm:grid-cols-3 max-sm:gap-4 max-sm:mt-[26px] max-sm:text-[8px] max-sm:letter-spacing-[0.1em] max-sm:border-t-[1.5px] max-sm:border-dashed max-sm:border-brass/40">
-          <span>
-            <b className="text-espresso/78 font-bold">Wash</b> by hand
-          </span>
-          <span>
-            <b className="text-espresso/78 font-bold">Dry</b> in the sun
-          </span>
-          <span>
-            <b className="text-espresso/78 font-bold">Wear</b> anywhere
-          </span>
-        </p>
-        <span className="care-thread absolute left-[22%] bottom-[-18px] w-px h-[18px] bg-brass/70 origin-top" aria-hidden="true">
-          <span className="absolute -left-[1.5px] -bottom-[2px] w-[4px] h-[4px] rounded-full bg-brass" />
-        </span>
-      </div>
-      <div className="care-legal flex justify-between gap-24 flex-wrap text-espresso/5 text-[12px]">
-        <span>© {new Date().getFullYear()} Rangvanat · Khadi Art by Rangvesh</span>
-        <span>Handwoven in Bardoli</span>
+
+        <div className="care-item mt-16 overflow-hidden border-y border-dashed border-brass/40 py-[13px]" aria-hidden="true">
+          <div className="foot-marquee-track">
+            <div className="flex shrink-0 items-center">{careRun}</div>
+            <div className="flex shrink-0 items-center">{careRun}</div>
+          </div>
+        </div>
+
+        {/* Selvedge wordmark — letters spaced across the full width like warp threads */}
+        <div className="care-item mt-12 select-none" aria-hidden="true">
+          <svg viewBox="0 0 1000 116" className="block w-full overflow-visible" focusable="false">
+            <text x="500" y="98" textAnchor="middle" textLength="998" lengthAdjust="spacing" fontSize="122" fontFamily="var(--font-display)">
+              <tspan fill="#2a0e06">R</tspan>
+              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">A</tspan>
+              <tspan fill="#2a0e06">N</tspan>
+              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">G</tspan>
+              <tspan fill="#2a0e06">V</tspan>
+              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">A</tspan>
+              <tspan fill="#2a0e06">N</tspan>
+              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">A</tspan>
+              <tspan fill="#2a0e06">T</tspan>
+            </text>
+          </svg>
+        </div>
+
+        <div className="care-item mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-dashed border-brass/30 pt-5 text-[11px] uppercase tracking-[0.16em] text-espresso/55">
+          <span>© {new Date().getFullYear()} Rangvanat · Khadi Art by Rangvesh</span>
+          <button type="button" onClick={toTop} className="group inline-flex items-center gap-2 uppercase tracking-[0.16em] transition-colors duration-300 hover:text-heritage">
+            Back to top
+            <ArrowUp size={13} strokeWidth={2} className="transition-transform duration-300 group-hover:-translate-y-0.5" />
+          </button>
+        </div>
       </div>
     </footer>
   )
