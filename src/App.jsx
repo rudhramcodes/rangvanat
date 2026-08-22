@@ -1028,6 +1028,8 @@ const Closing = () => {
     }
   }
 
+  /// p
+
   return (
     <section id="contact" className="closing-section grain bg-parchment text-espresso grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-[clamp(48px,7vw,110px)] items-start px-[5vw] py-[120px] border-b border-brass/15 max-lg:grid-cols-1 max-lg:gap-10 max-lg:px-6 max-lg:py-[72px]" ref={sectionRef}>
       <div className="closing-head max-w-[460px]">
