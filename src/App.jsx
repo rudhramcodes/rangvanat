@@ -923,7 +923,7 @@ const Faq = () => {
                   panelsRef.current[index] = el
                 }}
               >
-                <p className="max-w-[640px] mb-5 text-[14px] max-sm:text-[13px] max-sm:mb-4">{answer}</p>
+                <p className="max-w-[640px] mb-5 text-[14px] max-sm:text-[13px] max-sm:mb-4 pl-5">{answer}</p>
               </div>
             </div>
           )
