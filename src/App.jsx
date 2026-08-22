@@ -1095,10 +1095,7 @@ const Footer = () => {
     const el = rootRef.current
     if (!el || reduced) return
 
-    const items = el.querySelectorAll('.care-item')
-    const thread = el.querySelector('.care-thread')
-    thread.style.transform = 'scaleY(0)'
-
+    const items = el.querySelectorAll('.footer-item')
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return
@@ -1109,12 +1106,6 @@ const Footer = () => {
           ease: 'outQuad',
           delay: stagger(90),
         })
-        animate(thread, {
-          scaleY: [0, 1],
-          duration: 600,
-          ease: 'outCubic',
-          delay: 90 * items.length,
-        })
         io.disconnect()
       },
       { threshold: 0.15 },
@@ -1123,43 +1114,37 @@ const Footer = () => {
     return () => io.disconnect()
   }, [reduced])
 
-  const toTop = () => window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
-
-  // One repeating unit of the care-label marquee (rendered twice for a seamless loop)
-  const careRun = (
-    <>
-      {Array.from({ length: 4 }).map((_, i) => (
-        <span key={i} className="foot-run">
-          <span className="foot-mq-text">
-            <b>Wash</b>&thinsp;by hand
-          </span>
-          <span className="foot-mq-sep" aria-hidden="true" />
-          <span className="foot-mq-text">
-            <b>Dry</b>&thinsp;in the sun
-          </span>
-          <span className="foot-mq-sep" aria-hidden="true" />
-          <span className="foot-mq-text">
-            <b>Wear</b>&thinsp;anywhere
-          </span>
-          <span className="foot-mq-sep" aria-hidden="true" />
-        </span>
-      ))}
-    </>
-  )
-
   const linkBase =
     'foot-link block w-fit py-[7px] text-[13px] text-espresso/70 transition-colors duration-300 hover:text-heritage max-sm:flex max-sm:w-full max-sm:max-w-none max-sm:items-center max-sm:justify-between max-sm:border-b max-sm:border-brass/15 max-sm:py-[13px] max-sm:text-[14px]'
 
-  return (
-    <footer className="footer grain relative bg-ivory text-espresso px-[5vw] pt-16 pb-10 max-lg:px-6 max-lg:pt-14 max-sm:px-5 max-sm:pt-12">
-      <div ref={rootRef}>
-        <div className="relative mb-14 border-t border-dashed border-brass/40" aria-hidden="true">
-          <span className="care-thread" />
-        </div>
+  const currentYear = new Date().getFullYear()
 
-        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-8">
-          <div className="care-item flex flex-col gap-3">
-            <img src="/images/full-logo.svg" alt="Rangvanat" className="block h-auto w-[clamp(150px,15vw,200px)] max-sm:w-[130px]" />
+  return (
+    <footer className="footer relative text-espresso px-[5vw] pt-16 pb-10 min-h-[420px] max-lg:min-h-[360px] max-sm:min-h-[320px] max-lg:px-6 max-lg:pt-14 max-sm:px-5 max-sm:pt-12 flex flex-col" ref={rootRef}>
+{/* Landscape background - taller than footer to show lower portion */}
+      <div
+        className="footer-landscape absolute left-0 right-0 -z-10"
+        style={{
+          height: '140%',
+          top: '0',
+          backgroundImage: 'url(/images/footer.png)',
+          backgroundSize: '100% auto',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+        }}
+        aria-hidden="true"
+      />
+      {/* Gradient overlay to blend content into landscape */}
+      <div className="footer-overlay absolute inset-0 -z-10" aria-hidden="true" />
+
+      <div className="relative z-10 flex flex-col flex-grow">
+        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-8 max-lg:gap-8 flex-grow">
+          {/* Column 1: Brand */}
+          <div className="footer-item flex flex-col gap-3 w-full max-lg:w-[280px] max-sm:w-full">
+            <div className="flex items-center gap-2">
+              <img src="/images/logo-only.svg" alt="Rangvanat" className="w-10 h-10" />
+              <span className="font-display text-[22px] text-espresso">Rangvanat</span>
+            </div>
             <p className="mt-2 max-w-[46ch] text-[13px] uppercase tracking-[0.16em] text-heritage">
               The art of weaving colours into fabric, and fabric into stories.
             </p>
@@ -1167,86 +1152,35 @@ const Footer = () => {
               Your address stays in Bardoli. No lists are sold, ever.
             </p>
           </div>
-          <span className="care-item inline-flex items-center gap-2.5 self-start rounded-full border border-dashed border-brass px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-espresso max-sm:text-[9px]">
-            <span className="h-[5px] w-[5px] rotate-45 border border-brass bg-brass/30" aria-hidden="true" />
-            100% Handwoven Khadi · Made in Bardoli
-          </span>
-        </div>
 
-        <div className="care-item mt-16 grid grid-cols-1 gap-x-[clamp(36px,6vw,110px)] gap-y-12 sm:grid-cols-2 lg:grid-cols-[0.9fr_1.35fr_0.75fr]">
-          <nav aria-label="Footer navigation">
-            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso">Explore</h3>
-            {navLinks.map((link) => (
-              <a key={link} href={`#${link.toLowerCase()}`} className={linkBase}>
-                {link}
-                <span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">
-                  →
-                </span>
-              </a>
-            ))}
+          {/* Column 2: Explore (navbar links) */}
+          <nav className="footer-item" aria-label="Explore navigation">
+            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/60">Explore</h3>
+            <div className="space-y-3">
+              <a href="/" className={linkBase}>Home</a>
+              <a href="#story" className={linkBase}>Story</a>
+              <a href="#craft" className={linkBase}>Craft</a>
+              <a href="#artisans" className={linkBase}>Artisans</a>
+              <a href="/?page=collections" className={linkBase}>Collections</a>
+              <a href="#contact" className={linkBase}>Contact</a>
+            </div>
           </nav>
 
-          <div>
-            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso">Reach Us</h3>
+          {/* Column 3: Reach Us */}
+          <div className="footer-item">
+            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso/60">Reach Us</h3>
             <p className="mb-3 max-w-[34ch] text-[13px] leading-relaxed text-espresso/70">
-              Laxmi Gopal Complex - B, H-1, 2nd Floor
-              <br />
-              Dhamdod Naka, Kadod Road
-              <br />
+              Laxmi Gopal Complex - B, H-1, 2nd Floor<br />
+              Dhamdod Naka, Kadod Road<br />
               Bardoli - 394601, Dist. Surat, Gujarat
             </p>
-            <a href="tel:+918780572069" className={linkBase}>+91 87805 72069<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
-            <a href="tel:+919825573657" className={linkBase}>+91 98255 73657<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
-            <a href="tel:+919825219730" className={linkBase}>+91 98252 19730<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
-            <a href="mailto:rangvanat@gmail.com" className={linkBase}>rangvanat@gmail.com<span className="hidden text-[14px] text-brass max-sm:inline-block" aria-hidden="true">→</span></a>
-          </div>
-
-          <div>
-            <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-espresso">Follow Us</h3>
-            <div className="flex gap-3.5">
-              <a href="https://instagram.com/rangvanat" target="_blank" rel="noreferrer" aria-label="Rangvanat on Instagram" className="grid h-10 w-10 place-items-center rounded-full border border-brass/60 text-espresso transition-colors duration-300 hover:border-brass hover:bg-brass">
-                <Camera size={17} strokeWidth={1.75} />
-              </a>
-              <a href="https://instagram.com/rangvanat" target="_blank" rel="noreferrer" aria-label="Rangvanat social profile" className="grid h-10 w-10 place-items-center rounded-full border border-brass/60 text-espresso transition-colors duration-300 hover:border-brass hover:bg-brass">
-                <AtSign size={17} strokeWidth={1.75} />
-              </a>
-              <a href="mailto:rangvanat@gmail.com" target="_blank" rel="noreferrer" aria-label="Email Rangvanat" className="grid h-10 w-10 place-items-center rounded-full border border-brass/60 text-espresso transition-colors duration-300 hover:border-brass hover:bg-brass">
-                <Mail size={17} strokeWidth={1.75} />
-              </a>
+            <div className="space-y-2">
+              <a href="tel:+918780572069" className={linkBase}>+91 87805 72069</a>
+              <a href="tel:+919825573657" className={linkBase}>+91 98255 73657</a>
+              <a href="tel:+919825219730" className={linkBase}>+91 98252 19730</a>
+              <a href="mailto:rangvanat@gmail.com" className={linkBase}>rangvanat@gmail.com</a>
             </div>
           </div>
-        </div>
-
-        <div className="care-item mt-16 overflow-hidden border-y border-dashed border-brass/40 py-[13px]" aria-hidden="true">
-          <div className="foot-marquee-track">
-            <div className="flex shrink-0 items-center">{careRun}</div>
-            <div className="flex shrink-0 items-center">{careRun}</div>
-          </div>
-        </div>
-
-        {/* Selvedge wordmark — letters spaced across the full width like warp threads */}
-        <div className="care-item mt-12 select-none" aria-hidden="true">
-          <svg viewBox="0 0 1000 116" className="block w-full overflow-visible" focusable="false">
-            <text x="500" y="98" textAnchor="middle" textLength="998" lengthAdjust="spacing" fontSize="122" fontFamily="var(--font-display)">
-              <tspan fill="#2a0e06">R</tspan>
-              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">A</tspan>
-              <tspan fill="#2a0e06">N</tspan>
-              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">G</tspan>
-              <tspan fill="#2a0e06">V</tspan>
-              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">A</tspan>
-              <tspan fill="#2a0e06">N</tspan>
-              <tspan fill="none" stroke="#2a0e06" strokeWidth="1.4">A</tspan>
-              <tspan fill="#2a0e06">T</tspan>
-            </text>
-          </svg>
-        </div>
-
-        <div className="care-item mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-dashed border-brass/30 pt-5 text-[11px] uppercase tracking-[0.16em] text-espresso/55">
-          <span>© {new Date().getFullYear()} Rangvanat · Khadi Art by Rangvesh</span>
-          <button type="button" onClick={toTop} className="group inline-flex items-center gap-2 uppercase tracking-[0.16em] transition-colors duration-300 hover:text-heritage">
-            Back to top
-            <ArrowUp size={13} strokeWidth={2} className="transition-transform duration-300 group-hover:-translate-y-0.5" />
-          </button>
         </div>
       </div>
     </footer>
