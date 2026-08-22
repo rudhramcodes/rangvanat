@@ -48,10 +48,13 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USER }}
           password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
           port: 21
+          passive: true
+          timeout: 120000
           local-dir: ./dist/
           server-dir: /public_html/
-          dangerous-clean-slate: true
+          # dangerous-clean-slate: true  # Commented out for safety
           exclude: |
             **/.git*
             **/.git*/**
