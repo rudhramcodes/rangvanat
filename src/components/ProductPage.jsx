@@ -76,7 +76,6 @@ const ProductPage = ({ productId }) => {
 
         <div className="product-body pt-8 max-lg:pt-0">
           <div className="lookbook-modal-kicker flex flex-wrap items-center gap-[10px] mb-[20px] text-[10px] tracking-[0.16em] uppercase">
-            <span className="lookbook-code px-[5px_10px] border border-brass rounded-full text-brass border-brass">{product.code}</span>
             <span className="lookbook-category px-[5px_10px] border border-brass/35 rounded-full text-espresso/70">{product.category}</span>
             {collection && <span className="lookbook-collection px-[5px_10px] border border-brass/35 rounded-full text-espresso/70">{collection.name}</span>}
           </div>

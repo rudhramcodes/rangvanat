@@ -73,7 +73,7 @@ const Asset = ({ src, label, className = '', children, alt = assetAlt(label) }) 
 )
 
 const Eyebrow = ({ children, style }) => (
-  <p className="eyebrow text-oxblood" style={style}>
+  <p className="eyebrow text-terracotta" style={style}>
     {children}
   </p>
 )
