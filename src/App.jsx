@@ -1125,8 +1125,8 @@ const Footer = () => {
       <div
         className="footer-landscape absolute left-0 right-0 -z-10"
         style={{
-          height: '140%',
-          top: '0',
+          height: '150%',
+          top: '-10%',
           backgroundImage: 'url(/images/footer.png)',
           backgroundSize: '100% auto',
           backgroundPosition: 'center bottom',
@@ -1138,12 +1138,12 @@ const Footer = () => {
       <div className="footer-overlay absolute inset-0 -z-10" aria-hidden="true" />
 
       <div className="relative z-10 flex flex-col flex-grow">
-        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-8 max-lg:gap-8 flex-grow">
+        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-8 max-lg:gap-8 flex-grow mt-2 mx-2">
           {/* Column 1: Brand */}
-          <div className="footer-item flex flex-col gap-3 w-full max-lg:w-[280px] max-sm:w-full">
-            <div className="flex items-center gap-2">
-              <img src="/images/logo-only.svg" alt="Rangvanat" className="w-10 h-10" />
-              <span className="font-display text-[22px] text-espresso">Rangvanat</span>
+          <div className="footer-item flex flex-col gap-4 w-full max-lg:w-[280px] max-sm:w-full">
+            <div className="flex items-center gap-4">
+              <img src="/images/full-logo.svg" alt="Rangvanat" className="w-auto h-16" />
+              {/* <span className="font-display text-[22px] text-espresso">Rangvanat</span> */}
             </div>
             <p className="mt-2 max-w-[46ch] text-[13px] uppercase tracking-[0.16em] text-heritage">
               The art of weaving colours into fabric, and fabric into stories.

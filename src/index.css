@@ -2924,9 +2924,10 @@
   background: linear-gradient(
     180deg,
     var(--color-ivory) 0%,
-    var(--color-ivory) 40%,
-    rgba(251, 246, 236, 0.9) 60%,
-    rgba(251, 246, 236, 0.6) 80%,
+    var(--color-ivory) 25%,
+    rgba(251, 246, 236, 0.85) 45%,
+    rgba(251, 246, 236, 0.5) 65%,
+    rgba(251, 246, 236, 0.2) 80%,
     transparent 100%
   );
 }
@@ -2943,6 +2944,13 @@
 
 .foot-link {
   position: relative;
+  color: var(--color-espresso);
+  transition: color 0.3s ease;
+}
+
+.foot-link:hover,
+.foot-link:focus-visible {
+  color: var(--color-terracotta);
 }
 
 .foot-link::after {
