@@ -2974,6 +2974,18 @@
   .foot-link:hover::after {
     transform: none !important;
   }
+  /* Remove ALL underlines/borders from footer links, addresses, phone, email on mobile */
+  .footer a,
+  .footer p,
+  .footer address {
+    border: none !important;
+    text-decoration: none !important;
+  }
+  .footer a::after,
+  .footer a::before {
+    display: none !important;
+    content: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
