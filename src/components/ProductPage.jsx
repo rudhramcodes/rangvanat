@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ShoppingBag } from 'lucide-react'
 import { animate } from 'animejs'
 import { PRODUCTS, getCollection, productsByCollection } from '../lib/lookbook'
 import { useReducedMotion } from '../lib/motion'
@@ -92,9 +92,10 @@ const ProductPage = ({ productId }) => {
 
           <div className="lookbook-modal-cta mt-[32px]">
             <a
-              className="cta cta-md font-sans font-semibold"
+              className="cta cta-md font-sans font-semibold inline-flex items-center gap-2.5"
               href={`mailto:rangvanat@gmail.com?subject=Enquiry — ${product.code} ${product.name}`}
             >
+              <ShoppingBag size={17} className="shrink-0" />
               <span className="cta-label">Enquire about this piece</span>
             </a>
           </div>

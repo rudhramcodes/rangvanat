@@ -196,30 +196,30 @@ export const PRODUCTS = [
   },
 
   // ───────────────────────── CO-ORD SETS ─────────────────────────
-  // {
-  //   id: 'rvcs-01',
-  //   code: 'RVCS-01',
-  //   name: 'Earthy Geometry Co-ord',
-  //   category: 'Co-ord Set',
-  //   collection: 'folk',
-  //   inspiredBy: [
-  //     'The bold geometry of Indian folk artistry',
-  //     'The warmth of earthy tones',
-  //     'The beauty of handcrafted traditions',
-  //   ],
-  //   specs: [
-  //     '100% Authentic Khadi',
-  //     'Heritage-Inspired Hand Painting',
-  //     'Earthy Brown & Beige Geometric Motifs',
-  //     'Natural Wooden Button Detailing',
-  //     'Contemporary Shirt & Pant Silhouette',
-  //     'Hand-Painted & Crafted in India',
-  //   ],
-  //   description:
-  //     'Inspired by the rhythmic geometry and earthy palette of Indian folk artistry — individually hand-painted on Authentic Khadi, complemented with natural wooden buttons for a contemporary co-ord look.',
-  //   tagline: 'Earthy Roots. Modern Rhythm.',
-  //   image: 'https://res.cloudinary.com/dvsrgdyi7/image/upload/v1787213011/RVC-01.avif',
-  // },
+  {
+    id: 'rvc-02',
+    code: 'RVC-02',
+    name: 'Authentic Khadi Co-ord Set',
+    category: 'Co-ord Set',
+    collection: 'folk',
+    inspiredBy: [
+      'The bold geometry of Indian folk artistry',
+      'The warmth of earthy tones',
+      'The beauty of handcrafted traditions',
+    ],
+    specs: [
+      '100% Authentic Khadi',
+      'Heritage-Inspired Hand Painting',
+      'Earthy Brown & Beige Geometric Motifs',
+      'Natural Wooden Button Detailing',
+      'Contemporary Shirt & Pant Silhouette',
+      'Hand-Painted & Crafted in India',
+    ],
+    description:
+      'Inspired by the rhythmic geometry and earthy palette of Indian folk artistry — individually hand-painted on Authentic Khadi, complemented with natural wooden buttons for a contemporary co-ord look.',
+    tagline: 'Earthy Roots. Modern Rhythm.',
+    image: 'https://res.cloudinary.com/dvsrgdyi7/image/upload/v1787213011/RVC-02.avif',
+  },
   // {
   //   id: 'rvcs-02',
   //   code: 'RVCS-02',

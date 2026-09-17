@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
-  ArrowUp,
-  AtSign,
-  Camera,
   Globe2,
   HandHeart,
   Leaf,
-  Mail,
   Menu,
+  ShoppingBag,
   Sparkles,
   X,
 } from 'lucide-react'
@@ -17,6 +14,26 @@ import ProductPage from './components/ProductPage'
 import { animate, stagger } from 'animejs'
 import { gsap, ScrollTrigger, useReducedMotion, useReveal } from './lib/motion'
 import { COLLECTIONS, BRAND_STORY } from './lib/lookbook'
+
+const InstagramIcon = ({ size = 20, className = '', ...props }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+    {...props}
+  >
+    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+  </svg>
+)
 
 const imagePaths = {
   hero: '/images/hero.png',
@@ -139,7 +156,25 @@ const Header = ({ menuOpen, setMenuOpen }) => {
           ))}
         </nav>
 
-        <div className="header-actions flex items-center justify-end max-lg:flex">
+        <div className="header-actions flex items-center justify-end gap-2.5 max-lg:flex">
+          <a
+            href="https://www.instagram.com/rangvanat.khadiart/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center w-8 h-8 rounded-full text-espresso/70 hover:text-heritage hover:bg-brass/10 transition-colors"
+            aria-label="Rangvanat on Instagram"
+            title="Follow us on Instagram"
+          >
+            <InstagramIcon size={18} />
+          </a>
+          <a
+            href="/?page=collections"
+            className="flex items-center justify-center w-8 h-8 rounded-full text-espresso/70 hover:text-heritage hover:bg-brass/10 transition-colors"
+            aria-label="Shop Collections"
+            title="Shop Collections"
+          >
+            <ShoppingBag size={18} />
+          </a>
           <Cta href="/?page=collections" size="sm" className="max-lg:hidden">Explore</Cta>
           <button
             className="menu-toggle hidden w-11 h-11 mr-[-11px] max-lg:grid grid place-items-center border-0 bg-transparent text-inherit cursor-pointer active:scale-[0.88]"
@@ -179,8 +214,30 @@ const Header = ({ menuOpen, setMenuOpen }) => {
             </a>
           ))}
         </nav>
-        <div className="mobile-menu-foot">
+        <div className="mobile-menu-foot flex flex-col gap-2.5">
           <p>Bardoli · Gujarat · India</p>
+          <div className="flex items-center gap-3 my-1">
+            <a
+              href="/?page=collections"
+              onClick={() => setMenuOpen(false)}
+              className="inline-flex items-center gap-1.5 text-[13px] text-espresso/80 hover:text-heritage transition-colors"
+              aria-label="Shop Collections"
+            >
+              <ShoppingBag size={15} className="text-heritage shrink-0" />
+              <span>Shop Collections</span>
+            </a>
+            <span className="text-brass/40" aria-hidden="true">·</span>
+            <a
+              href="https://www.instagram.com/rangvanat.khadiart/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-[13px] text-espresso/80 hover:text-heritage transition-colors"
+              aria-label="Rangvanat on Instagram"
+            >
+              <InstagramIcon size={15} className="text-heritage shrink-0" />
+              <span>Instagram</span>
+            </a>
+          </div>
           <Cta href="#contact" size="sm" onClick={() => setMenuOpen(false)}>
             Join the Journey
           </Cta>
@@ -1151,6 +1208,16 @@ const Footer = () => {
             <p className="max-w-[420px] text-[14px] leading-relaxed text-espresso/70">
               Your address stays in Bardoli. No lists are sold, ever.
             </p>
+            <a
+              href="https://www.instagram.com/rangvanat.khadiart/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-[13px] text-espresso/80 hover:text-heritage transition-colors duration-300 w-fit"
+              aria-label="Follow Rangvanat on Instagram"
+            >
+              <InstagramIcon size={16} className="text-heritage shrink-0" />
+              <span>@rangvanat.khadiart</span>
+            </a>
           </div>
 
           {/* Column 2: Explore (navbar links) */}
@@ -1179,8 +1246,33 @@ const Footer = () => {
               <a href="tel:+919825573657" className={linkBase}>+91 98255 73657</a>
               <a href="tel:+919825219730" className={linkBase}>+91 98252 19730</a>
               <a href="mailto:rangvanat@gmail.com" className={linkBase}>rangvanat@gmail.com</a>
+              <a
+                href="https://www.instagram.com/rangvanat.khadiart/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${linkBase} inline-flex items-center gap-2`}
+                aria-label="Rangvanat on Instagram"
+              >
+                <InstagramIcon size={16} className="text-heritage shrink-0" />
+                <span>@rangvanat.khadiart</span>
+              </a>
             </div>
           </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="footer-item mt-10 pt-5 border-t border-brass/25 flex flex-wrap items-center justify-between gap-4 text-[12px] text-espresso/60">
+          <span>© {currentYear} Rangvanat · Handwoven Khadi Art</span>
+          <a
+            href="https://www.instagram.com/rangvanat.khadiart/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-espresso/70 hover:text-heritage transition-colors"
+            aria-label="Rangvanat on Instagram"
+          >
+            <InstagramIcon size={15} className="text-heritage shrink-0" />
+            <span>@rangvanat.khadiart</span>
+          </a>
         </div>
       </div>
     </footer>
