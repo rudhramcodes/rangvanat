@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+.env.local
 
 # Editor directories and files
 .vscode/*
@@ -36,3 +39,5 @@ skills-lock.json
 .superpowers
 Rangvanaat  Booklet Final.pdf
 .claude
+deck
+docs
