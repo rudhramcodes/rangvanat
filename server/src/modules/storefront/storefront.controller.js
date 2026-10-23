@@ -1,0 +1,88 @@
+import mongoose from 'mongoose';
+
+// Simple in-DB schemas for newsletter and inquiries
+const subscriberSchema = new mongoose.Schema(
+  {
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    subscribedAt: { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+
+const enquirySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, lowercase: true, trim: true },
+    phone: { type: String, default: '', trim: true },
+    topic: { type: String, default: 'General Enquiry' },
+    message: { type: String, required: true },
+    productRef: { type: String, default: '' },
+  },
+  { timestamps: true }
+);
+
+export const Subscriber = mongoose.models.Subscriber || mongoose.model('Subscriber', subscriberSchema);
+export const Enquiry = mongoose.models.Enquiry || mongoose.model('Enquiry', enquirySchema);
+
+export const subscribeNewsletter = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ success: false, message: 'A valid email address is required' });
+    }
+
+    await Subscriber.findOneAndUpdate(
+      { email: email.toLowerCase().trim() },
+      { email: email.toLowerCase().trim(), subscribedAt: new Date() },
+      { upsert: true, new: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Namaste! You have been welcomed into Letters from the Loom.',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const submitEnquiry = async (req, res, next) => {
+  try {
+    const { name, email, phone, topic, message, productRef } = req.body;
+
+    if (!name || !email || !message) {
+      return res.status(400).json({ success: false, message: 'Name, email, and message are required' });
+    }
+
+    const enquiry = new Enquiry({
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      phone: phone ? phone.trim() : '',
+      topic: topic || 'General Enquiry',
+      message: message.trim(),
+      productRef: productRef || '',
+    });
+
+    await enquiry.save();
+
+    res.json({
+      success: true,
+      message: 'Thank you for reaching out to Rangvanat. Our master weaver or stylist will contact you within 24 hours.',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getStoreStats = async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      artisansCount: '200+',
+      generations: '3',
+      craftType: '100% Handloom',
+      cluster: '1 Village Cluster (Bardoli)',
+      shippingThreshold: 15000,
+    },
+  });
+};
