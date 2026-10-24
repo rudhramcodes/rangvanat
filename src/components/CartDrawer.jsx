@@ -1,5 +1,6 @@
+import {useDialog} from '../lib/useDialog';
 import { X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
 
 export default function CartDrawer({ navigate }) {
   const {
@@ -10,11 +11,12 @@ export default function CartDrawer({ navigate }) {
     closeCart,
     removeFromCart,
     updateQuantity,
-    formatPrice,
+    formatPrice, settings,
   } = useStore();
 
-  const SHIPPING_THRESHOLD = 15000;
-  const progressPercent = Math.min(100, Math.round((subtotal / SHIPPING_THRESHOLD) * 100));
+  const dialogRef=useDialog(isCartOpen,closeCart);
+  const SHIPPING_THRESHOLD = settings?.freeShippingThreshold ?? 15000;
+  const progressPercent = Math.min(100, Math.round((subtotal / (SHIPPING_THRESHOLD || 1)) * 100));
   const diffToFreeShipping = Math.max(0, SHIPPING_THRESHOLD - subtotal);
 
   return (
@@ -26,7 +28,7 @@ export default function CartDrawer({ navigate }) {
       />
 
       {/* Drawer Panel */}
-      <aside
+      <aside ref={dialogRef} role="dialog" aria-modal={isCartOpen} aria-label="Shopping bag" inert={!isCartOpen}
         className={`cart-drawer-panel ${isCartOpen ? 'open' : ''}`}
         aria-labelledby="cart-drawer-title"
       >

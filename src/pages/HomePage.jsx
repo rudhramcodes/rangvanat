@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ArrowDown, Disc, Droplets, Grid, Layers, Sparkles } from 'lucide-react';
+import { Disc, Droplets, Grid, Layers } from 'lucide-react';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../api/client.js';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
 
 const InstagramIcon = ({ size = 20, className = '' }) => (
   <svg
@@ -24,24 +24,25 @@ const InstagramIcon = ({ size = 20, className = '' }) => (
 );
 
 export default function HomePage({ navigate }) {
-  const { addToast } = useStore();
+  const { addToast, settings } = useStore();
   const [collections, setCollections] = useState([]);
   const [selectedEdit, setSelectedEdit] = useState('all');
   const [bestsellers, setBestsellers] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [curatedLoading, setCuratedLoading] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'editorial'
   const [newsletterEmail, setNewsletterEmail] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   // Initial load: Collections and Bestsellers
   useEffect(() => {
+    let active=true;
     async function loadInitial() {
       try {
         const [colls, bests] = await Promise.all([
           api.getCollections(),
           api.getBestsellers(),
         ]);
+        if(!active)return;
         setCollections(colls || []);
         setBestsellers(bests || []);
       } catch (e) {
@@ -51,10 +52,12 @@ export default function HomePage({ navigate }) {
       }
     }
     loadInitial();
+    return()=>{active=false;};
   }, []);
 
   // Dynamically load Curated Edits products based on selected tab
   useEffect(() => {
+    let active=true;
     async function loadCurated() {
       setCuratedLoading(true);
       try {
@@ -70,11 +73,11 @@ export default function HomePage({ navigate }) {
             );
             items = [...items, ...extraItems].slice(0, 3);
           }
-          setFeaturedProducts(items);
+          if(active)setFeaturedProducts(items);
         } else {
           // Fetch specifically for the chosen collection
           const data = await api.getProducts({ collection: selectedEdit, limit: 3 });
-          setFeaturedProducts(data?.products || []);
+          if(active)setFeaturedProducts(data?.products || []);
         }
       } catch (err) {
         console.error('Failed to load curated products:', err);
@@ -83,14 +86,15 @@ export default function HomePage({ navigate }) {
       }
     }
     loadCurated();
+    return()=>{active=false;};
   }, [selectedEdit]);
 
   const handleNewsletter = async (e) => {
     e.preventDefault();
     if (!newsletterEmail || !newsletterEmail.includes('@')) return;
-    await api.subscribeNewsletter(newsletterEmail);
-    addToast('Subscribed to Letters from the Loom!', 'success');
-    setNewsletterEmail('');
+    const res=await api.subscribeNewsletter(newsletterEmail);
+    addToast(res.success?'Subscribed to Letters from the Loom!':res.message,res.success?'success':'error');
+    if(res.success)setNewsletterEmail('');
   };
 
   return (
@@ -104,11 +108,11 @@ export default function HomePage({ navigate }) {
             loop
             muted
             playsInline
-            poster="/images/hero.png"
+            poster={settings?.heroImage||'/images/hero.png'}
             className="w-full h-full object-cover opacity-100"
           >
             <source
-              src="https://res.cloudinary.com/dvsrgdyi7/video/upload/rangvanat-hero.mp4"
+              src={settings?.heroVideo || 'https://res.cloudinary.com/dvsrgdyi7/video/upload/rangvanat-hero.mp4'}
               type="video/mp4"
             />
           </video>
@@ -140,12 +144,12 @@ export default function HomePage({ navigate }) {
 
             {/* Architectural 2-Line Headline per Taste-Skill (No decorative line) */}
             <h1 className="display-xl font-bold tracking-tight text-[var(--bg-ivory)] mb-6 leading-[0.98] drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">
-              WEAVING COLOURS<br className="hidden sm:inline" /> INTO STORIES
+              {settings?.heroTitle || 'WEAVING COLOURS INTO STORIES'}
             </h1>
 
             {/* Serif Pull Statement (Separated cleanly by space, no thin line) */}
             <p className="serif-statement text-xl sm:text-2xl md:text-[25px] text-[var(--bg-ivory)]/95 mb-8 max-w-xl font-normal leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
-              "Cloth whose thread is spun by hand, dyed with ancient roots, and woven into quiet poetry."
+              {settings?.heroText || 'Cloth whose thread is spun by hand, dyed with ancient roots, and woven into quiet poetry.'}
             </p>
 
             {/* Two Action Buttons: Both 52px height, pristine alignment */}
@@ -370,80 +374,26 @@ export default function HomePage({ navigate }) {
               <h2 className="heading-1 text-[var(--brand-maroon)]">Bestsellers</h2>
             </div>
 
-            {/* Signature Editorial / Grid View Toggle */}
-            <div className="flex items-center gap-3">
-              <span className="caption text-[var(--ink-soft)] uppercase tracking-wider text-[11px]">
-                Layout:
-              </span>
-              <div className="view-toggle-track">
-                <button
-                  type="button"
-                  onClick={() => setViewMode('grid')}
-                  className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                >
-                  <Grid size={14} />
-                  <span>Grid</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('editorial')}
-                  className={`view-toggle-btn ${viewMode === 'editorial' ? 'active' : ''}`}
-                >
-                  <Layers size={14} />
-                  <span>Editorial</span>
-                </button>
-              </div>
-            </div>
+            <button
+              onClick={() => navigate({ page: 'shop' })}
+              className="text-xs font-semibold tracking-wider uppercase text-[var(--brand-maroon)] hover:text-[var(--brand-gold)] transition-colors inline-flex items-center gap-1.5"
+            >
+              <span>Explore All</span>
+              <span>→</span>
+            </button>
           </div>
 
-          {/* Product Cards Display according to view mode */}
-          {viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-              {bestsellers.slice(0, 8).map((product) => (
-                <ProductCard
-                  key={product._id || product.slug}
-                  product={product}
-                  variant="grid"
-                  onSelect={(id) => navigate({ page: 'product', id })}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-12">
-              {bestsellers.slice(0, 4).map((product, idx) => (
-                <div
-                  key={product._id || product.slug}
-                  className={`grid grid-cols-1 md:grid-cols-12 gap-8 items-center ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''
-                    }`}
-                >
-                  <div className={`md:col-span-7 ${idx % 2 === 1 ? 'md:order-2' : ''}`}>
-                    <ProductCard
-                      product={product}
-                      variant="editorial"
-                      onSelect={(id) => navigate({ page: 'product', id })}
-                    />
-                  </div>
-                  <div className={`md:col-span-5 ${idx % 2 === 1 ? 'md:order-1' : ''} space-y-4`}>
-                    <p className="eyebrow text-[var(--brand-gold)]">Handloom Certified</p>
-                    <h3 className="heading-2 text-[var(--brand-maroon)]">{product.title}</h3>
-                    <p className="body-l text-[var(--ink-chocolate)]/90">
-                      {product.description ||
-                        'Crafted painstakingly over forty days on pit looms in Bardoli, using single-spindle khadi yarns.'}
-                    </p>
-                    <div className="pt-2 flex items-center gap-4">
-                      <button
-                        onClick={() => navigate({ page: 'product', id: product.slug || product._id })}
-                        className="btn btn-primary btn-md"
-                      >
-                        View Craft Details
-                      </button>
-                      <span className="price text-xl">₹{product.price?.toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Product Cards Display - Pure Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            {bestsellers.slice(0, 8).map((product) => (
+              <ProductCard
+                key={product._id || product.slug}
+                product={product}
+                variant="grid"
+                onSelect={(id) => navigate({ page: 'product', id })}
+              />
+            ))}
+          </div>
 
           <div className="text-center mt-12">
             <button
@@ -658,6 +608,7 @@ export default function HomePage({ navigate }) {
           </form>
         </div>
       </section>
+      {settings?.sections?.filter(s=>s.enabled).map((s,i)=><section className="rv-container py-16" key={i}><h2 className="heading-2">{s.title}</h2><p className="my-6 whitespace-pre-wrap">{s.body}</p>{s.image&&<img className="max-h-96 object-cover" src={s.image} alt={s.title}/ >}{s.href&&<a className="btn btn-secondary" href={s.href}>Explore</a>}</section>)}
     </main>
   );
 }

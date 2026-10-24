@@ -1,155 +1,131 @@
-import { Product } from './product.model.js';
-
+import { Product } from "./product.model.js";
+import { fail, text, escapeRegex } from "../../utils/validate.js";
 export const getProducts = async (req, res, next) => {
   try {
-    const {
-      collection,
-      category,
-      search,
-      minPrice,
-      maxPrice,
-      inStock,
-      sort = 'featured',
-      page = 1,
-      limit = 24,
-    } = req.query;
-
-    const query = { isPublished: true };
-
-    if (collection && collection !== 'all') {
-      query.collectionId = collection.toLowerCase();
+    const b = req.query,
+      query = { isPublished: true };
+    for (const [param, field] of [
+      ["collection", "collectionId"],
+      ["category", "category"],
+      ["fabric", "fabric"],
+      ["craft", "craft"],
+    ])
+      if (typeof b[param] === "string" && b[param] !== "all")
+        query[field] = text(b[param], 100);
+    if (typeof b.search === "string" && b.search.trim()) {
+      const regex = new RegExp(escapeRegex(text(b.search, 100)), "i");
+      query.$or = ["title", "description", "category", "fabric", "craft"].map(
+        (k) => ({ [k]: regex }),
+      );
     }
-
-    if (category && category !== 'all') {
-      query.category = category;
-    }
-
-    if (minPrice || maxPrice) {
+    if (b.minPrice !== undefined || b.maxPrice !== undefined) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      for (const [param, op] of [
+        ["minPrice", "$gte"],
+        ["maxPrice", "$lte"],
+      ])
+        if (b[param] !== undefined) {
+          const n = Number(b[param]);
+          if (!Number.isFinite(n) || n < 0) fail("Invalid price filter");
+          query.price[op] = n;
+        }
     }
-
-    if (inStock === 'true') {
-      query.totalStock = { $gt: 0 };
-    }
-
-    if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), 'i');
-      query.$or = [
-        { title: searchRegex },
-        { description: searchRegex },
-        { category: searchRegex },
-        { heritageCraftStory: searchRegex },
+    if (b.inStock === "true") {
+      query.salesPaused = { $ne: true };
+      query.$and = [
+        { $or: [{ totalStock: { $gt: 0 } }, { madeToOrder: true }] },
       ];
     }
-
-    let sortOption = { isFeatured: -1, createdAt: -1 };
-    if (sort === 'price_asc') sortOption = { price: 1 };
-    else if (sort === 'price_desc') sortOption = { price: -1 };
-    else if (sort === 'newest') sortOption = { createdAt: -1 };
-    else if (sort === 'title') sortOption = { title: 1 };
-
-    const pageNum = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.max(1, parseInt(limit, 10));
-    const skip = (pageNum - 1) * limitNum;
-
-    const [products, totalCount] = await Promise.all([
-      Product.find(query).sort(sortOption).skip(skip).limit(limitNum).lean(),
+    const page = Math.max(1, Math.min(10000, Number.parseInt(b.page, 10) || 1)),
+      limit = Math.max(1, Math.min(100, Number.parseInt(b.limit, 10) || 24));
+    const sort = {
+      price_asc: { price: 1 },
+      price_desc: { price: -1 },
+      newest: { createdAt: -1 },
+      title: { title: 1 },
+    }[b.sort] || { isFeatured: -1, createdAt: -1 };
+    const [products, total, facets] = await Promise.all([
+      Product.find(query)
+        .sort(sort)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
       Product.countDocuments(query),
+      Product.aggregate([
+        { $match: { isPublished: true } },
+        {
+          $group: {
+            _id: null,
+            categories: { $addToSet: "$category" },
+            fabrics: { $addToSet: "$fabric" },
+            crafts: { $addToSet: "$craft" },
+          },
+        },
+      ]),
     ]);
-
     res.json({
       success: true,
       data: {
         products,
+        facets: facets[0] || { categories: [], fabrics: [], crafts: [] },
         pagination: {
-          total: totalCount,
-          page: pageNum,
-          limit: limitNum,
-          pages: Math.ceil(totalCount / limitNum),
-          hasMore: pageNum * limitNum < totalCount,
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit),
+          hasMore: page * limit < total,
         },
       },
     });
-  } catch (err) {
-    next(err);
+  } catch (e) {
+    next(e);
   }
 };
-
 export const getFeaturedProducts = async (req, res, next) => {
   try {
-    let products = await Product.find({ isPublished: true, isFeatured: true }).limit(8).lean();
-    if (!products.length) {
-      products = await Product.find({ isPublished: true }).limit(8).lean();
-    }
-    res.json({ success: true, data: products });
-  } catch (err) {
-    next(err);
+    res.json({
+      success: true,
+      data: await Product.find({ isPublished: true, isFeatured: true })
+        .limit(8)
+        .lean(),
+    });
+  } catch (e) {
+    next(e);
   }
 };
-
-export const getBestsellers = async (req, res, next) => {
-  try {
-    const products = await Product.find({ isPublished: true }).sort({ totalStock: -1 }).limit(8).lean();
-    res.json({ success: true, data: products });
-  } catch (err) {
-    next(err);
-  }
-};
-
+export const getBestsellers = getFeaturedProducts;
 export const getProductBySlugOrId = async (req, res, next) => {
   try {
-    const { identifier } = req.params;
-    let product = null;
-
-    if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-      product = await Product.findById(identifier).lean();
-    }
-
-    if (!product) {
-      product = await Product.findOne({ slug: identifier.toLowerCase() }).lean();
-    }
-
-    if (!product) {
-      // Also fallback search in code or partial slug match
-      product = await Product.findOne({
-        $or: [
-          { 'images.publicId': identifier.toUpperCase() },
-          { slug: new RegExp(identifier, 'i') },
-        ],
-      }).lean();
-    }
-
-    if (!product) {
-      return res.status(404).json({ success: false, message: 'Product not found' });
-    }
-
+    const id = req.params.identifier;
+    const product = await Product.findOne({
+      isPublished: true,
+      ...(/^[a-f\d]{24}$/i.test(id) ? { _id: id } : { slug: id }),
+    }).lean();
+    if (!product) fail("Product not found", 404);
     res.json({ success: true, data: product });
-  } catch (err) {
-    next(err);
+  } catch (e) {
+    next(e);
   }
 };
-
 export const getRelatedProducts = async (req, res, next) => {
   try {
-    const { identifier } = req.params;
     const base = await Product.findOne({
-      $or: [
-        { slug: identifier.toLowerCase() },
-        ...(identifier.match(/^[0-9a-fA-F]{24}$/) ? [{ _id: identifier }] : []),
-      ],
-    }).lean();
-
-    const query = { isPublished: true };
-    if (base) {
-      query._id = { $ne: base._id };
-      query.$or = [{ collectionId: base.collectionId }, { category: base.category }];
-    }
-
-    const related = await Product.find(query).limit(4).lean();
-    res.json({ success: true, data: related });
-  } catch (err) {
-    next(err);
+      slug: req.params.identifier,
+      isPublished: true,
+    });
+    res.json({
+      success: true,
+      data: base
+        ? await Product.find({
+            _id: { $ne: base._id },
+            isPublished: true,
+            collectionId: base.collectionId,
+          })
+            .limit(4)
+            .lean()
+        : [],
+    });
+  } catch (e) {
+    next(e);
   }
 };

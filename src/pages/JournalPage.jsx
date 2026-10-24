@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Clock, Calendar, Share2 } from 'lucide-react';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
 
 const ARTICLES = [
   {

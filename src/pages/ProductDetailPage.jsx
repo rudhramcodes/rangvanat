@@ -1,20 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-  Heart,
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  Plus,
-  Minus,
-  ChevronDown,
-  Sparkles,
-} from 'lucide-react';
+import { Heart, ShieldCheck, Truck, RotateCcw, Plus, Minus, ChevronDown } from 'lucide-react';
+import DeliveryCheck from '../components/DeliveryCheck';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../api/client.js';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
 
 export default function ProductDetailPage({ productId, navigate }) {
-  const { addToCart, toggleWishlist, isInWishlist, formatPrice } = useStore();
+  const { addToCart, toggleWishlist, isInWishlist, formatPrice, addToast } = useStore();
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -37,10 +29,12 @@ export default function ProductDetailPage({ productId, navigate }) {
   const [showStickyBar, setShowStickyBar] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
+    let active=true;
+    queueMicrotask(()=>{if(active)setLoading(true);});
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     api.getProductByIdOrSlug(productId).then((data) => {
+      if(!active)return;
       setProduct(data);
       if (data?.variants?.length) {
         setSelectedSize(data.variants[0].size || 'M');
@@ -48,7 +42,8 @@ export default function ProductDetailPage({ productId, navigate }) {
       setLoading(false);
     });
 
-    api.getRelatedProducts(productId).then((data) => setRelated(data || []));
+    api.getRelatedProducts(productId).then((data) => {if(active)setRelated(data || []);});
+    return()=>{active=false;};
   }, [productId]);
 
   // Track scroll for sticky bottom buy bar
@@ -94,7 +89,9 @@ export default function ProductDetailPage({ productId, navigate }) {
 
   const id = product._id || product.id || product.slug;
   const title = product.title || product.name || 'Handcrafted Khadi Piece';
-  const price = product.price || 12500;
+  const selectedVariant=product.variants?.find(v=>v.size===selectedSize);
+  const maximum=product.salesPaused?0:product.madeToOrder?99:Math.min(99,selectedVariant?.stock||0);
+  const price = Number(product.price || 0)+Number(selectedVariant?.priceDelta||0);
   const compareAtPrice = product.compareAtPrice || null;
   const images = product.images?.length
     ? product.images.map((img) => img.url)
@@ -106,12 +103,14 @@ export default function ProductDetailPage({ productId, navigate }) {
     : ['XS', 'S', 'M', 'L', 'XL', 'Custom'];
 
   const handleAdd = () => {
+    if(quantity>maximum){addToast('Requested quantity is unavailable','error');return;}
     const customMeasurements =
       selectedSize === 'Custom' ? { bust: customBust, waist: customWaist, hip: customHip } : {};
     addToCart(product, selectedSize || 'Standard', quantity, customMeasurements);
   };
 
   const handleBuyNow = () => {
+    if(quantity>maximum){addToast('Requested quantity is unavailable','error');return;}
     const customMeasurements =
       selectedSize === 'Custom' ? { bust: customBust, waist: customWaist, hip: customHip } : {};
     addToCart(product, selectedSize || 'Standard', quantity, customMeasurements);
@@ -249,7 +248,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                   <button
                     key={size}
                     type="button"
-                    onClick={() => setSelectedSize(size)}
+                    disabled={product.salesPaused || (!product.madeToOrder && !product.variants?.find(v=>v.size===size)?.stock)} onClick={() => {setSelectedSize(size);setQuantity(1);}}
                     className={`h-11 px-5 rounded-full text-sm font-semibold transition-all ${selectedSize === size
                         ? 'bg-[var(--brand-maroon)] text-[var(--bg-ivory)] shadow-sm'
                         : 'bg-white border border-[var(--line-khadi)] text-[var(--ink-chocolate)] hover:border-[var(--brand-maroon)]'
@@ -290,7 +289,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                     />
                   </div>
                   <p className="caption text-xs text-[var(--ink-soft)]">
-                    Our master tailor will confirm final specs over WhatsApp.
+                    Our master tailor will confirm bespoke measurements before looming.
                   </p>
                 </div>
               )}
@@ -311,7 +310,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                   <span>{quantity}</span>
                   <button
                     type="button"
-                    onClick={() => setQuantity((q) => q + 1)}
+                    onClick={() => setQuantity((q) => Math.min(maximum,q + 1))}
                     aria-label="Increase quantity"
                   >
                     <Plus size={14} />
@@ -323,14 +322,14 @@ export default function ProductDetailPage({ productId, navigate }) {
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <button
                   type="button"
-                  onClick={handleAdd}
+                  disabled={maximum<quantity} onClick={handleAdd}
                   className="btn btn-secondary btn-lg flex-1 justify-center tracking-wider text-sm uppercase"
                 >
                   Add to Bag
                 </button>
                 <button
                   type="button"
-                  onClick={handleBuyNow}
+                  disabled={maximum<quantity} onClick={handleBuyNow}
                   className="btn btn-primary btn-lg flex-1 justify-center tracking-wider text-sm uppercase shadow-sm"
                 >
                   Buy Now · {formatPrice(price * quantity)}
@@ -484,13 +483,14 @@ export default function ProductDetailPage({ productId, navigate }) {
           </div>
           <button
             type="button"
-            onClick={handleAdd}
+            disabled={maximum<quantity} onClick={handleAdd}
             className="btn btn-primary btn-sm px-6 text-xs uppercase tracking-wider"
           >
             Add to Bag
           </button>
         </div>
       )}
+      <DeliveryCheck />
     </main>
   );
 }

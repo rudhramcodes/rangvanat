@@ -1,23 +1,16 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { readArray, validCartLine } from '../lib/commerce';
 import { api } from '../api/client.js';
 
-export const formatPrice = (amount) => {
-  if (amount === undefined || amount === null || isNaN(Number(amount))) return '₹0';
-  return '₹' + Math.round(Number(amount)).toLocaleString('en-IN');
-};
-
-const StoreContext = createContext(null);
+import StoreContext, {formatPrice} from './store';
 
 export function StoreProvider({ children }) {
   // 1. Cart State with localStorage persistence
-  const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem('rv_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [cart, setCart] = useState(() => readArray('rv_cart',validCartLine));
+  const [couponCode,setCouponCode]=useState(()=>localStorage.getItem('rv_coupon')||'');
+  useEffect(()=>{localStorage.setItem('rv_coupon',couponCode);},[couponCode]);
+  const [settings,setSettings]=useState(null);
+  useEffect(()=>{api.settings().then(r=>{if(r.success)setSettings(r.data);});},[]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
@@ -30,14 +23,7 @@ export function StoreProvider({ children }) {
   }, [cart]);
 
   // 2. Wishlist State with localStorage persistence
-  const [wishlist, setWishlist] = useState(() => {
-    try {
-      const saved = localStorage.getItem('rv_wishlist');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [wishlist, setWishlist] = useState(() => readArray('rv_wishlist',i=>typeof i==='string'));
 
   useEffect(() => {
     try {
@@ -90,18 +76,13 @@ export function StoreProvider({ children }) {
     [removeToast]
   );
 
-  // Sync customer session if token exists
-  useEffect(() => {
-    const token = localStorage.getItem('rv_token');
-    if (token) {
-      api.getMe().then((res) => {
-        if (res?.success && res.data) {
-          setCustomer(res.data);
-        }
-      });
-    }
-  }, []);
-
+  const refreshCustomer = useCallback(async () => {
+    if(!localStorage.getItem('rv_token')) return;
+    const res=await api.getMe();
+    if(res.success){setCustomer(res.data);setWishlist(res.data.wishlist||[]);}
+    else if(res.status===401||res.status===403){localStorage.removeItem('rv_token');setCustomer(null);}
+  },[]);
+  useEffect(()=>{queueMicrotask(refreshCustomer);const sync=e=>{if(e.key==='rv_cart')setCart(readArray('rv_cart',validCartLine));if(e.key==='rv_wishlist')setWishlist(readArray('rv_wishlist',i=>typeof i==='string'));};window.addEventListener('storage',sync);return()=>window.removeEventListener('storage',sync);},[refreshCustomer]);
   // Cart operations
   const openCart = useCallback(() => setIsCartOpen(true), []);
   const closeCart = useCallback(() => setIsCartOpen(false), []);
@@ -112,7 +93,10 @@ export function StoreProvider({ children }) {
       const id = product._id || product.id || product.slug || 'piece';
       const slug = product.slug || product.id || 'piece';
       const title = product.title || product.name || 'Handcrafted Khadi Piece';
-      const price = Number(product.price) || 12500;
+      const variant=product.variants?.find(v=>v.size===size);
+      if(!variant || product.salesPaused || (!product.madeToOrder && variant.stock<quantity)){addToast('This size or quantity is unavailable','error');return;}
+      if(size==='Custom' && !customMeasurements.bust && !customMeasurements.waist && !customMeasurements.notes){addToast('Add custom measurements first','error');return;}
+      const price = Number(product.price) + Number(variant.priceDelta||0);
       const image =
         product.images?.[0]?.url ||
         product.image ||
@@ -126,7 +110,7 @@ export function StoreProvider({ children }) {
           const updated = [...prev];
           updated[existingIndex] = {
             ...updated[existingIndex],
-            quantity: updated[existingIndex].quantity + (quantity || 1),
+            quantity: Math.min(product.madeToOrder?99:Math.min(99,variant.stock),updated[existingIndex].quantity + (quantity || 1)),
           };
           return updated;
         }
@@ -141,7 +125,7 @@ export function StoreProvider({ children }) {
             image,
             price,
             size,
-            quantity: Math.max(1, quantity || 1),
+            quantity: Math.min(99,Math.max(1, quantity || 1)),
             customMeasurements: customMeasurements || {},
           },
         ];
@@ -166,7 +150,7 @@ export function StoreProvider({ children }) {
       prev
         .map((item) => {
           if (item.key === key) {
-            const nextQty = item.quantity + delta;
+            const nextQty = Math.min(99,item.quantity + delta);
             return nextQty > 0 ? { ...item, quantity: nextQty } : null;
           }
           return item;
@@ -177,6 +161,7 @@ export function StoreProvider({ children }) {
 
   const clearCart = useCallback(() => {
     setCart([]);
+    setCouponCode('');
   }, []);
 
   const cartCount = useMemo(() => {
@@ -197,29 +182,13 @@ export function StoreProvider({ children }) {
     [wishlist]
   );
 
-  const toggleWishlist = useCallback(
-    (product) => {
-      const idOrSlug =
-        typeof product === 'string'
-          ? product
-          : product.slug || product._id || product.id;
-      if (!idOrSlug) return;
-      const key = String(idOrSlug);
-
-      setWishlist((prev) => {
-        const exists = prev.some((k) => String(k).toLowerCase() === key.toLowerCase());
-        const updated = exists
-          ? prev.filter((k) => String(k).toLowerCase() !== key.toLowerCase())
-          : [...prev, key];
-        addToast(
-          exists ? 'Removed from wishlist' : 'Saved to wishlist',
-          exists ? 'info' : 'success'
-        );
-        return updated;
-      });
-    },
-    [addToast]
-  );
+  const toggleWishlist = useCallback(async product => {
+    const key=typeof product==='string'?product:product.slug||product._id||product.id;
+    if(!key)return;
+    const exists=wishlist.includes(key);const updated=exists?wishlist.filter(k=>k!==key):[...wishlist,key];
+    if(customer){const res=await api.updateProfile({wishlist:updated});if(!res.success){addToast(res.message,'error');return;}}
+    setWishlist(updated);addToast(exists?'Removed from wishlist':'Saved to wishlist','success');
+  },[wishlist,customer,addToast]);
 
   // Authentication operations
   const login = useCallback(
@@ -232,6 +201,7 @@ export function StoreProvider({ children }) {
           }
           const cust = res.data.customer || res.data;
           setCustomer(cust);
+          await refreshCustomer();
           addToast(`Welcome back, ${cust.name || 'patron'}!`, 'success');
           return { success: true, customer: cust };
         }
@@ -243,7 +213,7 @@ export function StoreProvider({ children }) {
         return { success: false, message: err.message };
       }
     },
-    [addToast]
+    [addToast,refreshCustomer]
   );
 
   const register = useCallback(
@@ -256,6 +226,7 @@ export function StoreProvider({ children }) {
           }
           const cust = res.data.customer || res.data;
           setCustomer(cust);
+          await refreshCustomer();
           addToast(`Welcome to Rangvanat, ${cust.name}!`, 'success');
           return { success: true, customer: cust };
         }
@@ -267,17 +238,19 @@ export function StoreProvider({ children }) {
         return { success: false, message: err.message };
       }
     },
-    [addToast]
+    [addToast,refreshCustomer]
   );
 
   const logout = useCallback(() => {
     localStorage.removeItem('rv_token');
     localStorage.removeItem('rv_customer');
     setCustomer(null);
+    setWishlist([]);
     addToast('Signed out of atelier session', 'info');
   }, [addToast]);
 
   const value = {
+    settings,couponCode,setCouponCode,refreshCustomer,
     // Cart
     cart,
     cartCount,
@@ -314,12 +287,3 @@ export function StoreProvider({ children }) {
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 
-export function useStore() {
-  const context = useContext(StoreContext);
-  if (!context) {
-    throw new Error('useStore must be used within a StoreProvider');
-  }
-  return context;
-}
-
-export default StoreContext;

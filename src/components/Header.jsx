@@ -1,24 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
-import { Search, User, Heart, ShoppingBag, Menu, X, ChevronDown, ArrowRight } from 'lucide-react';
-import { useStore } from '../context/StoreContext.jsx';
+import { useState, useEffect } from 'react';
+import { Search, User, Heart, ShoppingBag, Menu, X } from 'lucide-react';
+import {api} from '../api/client';
+import { useStore } from '../context/store.js';
 
-export default function Header({ currentRoute, navigate }) {
-  const { cartCount, wishlist, openCart, customer, logout } = useStore();
+export default function Header({ navigate }) {
+  const { cartCount, wishlist, openCart, customer, logout, settings } = useStore();
+  const [collections,setCollections]=useState([]);
+  useEffect(()=>{api.getCollections().then(setCollections);},[]);
   const [scrolled, setScrolled] = useState(false);
-  const [shopMegaOpen, setShopMegaOpen] = useState(false);
-  const [craftDropOpen, setCraftDropOpen] = useState(false);
   const [accountDropOpen, setAccountDropOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [mobileShopOpen, setMobileShopOpen] = useState(false);
-  const [mobileCraftOpen, setMobileCraftOpen] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
 
-  const shopMegaTimer = useRef(null);
 
   // Handle sticky header scroll past 24px
   useEffect(() => {
@@ -32,15 +30,16 @@ export default function Header({ currentRoute, navigate }) {
   // Debounced search
   useEffect(() => {
     if (!searchQuery.trim() || searchQuery.length < 2) {
-      setSearchResults([]);
+      queueMicrotask(()=>{setSearchResults([]);setSearching(false);});
       return;
     }
-    setSearching(true);
+    queueMicrotask(()=>setSearching(true));
+    let active=true;
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}&limit=4`);
         const json = await res.json();
-        if (json?.success) {
+        if (active && json?.success) {
           setSearchResults(json.data.products || []);
         }
       } catch (e) {
@@ -50,15 +49,13 @@ export default function Header({ currentRoute, navigate }) {
       }
     }, 200);
 
-    return () => clearTimeout(timer);
+    return () => {active=false;clearTimeout(timer);};
   }, [searchQuery]);
 
   // Close dropdowns on outside click or Escape
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        setShopMegaOpen(false);
-        setCraftDropOpen(false);
         setAccountDropOpen(false);
         setSearchOpen(false);
         setMobileDrawerOpen(false);
@@ -68,19 +65,30 @@ export default function Header({ currentRoute, navigate }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleShopEnter = () => {
-    clearTimeout(shopMegaTimer.current);
-    shopMegaTimer.current = setTimeout(() => {
-      setShopMegaOpen(true);
-      setCraftDropOpen(false);
-    }, 150);
-  };
+  const DEFAULT_NAV = [
+    { label: 'Shop', href: '/?page=shop' },
+    { label: 'Our Story', href: '/?page=story' },
+    { label: 'The Craft', href: '/?page=craft' },
+    { label: 'Journal', href: '/?page=journal' },
+    { label: 'Contact', href: '/?page=contact' },
+  ];
+  const navItems = settings?.navigation?.length ? settings.navigation : DEFAULT_NAV;
 
-  const handleShopLeave = () => {
-    clearTimeout(shopMegaTimer.current);
-    shopMegaTimer.current = setTimeout(() => {
-      setShopMegaOpen(false);
-    }, 200);
+  const handleNavClick = (e, href) => {
+    if (!href || href.startsWith('http://') || href.startsWith('https://')) return;
+    e.preventDefault();
+    setMobileDrawerOpen(false);
+    try {
+      const url = new URL(href, window.location.origin);
+      const pageParam = url.searchParams.get('page');
+      const cleanPath = url.pathname.replace(/^\//, '');
+      const page = cleanPath === 'products' ? 'shop' : pageParam || cleanPath || 'home';
+      const collection = url.searchParams.get('collection') || 'all';
+      const category = url.searchParams.get('category') || 'all';
+      navigate({ page, collection, category });
+    } catch {
+      navigate({ page: 'shop' });
+    }
   };
 
   return (
@@ -112,7 +120,7 @@ export default function Header({ currentRoute, navigate }) {
               aria-label="Rangvanat Home"
             >
               <img
-                src="/images/full-logo.svg"
+                src={settings?.logo || '/images/logo-only.svg'}
                 alt="Rangvanat Monogram"
                 className="h-9 md:h-10 w-auto object-contain"
                 onError={(e) => {
@@ -125,259 +133,36 @@ export default function Header({ currentRoute, navigate }) {
 
           {/* Center: Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-7" aria-label="Primary navigation">
-            <a
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate({ page: 'home' });
-              }}
-              className={`nav-link ${currentRoute.page === 'home' ? 'active' : ''}`}
-            >
-              Home
-            </a>
-
-            {/* Shop with Mega Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={handleShopEnter}
-              onMouseLeave={handleShopLeave}
-            >
-              <button
-                onClick={() => navigate({ page: 'shop' })}
-                className={`nav-link flex items-center gap-1 bg-transparent border-none cursor-pointer ${
-                  currentRoute.page === 'shop' ? 'active' : ''
-                }`}
-              >
-                Shop
-                <ChevronDown size={14} strokeWidth={1.5} />
-              </button>
-
-              {shopMegaOpen && (
-                <div
-                  className="fixed left-0 right-0 top-[72px] bg-white border-t border-[var(--line-khadi)] shadow-[var(--shadow-dropdown)] py-8 z-50 transition-all duration-200"
-                  style={{ top: scrolled ? '60px' : '72px' }}
+            {navItems.map((n) => (
+              <div key={n.href} className="relative group">
+                <a
+                  className="nav-link cursor-pointer"
+                  href={n.href}
+                  onClick={(e) => handleNavClick(e, n.href)}
                 >
-                  <div className="rv-container grid grid-cols-5 gap-8">
-                    {/* Col 1: Categories */}
-                    <div>
-                      <p className="eyebrow text-[var(--ink-soft)] mb-4">Categories</p>
-                      <ul className="space-y-2.5 list-none p-0 m-0">
-                        {['Sarees', 'Dupattas & Stoles', 'Fabrics by Metre', 'Co-ord Sets', 'Dresses', 'Jackets'].map(
-                          (cat) => (
-                            <li key={cat}>
-                              <a
-                                href={`/shop?category=${encodeURIComponent(cat)}`}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setShopMegaOpen(false);
-                                  navigate({ page: 'shop', category: cat });
-                                }}
-                                className="text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] block transition-transform duration-150 hover:translate-x-1"
-                              >
-                                {cat}
-                              </a>
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-
-                    {/* Col 2: Curated Edits */}
-                    <div>
-                      <p className="eyebrow text-[var(--ink-soft)] mb-4">Curated Edits</p>
-                      <ul className="space-y-2.5 list-none p-0 m-0">
-                        {[
-                          { id: 'flora', name: 'The Flora Edit' },
-                          { id: 'sacred', name: 'The Sacred Edit' },
-                          { id: 'folk', name: 'The Folk Edit' },
-                          { id: 'heritage', name: 'The Heritage Edit' },
-                          { id: 'denim', name: 'The Denim Edit' },
-                          { id: 'modern', name: 'The Modern Edit' },
-                        ].map((edit) => (
-                          <li key={edit.id}>
-                            <a
-                              href={`/shop?collection=${edit.id}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setShopMegaOpen(false);
-                                navigate({ page: 'shop', collection: edit.id });
-                              }}
-                              className="text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] block transition-transform duration-150 hover:translate-x-1"
-                            >
-                              {edit.name}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Col 3: By Craft */}
-                    <div>
-                      <p className="eyebrow text-[var(--ink-soft)] mb-4">By Craft</p>
-                      <ul className="space-y-2.5 list-none p-0 m-0">
-                        {['Artisan Hand Spun', 'Natural Indigo Dye', 'Pit Loom Woven', 'Block Printed Border'].map((craft) => (
-                          <li key={craft}>
-                            <a
-                              href="/craft"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setShopMegaOpen(false);
-                                navigate({ page: 'craft' });
-                              }}
-                              className="text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] block transition-transform duration-150 hover:translate-x-1"
-                            >
-                              {craft}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Col 4: Help Me Choose */}
-                    <div>
-                      <p className="eyebrow text-[var(--ink-soft)] mb-4">Services</p>
-                      <ul className="space-y-2.5 list-none p-0 m-0">
-                        <li>
-                          <a
-                            href="/contact"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setShopMegaOpen(false);
-                              navigate({ page: 'contact', topic: 'Video Consultation' });
-                            }}
-                            className="text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] block"
-                          >
-                            Book a Video Call
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="/contact"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setShopMegaOpen(false);
-                              navigate({ page: 'contact' });
-                            }}
-                            className="text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] block"
-                          >
-                            Customer & Order Support
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            href="/faq"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setShopMegaOpen(false);
-                              navigate({ page: 'faq' });
-                            }}
-                            className="text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] block"
-                          >
-                            Care & Sizing Guide
-                          </a>
-                        </li>
-                      </ul>
-                    </div>
-
-                    {/* Col 5: Editorial Feature Card */}
-                    <div className="bg-[var(--bg-cream)] p-4 flex flex-col justify-between rounded-[2px] relative overflow-hidden">
-                      <img
-                        src="/images/bridal-edit.jpg"
-                        alt="The Bridal Edit"
-                        className="w-full h-36 object-cover mb-3"
-                      />
-                      <p className="serif-statement text-[17px] text-[var(--ink-chocolate)] mb-2">
-                        "Every thread spun by human hands carries a pulse."
-                      </p>
-                      <button
-                        onClick={() => {
-                          setShopMegaOpen(false);
-                          navigate({ page: 'shop', collection: 'heritage' });
-                        }}
-                        className="btn-ghost text-left text-[13px] font-semibold text-[var(--brand-maroon)]"
+                  {n.label}
+                </a>
+                {/products|shop/.test(n.href) && collections.length > 0 && (
+                  <div className="absolute top-full left-0 hidden group-hover:block group-focus-within:block bg-white shadow-lg border border-[var(--line-khadi)] rounded-[2px] p-4 min-w-56 z-50">
+                    <p className="caption text-[var(--ink-soft)] text-xs mb-2 uppercase tracking-wider font-semibold">
+                      Curated Edits
+                    </p>
+                    {collections.map((c) => (
+                      <a
+                        className="block py-1.5 text-xs text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] transition-colors cursor-pointer"
+                        key={c.collectionId}
+                        href={`/?page=shop&collection=${encodeURIComponent(c.collectionId)}`}
+                        onClick={(e) =>
+                          handleNavClick(e, `/?page=shop&collection=${encodeURIComponent(c.collectionId)}`)
+                        }
                       >
-                        Explore Heritage Edit →
-                      </button>
-                    </div>
+                        {c.name}
+                      </a>
+                    ))}
                   </div>
-                </div>
-              )}
-            </div>
-
-            <a
-              href="/story"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate({ page: 'story' });
-              }}
-              className={`nav-link ${currentRoute.page === 'story' ? 'active' : ''}`}
-            >
-              Our Story
-            </a>
-
-            {/* The Craft Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setCraftDropOpen(true)}
-              onMouseLeave={() => setCraftDropOpen(false)}
-            >
-              <button
-                onClick={() => navigate({ page: 'craft' })}
-                className={`nav-link flex items-center gap-1 bg-transparent border-none cursor-pointer ${
-                  currentRoute.page === 'craft' ? 'active' : ''
-                }`}
-              >
-                The Craft
-                <ChevronDown size={14} strokeWidth={1.5} />
-              </button>
-
-              {craftDropOpen && (
-                <div className="absolute left-0 top-full w-56 bg-white shadow-[var(--shadow-dropdown)] border border-[var(--line-khadi)] rounded-[2px] py-2 z-50">
-                  {[
-                    { key: 'spinning', label: '1. Hand Spinning' },
-                    { key: 'dyeing', label: '2. Natural Dyeing' },
-                    { key: 'weaving', label: '3. Pit Loom Weaving' },
-                    { key: 'finishing', label: '4. Block Finishing' },
-                    { key: 'artisans', label: 'Meet the Artisans' },
-                  ].map((item) => (
-                    <a
-                      key={item.key}
-                      href={`/craft?step=${item.key}`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setCraftDropOpen(false);
-                        navigate({ page: 'craft', step: item.key });
-                      }}
-                      className="block px-4 py-2.5 text-[14px] text-[var(--ink-chocolate)] hover:bg-[var(--bg-cream)] hover:text-[var(--brand-maroon)] transition-colors"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <a
-              href="/journal"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate({ page: 'journal' });
-              }}
-              className={`nav-link ${currentRoute.page === 'journal' ? 'active' : ''}`}
-            >
-              Journal
-            </a>
-
-            <a
-              href="/contact"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate({ page: 'contact' });
-              }}
-              className={`nav-link ${currentRoute.page === 'contact' ? 'active' : ''}`}
-            >
-              Contact
-            </a>
+                )}
+              </div>
+            ))}
           </nav>
 
           {/* Right: Actions */}
@@ -640,105 +425,16 @@ export default function Header({ currentRoute, navigate }) {
           </div>
 
           <nav className="space-y-4">
-            <button
-              onClick={() => {
-                setMobileDrawerOpen(false);
-                navigate({ page: 'home' });
-              }}
-              className="heading-2 block w-full text-left text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)]"
-            >
-              Home
-            </button>
-
-            {/* Shop Accordion */}
-            <div>
-              <button
-                onClick={() => setMobileShopOpen((prev) => !prev)}
-                className="heading-2 flex items-center justify-between w-full text-left text-[var(--ink-chocolate)]"
+            {navItems.map((n) => (
+              <a
+                key={n.href}
+                className="block nav-link text-base cursor-pointer"
+                href={n.href}
+                onClick={(e) => handleNavClick(e, n.href)}
               >
-                <span>Shop</span>
-                <ChevronDown
-                  size={20}
-                  className={`transition-transform duration-200 ${mobileShopOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {mobileShopOpen && (
-                <div className="pl-4 pt-3 pb-2 space-y-2 border-l-2 border-[var(--brand-gold)] mt-2">
-                  {['All Pieces', 'Sarees', 'Dupattas & Stoles', 'Fabrics', 'Co-ord Sets', 'Dresses'].map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        setMobileDrawerOpen(false);
-                        navigate({ page: 'shop', category: cat === 'All Pieces' ? 'all' : cat });
-                      }}
-                      className="block text-left text-[15px] text-[var(--ink-soft)] hover:text-[var(--brand-maroon)]"
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={() => {
-                setMobileDrawerOpen(false);
-                navigate({ page: 'story' });
-              }}
-              className="heading-2 block w-full text-left text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)]"
-            >
-              Our Story
-            </button>
-
-            {/* The Craft Accordion */}
-            <div>
-              <button
-                onClick={() => setMobileCraftOpen((prev) => !prev)}
-                className="heading-2 flex items-center justify-between w-full text-left text-[var(--ink-chocolate)]"
-              >
-                <span>The Craft</span>
-                <ChevronDown
-                  size={20}
-                  className={`transition-transform duration-200 ${mobileCraftOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {mobileCraftOpen && (
-                <div className="pl-4 pt-3 pb-2 space-y-2 border-l-2 border-[var(--brand-gold)] mt-2">
-                  {['Spinning', 'Dyeing', 'Weaving', 'Finishing', 'Artisans'].map((step) => (
-                    <button
-                      key={step}
-                      onClick={() => {
-                        setMobileDrawerOpen(false);
-                        navigate({ page: 'craft', step: step.toLowerCase() });
-                      }}
-                      className="block text-left text-[15px] text-[var(--ink-soft)] hover:text-[var(--brand-maroon)]"
-                    >
-                      {step}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={() => {
-                setMobileDrawerOpen(false);
-                navigate({ page: 'journal' });
-              }}
-              className="heading-2 block w-full text-left text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)]"
-            >
-              Journal
-            </button>
-
-            <button
-              onClick={() => {
-                setMobileDrawerOpen(false);
-                navigate({ page: 'contact' });
-              }}
-              className="heading-2 block w-full text-left text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)]"
-            >
-              Contact
-            </button>
+                {n.label}
+              </a>
+            ))}
           </nav>
         </div>
 

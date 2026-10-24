@@ -1,0 +1,16 @@
+.merchant-ui {background:#faf8f4;color:#302922;padding:2rem;min-height:80vh;font-family:Arial,sans-serif}
+.merchant-ui .admin-shell {display:grid;grid-template-columns:200px minmax(0,1fr);gap:2rem}
+.merchant-ui .admin-nav {display:flex;flex-direction:column;gap:.7rem;align-items:stretch}
+.merchant-ui button,.merchant-ui input,.merchant-ui textarea,.merchant-ui select {border:1px solid #d4cbc0;padding:.7rem;border-radius:3px}
+.merchant-ui button {cursor:pointer}.merchant-ui button:disabled{opacity:.5;cursor:not-allowed}
+.merchant-ui .button {background:#682b39;color:white}.merchant-ui .secondary{background:white;color:#302922}
+.merchant-ui label {display:flex;flex-direction:column;gap:.4rem;min-width:0}
+.merchant-ui input,.merchant-ui textarea{background:white;width:100%}.merchant-ui input[type=checkbox]{width:auto}
+.merchant-ui .form-stack,.merchant-ui form{display:grid;gap:1rem}.merchant-ui .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.merchant-ui .section-heading,.merchant-ui .inline{display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.merchant-ui h1{font-size:2rem}.merchant-ui h2{font-size:1.5rem}.merchant-ui h3{font-size:1.2rem}.merchant-ui .error{color:#a31531}.merchant-ui .muted{color:#665c50}
+.merchant-ui table{width:100%;border-collapse:collapse}.merchant-ui th,.merchant-ui td{padding:.8rem;text-align:left;border-bottom:1px solid #ded6ca}.merchant-ui .table-wrap{overflow:auto}
+.merchant-ui fieldset,.merchant-ui article{border:1px solid #d4cbc0;padding:1rem;margin:1rem 0}.merchant-ui img{max-width:120px}.merchant-ui .inline-icon{width:16px;display:inline}
+[data-slot=select-content]{background:#faf8f4;color:#302922;border:1px solid #d4cbc0;z-index:100;padding:.4rem;box-shadow:0 8px 24px #0002}
+[data-slot=select-item]{padding:.6rem 2rem .6rem .6rem;cursor:pointer}[data-slot=select-item][data-highlighted]{background:#eaded9}
+@media(max-width:700px){.merchant-ui{padding:1rem}.merchant-ui .admin-shell,.merchant-ui .form-grid{grid-template-columns:1fr}.merchant-ui .admin-nav{flex-direction:row;flex-wrap:wrap}}

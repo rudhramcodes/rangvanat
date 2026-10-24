@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { api } from '../api/client.js';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
 
 export default function Footer({ navigate }) {
-  const { addToast } = useStore();
+  const { addToast, settings } = useStore();
   const [email, setEmail] = useState('');
   const [subscribing, setSubscribing] = useState(false);
 
@@ -20,12 +20,10 @@ export default function Footer({ navigate }) {
         addToast(res.message || 'Subscribed to Letters from the Loom!', 'success');
         setEmail('');
       } else {
-        addToast(res?.message || 'Thank you for subscribing!', 'success');
-        setEmail('');
+        addToast(res?.message || 'Subscription failed. Please try again.', 'error');
       }
     } catch {
-      addToast('Subscribed to Letters from the Loom!', 'success');
-      setEmail('');
+      addToast('Subscription failed. Please try again.', 'error');
     } finally {
       setSubscribing(false);
     }
@@ -187,8 +185,8 @@ export default function Footer({ navigate }) {
             <p className="eyebrow text-[var(--brand-gold-soft)] mb-4">Reach Our Loom</p>
             <div className="space-y-3 text-[14px] text-[var(--bg-cream)]/85">
               <p>Rangvanat Khadi Studio, Bardoli 394601, Gujarat, India</p>
-              <p>Email: <a href="mailto:rangvanat@gmail.com" className="text-[var(--brand-gold-soft)] hover:underline">rangvanat@gmail.com</a></p>
-              <p>WhatsApp: <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="text-[var(--brand-gold-soft)] hover:underline">+91 98765 43210</a></p>
+              <p>Email: <a href={`mailto:${settings?.contactEmail||''}`} className="text-[var(--brand-gold-soft)] hover:underline">{settings?.contactEmail||'Contact the studio'}</a></p>
+              <p>WhatsApp: <a href={settings?.phone ? `https://wa.me/${settings.phone.replace(/\D/g,'')}` : '/?page=contact'} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-gold-soft)] hover:underline">{settings?.phone||'Contact the studio'}</a></p>
               <p className="text-xs text-[var(--bg-cream)]/60">Monday to Saturday: 10:00 AM – 7:00 PM IST</p>
             </div>
           </div>
@@ -201,9 +199,9 @@ export default function Footer({ navigate }) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--bg-cream)]/65">
           <p>© {new Date().getFullYear()} RANGVANAT STUDIO · All Rights Reserved. Crafted with honour in Bardoli.</p>
           <div className="flex items-center gap-6">
-            <button onClick={() => navigate({ page: 'faq' })} className="hover:text-white">Privacy Policy</button>
-            <button onClick={() => navigate({ page: 'faq' })} className="hover:text-white">Terms of Craft</button>
-            <button onClick={() => navigate({ page: 'faq' })} className="hover:text-white">Refunds & Returns</button>
+            <button onClick={() => navigate({ page: 'content', id: 'privacy' })} className="hover:text-white">Privacy Policy</button>
+            <button onClick={() => navigate({ page: 'content', id: 'terms' })} className="hover:text-white">Terms of Craft</button>
+            <button onClick={() => navigate({ page: 'content', id: 'returns' })} className="hover:text-white">Refunds & Returns</button>
           </div>
         </div>
       </div>

@@ -1,0 +1,3 @@
+import {useState} from 'react';
+import {api} from '../api/client';
+export default function DeliveryCheck(){const [pin,setPin]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);return <form className="my-6 space-y-2" onSubmit={async e=>{e.preventDefault();setBusy(true);const r=await api.delivery(pin);setMessage(r.success?r.data.message:r.message);setBusy(false);}}><label className="block">Delivery PIN<input className="form-input" value={pin} onChange={e=>{setPin(e.target.value);setMessage('');}} required pattern="[1-9][0-9]{5}" inputMode="numeric" maxLength={6} placeholder="Six-digit delivery PIN"/></label><button className="btn btn-secondary" disabled={busy}>{busy?'Checking…':'Check delivery'}</button><p role="status">{message}</p></form>;}

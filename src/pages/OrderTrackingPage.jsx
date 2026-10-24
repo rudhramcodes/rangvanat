@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, CheckCircle2, Circle, Clock, PackageCheck, Truck, Home } from 'lucide-react';
+
 import { api } from '../api/client.js';
 
-export default function OrderTrackingPage({ initialOrderNumber = '', navigate }) {
+export default function OrderTrackingPage({ initialOrderNumber = '' }) {
   const [orderNumber, setOrderNumber] = useState(initialOrderNumber);
-  const [contact, setContact] = useState('');
+  const [contact, setContact] = useState(()=>sessionStorage.getItem(`rv_order_${initialOrderNumber}`)||'');
   const [trackingData, setTrackingData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,7 +27,8 @@ export default function OrderTrackingPage({ initialOrderNumber = '', navigate })
     try {
       const res = await api.trackOrder(num.trim(), contact.trim());
       if (res?.success && res.data) {
-        setTrackingData(res.data);
+        const stages=['received','in_stitching','dispatched','delivered'];const current=stages.indexOf(res.data.fulfillment?.status);
+        setTrackingData({...res.data,steps:res.data.fulfillment?.status==='cancelled'?[{label:'Cancelled',done:true}]:stages.map((label,i)=>({label:label.replaceAll('_',' '),done:i<=current}))});
       } else {
         setError(res?.message || 'No order found with the provided details.');
         setTrackingData(null);
@@ -60,8 +61,8 @@ export default function OrderTrackingPage({ initialOrderNumber = '', navigate })
           className="grid grid-cols-1 md:grid-cols-12 gap-3"
         >
           <div className="md:col-span-6">
-            <label className="form-label">Order Number</label>
-            <input
+            <label htmlFor="ordertrackingpage-field-1" className="form-label">Order Number</label>
+            <input id="ordertrackingpage-field-1"
               type="text"
               placeholder="e.g. RV-2026-382910"
               value={orderNumber}
@@ -71,10 +72,10 @@ export default function OrderTrackingPage({ initialOrderNumber = '', navigate })
             />
           </div>
           <div className="md:col-span-4">
-            <label className="form-label">Email or Phone (Optional)</label>
-            <input
+            <label htmlFor="ordertrackingpage-field-2" className="form-label">Private order access key</label>
+            <input id="ordertrackingpage-field-2"
               type="text"
-              placeholder="Contact used during checkout"
+              placeholder="Access key from your private order link"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
               className="form-input"
@@ -107,7 +108,7 @@ export default function OrderTrackingPage({ initialOrderNumber = '', navigate })
             <div className="text-right">
               <span className="caption text-xs text-[var(--ink-soft)]">Courier Partner</span>
               <p className="font-semibold text-sm text-[var(--ink-chocolate)]">
-                {trackingData.courier} ({trackingData.trackingNumber})
+                {trackingData.fulfillment?.courierPartner || 'Not dispatched'} ({trackingData.fulfillment?.trackingNumber || 'Pending'})
               </p>
             </div>
           </div>

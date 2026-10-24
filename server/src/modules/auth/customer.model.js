@@ -17,6 +17,10 @@ const customerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    tokenVersion: {type:Number,default:0},
+    emailVerifiedAt: Date,
+    resetHash: String, resetExpires: Date,
+    verificationHash: String, verificationExpires: Date,
     passwordHash: { type: String, required: true },
     phone: { type: String, default: '', trim: true },
     addresses: [addressSchema],

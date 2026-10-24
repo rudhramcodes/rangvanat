@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, Disc, Droplets, Grid, Layers, Users } from 'lucide-react';
+import { ArrowRight, Disc, Droplets, Grid, Layers } from 'lucide-react';
 
 const CRAFT_STEPS = {
   spinning: {

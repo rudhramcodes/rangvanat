@@ -1,16 +1,23 @@
-# React + Vite
+# Rangvanaat
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The active frontend is the original React/Vite design in `src/`, served at http://localhost:5173. This is the design selected for future polishing.
 
-Currently, two official plugins are available:
+## Run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```sh
+npm install
+npm run dev
+```
 
-## React Compiler
+```sh
+npm run build
+npm run preview
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The Vite app proxies `/api` to the Express backend on port 5001. With the backend environment configured, `npm run dev:full` starts both services; `npm run dev:server` starts just the backend.
 
-## Expanding the ESLint configuration
+## Preserved work
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The Next.js implementation in `storefront/` is inactive and is no longer started or built by the default commands. Its backend/admin integration work is retained for reuse when connecting the selected design. Previous implementation notes are in [the archive](docs/implementation/ARCHIVED_NEXT_STOREFRONT.md); those feature claims apply to that implementation, not automatically to the Vite frontend.
+
+Payment integration remains deferred.

@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { Package, Heart, MapPin, User, LogOut, Plus, Trash2, Edit2, ArrowRight } from 'lucide-react';
-import { useStore } from '../context/StoreContext.jsx';
+import { useState, useEffect } from 'react';
+import { Package, Heart, MapPin, User, LogOut, Plus } from 'lucide-react';
+import { useStore } from '../context/store.js';
 import ProductCard from '../components/ProductCard.jsx';
-import { api } from '../api/client.js';
+import { api, fetchJson } from '../api/client.js';
 
 export default function AccountPage({ initialTab = 'orders', navigate }) {
-  const { customer, login, register, logout, wishlist, addToCart, formatPrice, addToast } = useStore();
+  const { customer, login, register, logout, wishlist, formatPrice, addToast, setCustomer, refreshCustomer } = useStore();
 
+  const [savedProducts,setSavedProducts]=useState([]);
+  useEffect(()=>{let active=true;Promise.all(wishlist.map(id=>api.getProductByIdOrSlug(id))).then(rows=>{if(active)setSavedProducts(rows.filter(Boolean));});return()=>{active=false;};},[wishlist]);
+  const [profileError,setProfileError]=useState('');
+  const saveProfile=async values=>{const r=await api.updateProfile(values);if(r.success){setCustomer(c=>({...c,...r.data}));await refreshCustomer();return true;}setProfileError(r.message);return false;};
   const [activeTab, setActiveTab] = useState(customer ? initialTab : 'login');
 
   // Login Form
@@ -22,10 +26,11 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
   const [regLoading, setRegLoading] = useState(false);
 
   // New Address Form
+  const [editingAddress,setEditingAddress]=useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [newStreet, setNewStreet] = useState('');
   const [newCity, setNewCity] = useState('');
-  const [newState, setNewState] = useState('Gujarat');
+  const [newState,setNewState] = useState('Gujarat');
   const [newPincode, setNewPincode] = useState('');
 
   const handleLoginSubmit = async (e) => {
@@ -53,7 +58,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
     if (!newStreet || !newCity || !newPincode) return;
 
     const currentAddresses = customer?.addresses || [];
-    const updated = [
+    const candidate = {addressLine1:newStreet,city:newCity,state:newState,pincode:newPincode,country:'India',isDefault:currentAddresses.length===0};
+    const updated = editingAddress===null ? [
       ...currentAddresses,
       {
         addressLine1: newStreet,
@@ -63,15 +69,14 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
         country: 'India',
         isDefault: currentAddresses.length === 0,
       },
-    ];
+    ] : currentAddresses.map((a,i)=>i===editingAddress?{...a,...candidate,isDefault:a.isDefault}:a);
 
-    const res = await api.updateProfile({ addresses: updated });
-    if (res?.success) {
+    if (await saveProfile({addresses:updated})) {
       addToast('Address added to profile', 'success');
       setShowAddressModal(false);
       setNewStreet('');
       setNewCity('');
-      setNewPincode('');
+      setNewPincode('');setEditingAddress(null);
     }
   };
 
@@ -89,11 +94,18 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
             </p>
           </div>
 
+          <button
+            type="button"
+            onClick={() => navigate({ page: 'security' })}
+            className="btn-ghost text-xs text-[var(--ink-soft)] hover:text-[var(--brand-maroon)] block my-3 text-left"
+          >
+            Forgot password?
+          </button>
           {activeTab === 'login' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="form-label">Email Address</label>
-                <input
+                <label htmlFor="accountpage-field-1" className="form-label">Email Address</label>
+                <input id="accountpage-field-1"
                   type="email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
@@ -104,8 +116,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               </div>
 
               <div>
-                <label className="form-label">Password</label>
-                <input
+                <label htmlFor="accountpage-field-2" className="form-label">Password</label>
+                <input id="accountpage-field-2"
                   type="password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
@@ -137,8 +149,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div>
-                <label className="form-label">Full Name</label>
-                <input
+                <label htmlFor="accountpage-field-3" className="form-label">Full Name</label>
+                <input id="accountpage-field-3"
                   type="text"
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
@@ -149,8 +161,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               </div>
 
               <div>
-                <label className="form-label">Email Address</label>
-                <input
+                <label htmlFor="accountpage-field-4" className="form-label">Email Address</label>
+                <input id="accountpage-field-4"
                   type="email"
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
@@ -161,8 +173,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               </div>
 
               <div>
-                <label className="form-label">Phone Number</label>
-                <input
+                <label htmlFor="accountpage-field-5" className="form-label">Phone Number</label>
+                <input id="accountpage-field-5"
                   type="tel"
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
@@ -172,12 +184,12 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               </div>
 
               <div>
-                <label className="form-label">Create Password</label>
-                <input
+                <label htmlFor="accountpage-field-6" className="form-label">Create Password</label>
+                <input id="accountpage-field-6"
                   type="password"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="At least 6 characters"
+                  placeholder="12–72 characters" minLength={12} maxLength={72}
                   className="form-input"
                   required
                 />
@@ -331,7 +343,7 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                       </div>
 
                       <div className="pt-3 border-t border-[var(--line-khadi)]/50 flex justify-between font-bold text-sm">
-                        <span>Total Paid</span>
+                        <span>Order total · payment pending</span>
                         <span className="price">{formatPrice(ord.financials?.totalAmount)}</span>
                       </div>
                     </div>
@@ -359,30 +371,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                  {wishlist.map((slugOrId) => (
-                    <div key={slugOrId} className="border border-[var(--line-khadi)] p-3 rounded-[2px] flex flex-col justify-between">
-                      <div>
-                        <div className="aspect-[3/4] bg-[var(--bg-cream)] mb-2 overflow-hidden">
-                          <img
-                            src="/images/hero.png"
-                            alt="Wishlist piece"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <p className="font-semibold text-sm text-[var(--ink-chocolate)] truncate uppercase">
-                          {slugOrId.replace(/-/g, ' ')}
-                        </p>
-                      </div>
-                      <div className="pt-3 border-t border-[var(--line-khadi)]/50 mt-3 flex items-center justify-between">
-                        <button
-                          onClick={() => navigate({ page: 'product', id: slugOrId })}
-                          className="btn btn-primary btn-sm text-xs w-full justify-center"
-                        >
-                          View & Bag
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                  {savedProducts.map(p=><ProductCard key={p._id} product={p} onSelect={id=>navigate({page:'product',id})} />)}
+
                 </div>
               )}
             </div>
@@ -395,7 +385,7 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                 <h2 className="heading-3 text-[var(--brand-maroon)] uppercase text-lg">
                   Saved Delivery Addresses
                 </h2>
-                <button onClick={() => setShowAddressModal(true)} className="btn btn-primary btn-sm">
+                <button onClick={() => {setEditingAddress(null);setNewStreet('');setNewCity('');setNewState('');setNewPincode('');setShowAddressModal(true);}} className="btn btn-primary btn-sm">
                   + Add New Address
                 </button>
               </div>
@@ -418,14 +408,16 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                       {addr.addressLine1}, {addr.addressLine2 ? addr.addressLine2 + ', ' : ''}
                       {addr.city}, {addr.state} - {addr.pincode}
                     </p>
-                    <p className="caption text-xs">{addr.country}</p>
+                    <p className="caption text-xs">{addr.country}</p><button className="btn btn-secondary btn-sm" onClick={()=>{setEditingAddress(idx);setNewStreet(addr.addressLine1);setNewCity(addr.city);setNewState(addr.state);setNewPincode(addr.pincode);setShowAddressModal(true);}}>Edit address</button>
+                    <button className="btn btn-secondary btn-sm" onClick={()=>saveProfile({addresses:customer.addresses.filter((_,i)=>i!==idx)})}>Delete address</button>
+                    <button className="btn btn-secondary btn-sm" onClick={()=>saveProfile({addresses:customer.addresses.map((a,i)=>({...a,isDefault:i===idx}))})}>Make default</button>
                   </div>
                 ))}
 
                 {/* Dashed "+ Add Address" Card (§12.11) */}
                 <button
                   type="button"
-                  onClick={() => setShowAddressModal(true)}
+                  onClick={() => {setEditingAddress(null);setNewStreet('');setNewCity('');setNewState('');setNewPincode('');setShowAddressModal(true);}}
                   className="min-h-[140px] border-2 border-dashed border-[var(--line-khadi)] hover:border-[var(--brand-maroon)] rounded-[2px] flex flex-col items-center justify-center p-6 text-[var(--ink-soft)] hover:text-[var(--brand-maroon)] transition-colors"
                 >
                   <Plus size={22} className="mb-1" />
@@ -440,8 +432,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                     <h3 className="heading-3 text-[var(--brand-maroon)] uppercase">New Delivery Address</h3>
                     <form onSubmit={handleAddAddress} className="space-y-3">
                       <div>
-                        <label className="form-label">Address Line 1</label>
-                        <input
+                        <label htmlFor="accountpage-field-7" className="form-label">Address Line 1</label>
+                        <input id="accountpage-field-7"
                           type="text"
                           value={newStreet}
                           onChange={(e) => setNewStreet(e.target.value)}
@@ -452,8 +444,8 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="form-label">City</label>
-                          <input
+                          <label htmlFor="accountpage-field-8" className="form-label">City</label>
+                          <input id="accountpage-field-8"
                             type="text"
                             value={newCity}
                             onChange={(e) => setNewCity(e.target.value)}
@@ -463,17 +455,18 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                           />
                         </div>
                         <div>
-                          <label className="form-label">PIN Code</label>
-                          <input
+                          <label htmlFor="accountpage-field-9" className="form-label">PIN Code</label>
+                          <input id="accountpage-field-9"
                             type="text"
                             value={newPincode}
                             onChange={(e) => setNewPincode(e.target.value)}
-                            placeholder="PIN"
+                            placeholder="Six-digit PIN" pattern="[1-9][0-9]{5}"
                             className="form-input"
                             required
                           />
                         </div>
                       </div>
+                      <label className="block">State / union territory<input className="form-input" required value={newState} onChange={e=>setNewState(e.target.value)} placeholder="State / union territory" /></label>
                       <div className="flex justify-end gap-2 pt-3">
                         <button
                           type="button"
@@ -494,29 +487,35 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
           )}
 
           {/* TAB 4: PROFILE */}
-          {activeTab === 'profile' && (
-            <div className="space-y-6 max-w-md">
-              <h2 className="heading-3 text-[var(--brand-maroon)] uppercase text-lg pb-3 border-b border-[var(--line-khadi)]">
-                Profile Credentials
-              </h2>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <label className="form-label">Full Name</label>
-                  <input type="text" value={customer.name} readOnly className="form-input bg-gray-50" />
-                </div>
-                <div>
-                  <label className="form-label">Registered Email</label>
-                  <input type="email" value={customer.email} readOnly className="form-input bg-gray-50" />
-                </div>
-                <div>
-                  <label className="form-label">Mobile Phone</label>
-                  <input type="tel" value={customer.phone || 'Not provided'} readOnly className="form-input bg-gray-50" />
-                </div>
-              </div>
+          {profileError&&<p role="alert">{profileError}</p>}
+          {activeTab === 'profile' && <form className="space-y-4" onSubmit={async e=>{e.preventDefault();const data=new FormData(e.currentTarget);if(await saveProfile(Object.fromEntries(data)))addToast('Profile updated','success');}}>
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--line-khadi)]">
+              <h2 className="heading-3">Profile settings</h2>
+              <button
+                type="button"
+                onClick={() => navigate({ page: 'security' })}
+                className="btn-ghost text-xs text-[var(--brand-maroon)]"
+              >
+                Change password
+              </button>
             </div>
-          )}
-        </div>
-      </div>
-    </main>
-  );
+            <p className="text-xs text-[var(--ink-soft)]">Email {customer.emailVerified ? 'verified ✓' : 'not verified'}</p>
+            {!customer.emailVerified && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={async () => {
+                  const r = await fetchJson('/auth/email/request', { method: 'POST', body: '{}' });
+                  addToast(r.success ? r.data.message : r.message, r.success ? 'success' : 'error');
+                }}
+              >
+                Send verification email
+              </button>
+            )}
+            <label className="block">Name<input className="form-input" name="name" defaultValue={customer.name} required placeholder="Full name" /></label>
+            <label className="block">Email<input className="form-input" value={customer.email} readOnly /></label>
+            <label className="block">Phone<input className="form-input" name="phone" defaultValue={customer.phone} placeholder="Mobile phone" /></label>
+            <button className="btn btn-primary">Save profile</button>
+          </form>}
+        </div></div></main>);
 }

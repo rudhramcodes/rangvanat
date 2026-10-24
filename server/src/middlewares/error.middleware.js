@@ -1,14 +1,22 @@
-import { env } from '../config/env.js';
+import { env } from "../config/env.js";
 
-export const errorHandler = (err, req, res, next) => {
-  let statusCode = err.statusCode || 500;
-  let message = err.message || 'Internal Server Error';
+export const errorHandler = (err, req, res, _next) => {
+  let statusCode = err.statusCode || err.status || 500;
+  if (err.name === "VersionError") {
+    statusCode = 409;
+    err.message = "This record changed. Reload before saving.";
+  }
+  if (err.code === "LIMIT_FILE_SIZE") {
+    statusCode = 400;
+    err.message = "Image must be smaller than 8 MB";
+  }
+  let message = err.message || "Internal Server Error";
   let errors = err.errors || [];
 
   // Mongoose validation error
-  if (err.name === 'ValidationError') {
+  if (err.name === "ValidationError") {
     statusCode = 400;
-    message = 'Validation Error';
+    message = "Validation Error";
     errors = Object.values(err.errors).map((e) => ({
       field: e.path,
       message: e.message,
@@ -23,27 +31,30 @@ export const errorHandler = (err, req, res, next) => {
   }
 
   // Mongoose invalid ObjectId
-  if (err.name === 'CastError') {
+  if (err.name === "CastError") {
     statusCode = 400;
     message = `Invalid ID format for resource lookup: ${err.value}`;
   }
 
   // JWT errors
-  if (err.name === 'JsonWebTokenError') {
+  if (err.name === "JsonWebTokenError") {
     statusCode = 401;
-    message = 'Invalid authentication token. Please log in again.';
+    message = "Invalid authentication token. Please log in again.";
   }
 
-  if (err.name === 'TokenExpiredError') {
+  if (err.name === "TokenExpiredError") {
     statusCode = 401;
-    message = 'Authentication token has expired. Please log in again.';
+    message = "Authentication token has expired. Please log in again.";
   }
 
   const responsePayload = {
     success: false,
-    message,
+    message:
+      statusCode >= 500 && env.NODE_ENV === "production"
+        ? "Service unavailable. Please try again later."
+        : message,
     ...(errors.length > 0 && { errors }),
-    ...(env.NODE_ENV === 'development' && { stack: err.stack }),
+    ...(env.NODE_ENV === "development" && { stack: err.stack }),
   };
 
   return res.status(statusCode).json(responsePayload);

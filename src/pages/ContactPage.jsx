@@ -1,10 +1,19 @@
 import { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, MessageSquare, ArrowRight } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock } from 'lucide-react';
+import CustomDropdown from '../components/CustomDropdown.jsx';
 import { api } from '../api/client.js';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
+
+const TOPIC_OPTIONS = [
+  { value: 'General Enquiry', label: 'General Atelier Enquiry' },
+  { value: 'Bespoke Order', label: 'Bespoke Bridal / Custom Sizing' },
+  { value: 'Wholesale and Bulk Orders', label: 'Wholesale & Bulk Orders' },
+  { value: 'Video Consultation', label: 'Book a Video Consultation' },
+  { value: 'Studio Visit', label: 'Schedule Studio Visit (Bardoli)' },
+];
 
 export default function ContactPage({ initialTopic = 'General Enquiry', navigate }) {
-  const { addToast } = useStore();
+  const { addToast, settings } = useStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -70,10 +79,10 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="form-label">
+                <label htmlFor="contactpage-field-1" className="form-label">
                   Your Name <span className="required-star">*</span>
                 </label>
-                <input
+                <input id="contactpage-field-1"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -85,10 +94,10 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">
+                  <label htmlFor="contactpage-field-2" className="form-label">
                     Email Address <span className="required-star">*</span>
                   </label>
-                  <input
+                  <input id="contactpage-field-2"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -98,37 +107,35 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
                   />
                 </div>
                 <div>
-                  <label className="form-label">Phone / WhatsApp</label>
-                  <input
+                  <label htmlFor="contactpage-field-3" className="form-label">Phone / WhatsApp</label>
+                  <input id="contactpage-field-3"
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 9876543210"
                     className="form-input"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="form-label">Purpose of Contact</label>
-                <select
+                <label className="form-label mb-1.5 block">Purpose of Contact</label>
+                <CustomDropdown
                   value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  className="form-select"
-                >
-                  <option value="General Enquiry">General Atelier Enquiry</option>
-                  <option value="Bespoke Order">Bespoke Bridal / Custom Sizing</option>
-                  <option value="Wholesale and Bulk Orders">Wholesale & Bulk Orders</option>
-                  <option value="Video Consultation">Book a Video Consultation</option>
-                  <option value="Studio Visit">Schedule Studio Visit (Bardoli)</option>
-                </select>
+                  onChange={setTopic}
+                  options={TOPIC_OPTIONS}
+                  size="md"
+                  className="w-full"
+                  buttonClassName="w-full justify-between"
+                  menuClassName="w-full min-w-full"
+                />
               </div>
 
               <div>
-                <label className="form-label">
+                <label htmlFor="contactpage-field-5" className="form-label">
                   Your Message <span className="required-star">*</span>
                 </label>
-                <textarea
+                <textarea id="contactpage-field-5"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Tell us about the pieces you are interested in, measurement preferences, or visit dates..."
@@ -168,8 +175,8 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
                   <Mail size={18} className="text-[var(--brand-maroon)] flex-shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-[var(--ink-chocolate)]">Direct Email:</strong>
-                    <a href="mailto:rangvanat@gmail.com" className="text-[var(--brand-maroon)] hover:underline">
-                      rangvanat@gmail.com
+                    <a href={`mailto:${settings?.contactEmail||''}`} className="text-[var(--brand-maroon)] hover:underline">
+                      {settings?.contactEmail || 'Contact us using this form'}
                     </a>
                   </div>
                 </div>
@@ -178,8 +185,8 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
                   <Phone size={18} className="text-[var(--brand-maroon)] flex-shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-[var(--ink-chocolate)]">WhatsApp & Phone:</strong>
-                    <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="text-[var(--brand-maroon)] hover:underline">
-                      +91 98765 43210
+                    <a href={settings?.phone ? `https://wa.me/${settings.phone.replace(/\D/g,'')}` : '#main-content'} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-maroon)] hover:underline">
+                      {settings?.phone || 'Use the enquiry form'}
                     </a>
                   </div>
                 </div>

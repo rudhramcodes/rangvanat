@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react';
-import { SlidersHorizontal, Grid, Layers, X, ChevronDown, Check } from 'lucide-react';
+import { SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '../components/ProductCard.jsx';
+import CustomDropdown from '../components/CustomDropdown.jsx';
 import { api } from '../api/client.js';
+
+const SORT_OPTIONS = [
+  { value: 'featured', label: 'Featured Atelier' },
+  { value: 'price_asc', label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'newest', label: 'Newly Spun' },
+];
 
 export default function ShopPage({ initialCollection = 'all', initialCategory = 'all', initialSearch = '', navigate }) {
   const [collection, setCollection] = useState(initialCollection);
   const [category, setCategory] = useState(initialCategory);
-  const [sort, setSort] = useState('featured');
-  const [inStockOnly, setInStockOnly] = useState(false);
-  const [priceRange, setPriceRange] = useState('all'); // 'all' | 'under10k' | '10k-18k' | 'above18k'
-  const [viewMode, setViewMode] = useState('grid');
+  const [sort, setSort] = useState(()=>new URLSearchParams(location.search).get('sort')||'featured');
+  const [error,setError]=useState('');
+  const [inStockOnly, setInStockOnly] = useState(()=>new URLSearchParams(location.search).get('inStock')==='true');
+  const [priceRange, setPriceRange] = useState(()=>new URLSearchParams(location.search).get('priceRange')||'all'); // 'all' | 'under10k' | '10k-18k' | 'above18k'
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
 
   const [products, setProducts] = useState([]);
@@ -26,6 +34,7 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
 
   // Fetch products based on filters
   useEffect(() => {
+    let active=true;
     let minPrice = null;
     let maxPrice = null;
     if (priceRange === 'under10k') maxPrice = 10000;
@@ -34,7 +43,7 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
       maxPrice = 18000;
     } else if (priceRange === 'above18k') minPrice = 18000;
 
-    setLoading(true);
+    queueMicrotask(()=>{if(active)setLoading(true);});
     api
       .getProducts({
         collection,
@@ -48,6 +57,8 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
         limit: 24,
       })
       .then((data) => {
+        if(!active)return;
+        setError(data?.error||'');
         if (data) {
           setProducts(data.products || []);
           setTotalCount(data.pagination?.total || data.products?.length || 0);
@@ -56,6 +67,8 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
         setPage(1);
         setLoading(false);
       });
+    const params=new URLSearchParams(location.search);Object.entries({page:'shop',collection,category,sort,priceRange,inStock:String(inStockOnly)}).forEach(([k,v])=>params.set(k,v));history.replaceState(null,'','/?'+params);
+    return()=>{active=false;};
   }, [collection, category, sort, priceRange, inStockOnly, initialSearch]);
 
   const loadMore = async () => {
@@ -120,7 +133,8 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
   return (
     <main id="main-content" className="w-full bg-[var(--bg-ivory)] py-10 md:py-14">
       <div className="rv-container">
-        {/* Breadcrumbs (§12) */}
+        {error&&<p role="alert">{error}</p>}
+      {/* Breadcrumbs (§12) */}
         <nav className="caption text-[var(--ink-soft)] mb-6 flex items-center gap-2">
           <button onClick={() => navigate({ page: 'home' })} className="hover:text-[var(--brand-maroon)]">
             Home
@@ -197,41 +211,16 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
             </div>
           </div>
 
-          {/* Center: Editorial / Grid View Toggle */}
-          <div className="view-toggle-track">
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              aria-label="Grid view"
-            >
-              <Grid size={15} />
-              <span className="hidden sm:inline">Grid</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('editorial')}
-              className={`view-toggle-btn ${viewMode === 'editorial' ? 'active' : ''}`}
-              aria-label="Editorial view"
-            >
-              <Layers size={15} />
-              <span className="hidden sm:inline">Editorial</span>
-            </button>
-          </div>
-
           {/* Right: Sort Select */}
           <div className="flex items-center gap-2">
             <span className="caption text-[var(--ink-soft)] text-xs">Sort:</span>
-            <select
+            <CustomDropdown
               value={sort}
-              onChange={(e) => setSort(e.target.value)}
-              className="form-select h-9 px-3 text-xs w-auto bg-white border-[var(--line-khadi)] rounded-[2px]"
-            >
-              <option value="featured">Featured Atelier</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="newest">Newly Spun</option>
-            </select>
+              onChange={setSort}
+              options={SORT_OPTIONS}
+              align="right"
+              buttonClassName="min-w-[145px]"
+            />
           </div>
         </div>
 
@@ -417,10 +406,11 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
                   Clear All Filters
                 </button>
               </div>
-            ) : viewMode === 'grid' ? (
+            ) : (
               <div
-                className={`grid grid-cols-2 ${filterPanelOpen ? 'md:grid-cols-3' : 'md:grid-cols-3 lg:grid-cols-4'
-                  } gap-6 md:gap-8`}
+                className={`grid grid-cols-2 ${
+                  filterPanelOpen ? 'md:grid-cols-3' : 'md:grid-cols-3 lg:grid-cols-4'
+                } gap-6 md:gap-8`}
               >
                 {products.map((p) => (
                   <ProductCard
@@ -429,46 +419,6 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
                     variant="grid"
                     onSelect={(id) => navigate({ page: 'product', id })}
                   />
-                ))}
-              </div>
-            ) : (
-              /* Editorial View Mode (§12.2) */
-              <div className="space-y-14">
-                {products.map((p, idx) => (
-                  <div
-                    key={p._id || p.slug}
-                    className={`grid grid-cols-1 md:grid-cols-12 gap-8 items-center ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''
-                      }`}
-                  >
-                    <div className={`md:col-span-7 ${idx % 2 === 1 ? 'md:order-2' : ''}`}>
-                      <ProductCard
-                        product={p}
-                        variant="editorial"
-                        onSelect={(id) => navigate({ page: 'product', id })}
-                      />
-                    </div>
-                    <div className={`md:col-span-5 ${idx % 2 === 1 ? 'md:order-1' : ''} space-y-4`}>
-                      <span className="caption text-[var(--brand-gold)] font-semibold uppercase">
-                        {p.category} · Bardoli Handloom
-                      </span>
-                      <h3 className="heading-2 text-[var(--brand-maroon)]">{p.title}</h3>
-                      <p className="body-l text-[var(--ink-chocolate)]">
-                        {p.description ||
-                          'Spun with indigenous cotton and woven on wooden looms. Each piece is an unrepeatable work of Indian heritage.'}
-                      </p>
-                      <div className="pt-2 flex items-center gap-4">
-                        <button
-                          onClick={() => navigate({ page: 'product', id: p.slug || p._id })}
-                          className="btn btn-primary btn-md"
-                        >
-                          View Full Piece
-                        </button>
-                        <span className="price text-xl font-bold">
-                          ₹{p.price?.toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
                 ))}
               </div>
             )}

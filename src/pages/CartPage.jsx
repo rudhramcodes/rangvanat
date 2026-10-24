@@ -1,18 +1,20 @@
-import { useState } from 'react';
-import { Trash2, Plus, Minus, ArrowRight, ShieldCheck, Tag } from 'lucide-react';
-import { useStore } from '../context/StoreContext.jsx';
+import { useState, useEffect } from 'react';
+import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react';
+import { useStore } from '../context/store.js';
+import { cartItems } from '../lib/commerce';
 import { api } from '../api/client.js';
 
 export default function CartPage({ navigate }) {
-  const { cart, subtotal, removeFromCart, updateQuantity, clearCart, formatPrice, addToast } = useStore();
-  const [couponCode, setCouponCode] = useState('');
+  const { cart, subtotal, removeFromCart, updateQuantity, clearCart, formatPrice, addToast, couponCode: savedCoupon, setCouponCode: saveCoupon, settings } = useStore();
+  const [couponCode, setCouponCode] = useState(savedCoupon);
+  const [quote,setQuote]=useState(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const SHIPPING_THRESHOLD = 15000;
-  const shippingFee = subtotal >= SHIPPING_THRESHOLD || subtotal === 0 ? 0 : 500;
-  const finalTotal = Math.max(0, subtotal - discountAmount + shippingFee);
+  const SHIPPING_THRESHOLD = settings?.freeShippingThreshold ?? 0;
+  const shippingFee = quote?.financials.shippingFee ?? (subtotal >= SHIPPING_THRESHOLD || subtotal === 0 ? 0 : (settings?.shippingFee || 0));
+  const finalTotal = quote?.financials.totalAmount ?? Math.max(0, subtotal - discountAmount + shippingFee);
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
@@ -20,10 +22,12 @@ export default function CartPage({ navigate }) {
 
     setApplyingCoupon(true);
     try {
-      const res = await api.validateCoupon(couponCode, subtotal);
+      const res = await api.quote(cartItems(cart),couponCode);
       if (res?.success && res.data) {
-        setDiscountAmount(res.data.discountAmount);
-        setAppliedCoupon(res.data.code);
+        setQuote(res.data);
+        setDiscountAmount(res.data.financials.discountAmount);
+        setAppliedCoupon(res.data.financials.couponCode);
+        saveCoupon(couponCode);
         addToast(res.data.message || 'Coupon applied successfully!', 'success');
       } else {
         addToast(res?.message || 'Invalid or expired coupon', 'error');
@@ -35,6 +39,7 @@ export default function CartPage({ navigate }) {
     }
   };
 
+  useEffect(()=>{let active=true;if(cart.length)api.quote(cartItems(cart),savedCoupon).then(r=>{if(active){if(r.success){setQuote(r.data);setDiscountAmount(r.data.financials.discountAmount);setAppliedCoupon(r.data.financials.couponCode);}else {setQuote(null);setDiscountAmount(0);setAppliedCoupon(null);addToast(r.message,'error');}}});return()=>{active=false;};},[cart,savedCoupon,addToast]);
   if (cart.length === 0) {
     return (
       <main id="main-content" className="rv-container py-24 text-center">
@@ -162,7 +167,7 @@ export default function CartPage({ navigate }) {
             {/* Subtotal */}
             <div className="flex items-center justify-between text-sm">
               <span className="text-[var(--ink-soft)]">Subtotal</span>
-              <span className="font-semibold text-[var(--ink-chocolate)]">{formatPrice(subtotal)}</span>
+              <span className="font-semibold text-[var(--ink-chocolate)]">{formatPrice(quote?.financials.subtotal ?? subtotal)}</span>
             </div>
 
             {/* Discount */}

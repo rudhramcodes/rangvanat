@@ -41,3 +41,14 @@ Rangvanaat  Booklet Final.pdf
 .claude
 deck
 docs
+!.env.example
+!**/.env.example
+!docs/
+!docs/implementation/
+!docs/implementation/**
+.next/
+*.tsbuildinfo
+backups/
+
+test-results/
+playwright-report/

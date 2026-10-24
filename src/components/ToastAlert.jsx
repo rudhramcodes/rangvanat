@@ -1,5 +1,5 @@
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
 
 export default function ToastAlert() {
   const { toasts, removeToast } = useStore();

@@ -1,26 +1,13 @@
-import { COLLECTIONS as LOCAL_COLLECTIONS, PRODUCTS as LOCAL_PRODUCTS, BRAND_STORY } from '../lib/lookbook.js';
-
-const API_BASE = '/api';
-
-/**
- * Robust API helper with JSON error handling and fallback
- */
-async function fetchJson(endpoint, options = {}) {
+export async function fetchJson(endpoint, options = {}) {
   try {
-    const res = await fetch(`${API_BASE}${endpoint}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...(localStorage.getItem('rv_token') ? { Authorization: `Bearer ${localStorage.getItem('rv_token')}` } : {}),
-        ...options.headers,
-      },
-      ...options,
-    });
+    const headers = new Headers(options.headers);
+    headers.set('Content-Type','application/json');
+    const token = localStorage.getItem('rv_token');
+    if(token) headers.set('Authorization',`Bearer ${token}`);
+    const res = await fetch(`/api${endpoint}`, {...options,headers});
     const data = await res.json();
-    return data;
-  } catch (err) {
-    console.warn(`[API] Fallback for ${endpoint}:`, err.message);
-    return null;
-  }
+    return {...data,status:res.status};
+  } catch { return {success:false,message:'Unable to connect. Please try again.'}; }
 }
 
 export const api = {
@@ -31,8 +18,8 @@ export const api = {
     if (params.category && params.category !== 'all') query.set('category', params.category);
     if (params.search) query.set('search', params.search);
     if (params.sort) query.set('sort', params.sort);
-    if (params.minPrice) query.set('minPrice', params.minPrice);
-    if (params.maxPrice) query.set('maxPrice', params.maxPrice);
+    if (params.minPrice != null) query.set('minPrice', params.minPrice);
+    if (params.maxPrice != null) query.set('maxPrice', params.maxPrice);
     if (params.inStock) query.set('inStock', 'true');
     if (params.page) query.set('page', params.page);
     if (params.limit) query.set('limit', params.limit);
@@ -40,92 +27,64 @@ export const api = {
     const res = await fetchJson(`/products?${query.toString()}`);
     if (res?.success) return res.data;
 
-    // Local fallback if API is starting
-    let filtered = [...LOCAL_PRODUCTS];
-    if (params.collection && params.collection !== 'all') {
-      filtered = filtered.filter((p) => p.collection === params.collection);
-    }
-    if (params.category && params.category !== 'all') {
-      filtered = filtered.filter((p) => p.category === params.category);
-    }
-    if (params.search) {
-      const q = params.search.toLowerCase();
-      filtered = filtered.filter((p) => p.name.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q));
-    }
-    return {
-      products: filtered,
-      pagination: { total: filtered.length, page: 1, limit: filtered.length, pages: 1, hasMore: false },
-    };
+    return { products: [], pagination: {total:0,hasMore:false}, error: res?.message || 'Catalog unavailable. Please try again.' };
   },
 
   async getBestsellers() {
     const res = await fetchJson('/products/bestsellers');
     if (res?.success && res.data?.length) return res.data;
-    return LOCAL_PRODUCTS.slice(0, 8);
+    return [];
   },
 
   async getFeaturedProducts() {
     const res = await fetchJson('/products/featured');
     if (res?.success && res.data?.length) return res.data;
-    return LOCAL_PRODUCTS.filter((p) => ['rvf-01', 'rvf-02', 'rvf-07', 'rvs-01'].includes(p.id));
+    return [];
   },
 
   async getProductByIdOrSlug(idOrSlug) {
-    const res = await fetchJson(`/products/${idOrSlug}`);
+    const res = await fetchJson(`/products/${encodeURIComponent(idOrSlug)}`);
     if (res?.success && res.data) return res.data;
-    return (
-      LOCAL_PRODUCTS.find((p) => p.id === idOrSlug || p.code?.toLowerCase() === idOrSlug.toLowerCase()) ||
-      LOCAL_PRODUCTS[0]
-    );
+    return null;
   },
 
   async getRelatedProducts(idOrSlug) {
-    const res = await fetchJson(`/products/${idOrSlug}/related`);
+    const res = await fetchJson(`/products/${encodeURIComponent(idOrSlug)}/related`);
     if (res?.success && res.data?.length) return res.data;
-    return LOCAL_PRODUCTS.slice(1, 5);
+    return [];
   },
 
   // Collections
   async getCollections() {
     const res = await fetchJson('/collections');
     if (res?.success && res.data?.length) return res.data;
-    return LOCAL_COLLECTIONS.map((c) => ({
-      collectionId: c.id,
-      name: c.name,
-      mood: c.mood,
-      coverImage: c.image || '',
-      productCount: c.count || 6,
-    }));
+    return [];
   },
 
   // Orders & Tracking
-  async createOrder(orderPayload) {
+  async createOrder(orderPayload, key) {
     const res = await fetchJson('/orders', {
       method: 'POST',
       body: JSON.stringify(orderPayload),
+      headers: {'Idempotency-Key': key},
     });
     return res;
   },
 
-  async getOrderByNumber(orderNumber) {
-    return fetchJson(`/orders/${orderNumber}`);
+  async getOrderByNumber(orderNumber, accessToken) {
+    return fetchJson(`/orders/${encodeURIComponent(orderNumber)}`, {headers:{"X-Order-Token":accessToken || ""}});
   },
 
-  async trackOrder(orderNumber, contact) {
+  async trackOrder(orderNumber, accessToken) {
     return fetchJson('/orders/track', {
       method: 'POST',
-      body: JSON.stringify({ orderNumber, contact }),
+      body: JSON.stringify({ orderNumber, accessToken }),
     });
   },
 
-  // Coupons
-  async validateCoupon(code, cartTotal) {
-    return fetchJson('/coupons/validate', {
-      method: 'POST',
-      body: JSON.stringify({ code, cartTotal }),
-    });
-  },
-
+  quote(items, couponCode = '', pincode = '') { return fetchJson('/cart/quote', {method:'POST',body:JSON.stringify({items,couponCode,pincode})}); },
+  settings() { return fetchJson('/settings'); },
+  delivery(pin) { return fetchJson(`/delivery/${encodeURIComponent(pin)}`); },
   // Customer Auth
   async register(data) {
     return fetchJson('/auth/register', {

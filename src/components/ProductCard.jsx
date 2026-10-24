@@ -1,5 +1,5 @@
 import { Heart } from 'lucide-react';
-import { useStore } from '../context/StoreContext.jsx';
+import { useStore } from '../context/store.js';
 
 export default function ProductCard({
   product,
@@ -19,7 +19,7 @@ export default function ProductCard({
     null;
   const category = product.category || 'Handloom Garment';
   const craftSpecs = product.heritageCraftStory || product.specs?.join(' • ') || 'Hand Spun • Bardoli Khadi';
-  const defaultSize = product.variants?.[0]?.size || 'Standard';
+  const defaultSize = product.variants?.find(v=>product.madeToOrder||v.stock>0)?.size || 'Standard';
 
   const inWishlist = isInWishlist(slug) || isInWishlist(id);
 
@@ -75,10 +75,14 @@ export default function ProductCard({
         onClick={() => onSelect?.(slug || id)}
       >
         <img
-          src={image}
+          src={image || '/images/hero.png'}
           alt={title}
           loading="lazy"
           className="transition-transform duration-600"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/images/hero.png';
+          }}
         />
 
         {/* Badge */}
@@ -106,7 +110,7 @@ export default function ProductCard({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            addToCart(product, 'Standard', 1);
+            addToCart(product, defaultSize, 1);
           }}
           className="quick-add-bar"
         >

@@ -1,0 +1,2 @@
+import { useStore } from '../context/store';
+export default function ContentPage({slug}){const {settings}=useStore();const page=settings?.pages?.find(p=>p.slug===slug&&p.published!==false);return <main className="rv-container py-16 max-w-3xl"><h1 className="heading-1">{page?.title || (settings?'Page unavailable':'Loading…')}</h1>{page?.body?.split('\n').map((p,i)=><p className="my-6 whitespace-pre-wrap" key={i}>{p}</p>)}</main>;}
