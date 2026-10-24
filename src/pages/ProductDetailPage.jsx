@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Heart,
-  MessageCircle,
   ShieldCheck,
   Truck,
   RotateCcw,
@@ -109,7 +108,14 @@ export default function ProductDetailPage({ productId, navigate }) {
   const handleAdd = () => {
     const customMeasurements =
       selectedSize === 'Custom' ? { bust: customBust, waist: customWaist, hip: customHip } : {};
-    addToCart(product, selectedSize, quantity, customMeasurements);
+    addToCart(product, selectedSize || 'Standard', quantity, customMeasurements);
+  };
+
+  const handleBuyNow = () => {
+    const customMeasurements =
+      selectedSize === 'Custom' ? { bust: customBust, waist: customWaist, hip: customHip } : {};
+    addToCart(product, selectedSize || 'Standard', quantity, customMeasurements);
+    navigate({ page: 'checkout' });
   };
 
   return (
@@ -139,11 +145,10 @@ export default function ProductDetailPage({ productId, navigate }) {
                   key={idx}
                   type="button"
                   onClick={() => setSelectedImageIndex(idx)}
-                  className={`w-18 h-24 md:w-20 md:h-26 flex-shrink-0 bg-[var(--bg-cream)] overflow-hidden rounded-[0px] border transition-all ${
-                    selectedImageIndex === idx
+                  className={`w-18 h-24 md:w-20 md:h-26 flex-shrink-0 bg-[var(--bg-cream)] overflow-hidden rounded-[0px] border transition-all ${selectedImageIndex === idx
                       ? 'border-[var(--brand-maroon)] ring-1 ring-[var(--brand-maroon)]'
                       : 'border-[var(--line-khadi)] opacity-70 hover:opacity-100'
-                  }`}
+                    }`}
                   aria-label={`View image ${idx + 1}`}
                 >
                   <img src={imgUrl} alt={`${title} view ${idx + 1}`} className="w-full h-full object-cover" />
@@ -245,11 +250,10 @@ export default function ProductDetailPage({ productId, navigate }) {
                     key={size}
                     type="button"
                     onClick={() => setSelectedSize(size)}
-                    className={`h-11 px-5 rounded-full text-sm font-semibold transition-all ${
-                      selectedSize === size
+                    className={`h-11 px-5 rounded-full text-sm font-semibold transition-all ${selectedSize === size
                         ? 'bg-[var(--brand-maroon)] text-[var(--bg-ivory)] shadow-sm'
                         : 'bg-white border border-[var(--line-khadi)] text-[var(--ink-chocolate)] hover:border-[var(--brand-maroon)]'
-                    }`}
+                      }`}
                   >
                     {size}
                   </button>
@@ -315,27 +319,23 @@ export default function ProductDetailPage({ productId, navigate }) {
                 </div>
               </div>
 
-              {/* Primary Add to Bag */}
-              <button
-                type="button"
-                onClick={handleAdd}
-                className="btn btn-primary btn-lg w-full justify-center tracking-widest text-base uppercase"
-              >
-                Add to Bag · {formatPrice(price * quantity)}
-              </button>
-
-              {/* Secondary WhatsApp Concierge */}
-              <a
-                href={`https://wa.me/919876543210?text=${encodeURIComponent(
-                  `Namaste Rangvanat, I would like to enquire about ordering ${title} in size ${selectedSize}.`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary btn-md w-full justify-center text-sm font-semibold flex items-center gap-2"
-              >
-                <MessageCircle size={16} />
-                <span>Enquire on WhatsApp</span>
-              </a>
+              {/* Direct E-commerce Purchase Actions */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  className="btn btn-secondary btn-lg flex-1 justify-center tracking-wider text-sm uppercase"
+                >
+                  Add to Bag
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="btn btn-primary btn-lg flex-1 justify-center tracking-wider text-sm uppercase shadow-sm"
+                >
+                  Buy Now · {formatPrice(price * quantity)}
+                </button>
+              </div>
             </div>
 
             {/* Trust Badges (§12.3) */}
@@ -405,9 +405,8 @@ export default function ProductDetailPage({ productId, navigate }) {
                   <span>{tab.title}</span>
                   <ChevronDown
                     size={18}
-                    className={`transition-transform duration-200 ${
-                      openAccordion === tab.id ? 'rotate-180 text-[var(--brand-maroon)]' : ''
-                    }`}
+                    className={`transition-transform duration-200 ${openAccordion === tab.id ? 'rotate-180 text-[var(--brand-maroon)]' : ''
+                      }`}
                   />
                 </button>
                 {openAccordion === tab.id && (

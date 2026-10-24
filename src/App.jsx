@@ -151,21 +151,21 @@ export default function App() {
             'faq',
             'account',
           ].includes(route.page) && (
-            <main id="main-content" className="rv-container py-24 text-center">
-              <p className="serif-statement text-3xl text-[var(--ink-chocolate)] mb-2">
-                "This thread ends here."
-              </p>
-              <h1 className="display-l text-[var(--brand-maroon)] mb-6 font-bold">404</h1>
-              <div className="flex justify-center gap-4">
-                <button onClick={() => navigate({ page: 'home' })} className="btn btn-primary btn-md">
-                  Back to Home
-                </button>
-                <button onClick={() => navigate({ page: 'shop' })} className="btn btn-secondary btn-md">
-                  Browse the Shop
-                </button>
-              </div>
-            </main>
-          )}
+              <main id="main-content" className="rv-container py-24 text-center">
+                <p className="serif-statement text-3xl text-[var(--ink-chocolate)] mb-2">
+                  "This thread ends here."
+                </p>
+                <h1 className="display-l text-[var(--brand-maroon)] mb-6 font-bold">404</h1>
+                <div className="flex justify-center gap-4">
+                  <button onClick={() => navigate({ page: 'home' })} className="btn btn-primary btn-md">
+                    Back to Home
+                  </button>
+                  <button onClick={() => navigate({ page: 'shop' })} className="btn btn-secondary btn-md">
+                    Browse the Shop
+                  </button>
+                </div>
+              </main>
+            )}
         </div>
 
         {/* Global Slide-in Cart Drawer (§11) */}

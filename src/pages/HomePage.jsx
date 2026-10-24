@@ -25,29 +25,65 @@ const InstagramIcon = ({ size = 20, className = '' }) => (
 
 export default function HomePage({ navigate }) {
   const { addToast } = useStore();
+  const [collections, setCollections] = useState([]);
+  const [selectedEdit, setSelectedEdit] = useState('all');
   const [bestsellers, setBestsellers] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [curatedLoading, setCuratedLoading] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'editorial'
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Initial load: Collections and Bestsellers
   useEffect(() => {
-    async function loadData() {
+    async function loadInitial() {
       try {
-        const [best, feat] = await Promise.all([
+        const [colls, bests] = await Promise.all([
+          api.getCollections(),
           api.getBestsellers(),
-          api.getFeaturedProducts(),
         ]);
-        setBestsellers(best || []);
-        setFeaturedProducts(feat || []);
+        setCollections(colls || []);
+        setBestsellers(bests || []);
       } catch (e) {
-        console.error(e);
+        console.error('Failed to load initial home data:', e);
       } finally {
         setLoading(false);
       }
     }
-    loadData();
+    loadInitial();
   }, []);
+
+  // Dynamically load Curated Edits products based on selected tab
+  useEffect(() => {
+    async function loadCurated() {
+      setCuratedLoading(true);
+      try {
+        if (selectedEdit === 'all') {
+          // Fetch featured products
+          const feat = await api.getFeaturedProducts();
+          let items = feat || [];
+          // If fewer than 3 items, fill up from published products so layout is always full
+          if (items.length < 3) {
+            const extra = await api.getProducts({ limit: 4 });
+            const extraItems = (extra?.products || []).filter(
+              (p) => !items.some((existing) => (existing._id || existing.slug) === (p._id || p.slug))
+            );
+            items = [...items, ...extraItems].slice(0, 3);
+          }
+          setFeaturedProducts(items);
+        } else {
+          // Fetch specifically for the chosen collection
+          const data = await api.getProducts({ collection: selectedEdit, limit: 3 });
+          setFeaturedProducts(data?.products || []);
+        }
+      } catch (err) {
+        console.error('Failed to load curated products:', err);
+      } finally {
+        setCuratedLoading(false);
+      }
+    }
+    loadCurated();
+  }, [selectedEdit]);
 
   const handleNewsletter = async (e) => {
     e.preventDefault();
@@ -192,79 +228,136 @@ export default function HomePage({ navigate }) {
         </div>
       </section>
 
-      {/* 3. CURATED EDITS (§12.1 Item 3 - Asymmetric Broken Grid) */}
+      {/* 3. CURATED EDITS (§12.1 Item 3 - Fully Dynamic Collection Showcase) */}
       <section className="rv-section bg-[var(--bg-ivory)]">
         <div className="rv-container">
-          <div className="flex items-baseline justify-between mb-10 pb-4 border-b border-[var(--line-khadi)]">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-4 border-b border-[var(--line-khadi)]">
             <div>
               <p className="eyebrow text-[var(--brand-gold)] mb-1">Curated Seasons</p>
               <h2 className="heading-1 text-[var(--brand-maroon)]">Curated Edits</h2>
             </div>
             <button
-              onClick={() => navigate({ page: 'shop' })}
-              className="btn-ghost text-[14px] font-semibold text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)]"
+              onClick={() => navigate({ page: 'shop', collection: selectedEdit })}
+              className="btn-ghost text-[14px] font-semibold text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] self-start md:self-auto"
             >
-              View all edits →
+              View all pieces in this edit →
             </button>
           </div>
 
-          {/* Asymmetric 7 cols / 5 cols Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-            {/* 7 Columns: Large Editorial Card */}
-            <div className="lg:col-span-7">
-              {featuredProducts[0] ? (
+          {/* Dynamic Collection Tabs: Click to switch edits live */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setSelectedEdit('all')}
+              className={`h-9 px-4 rounded-full text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${
+                selectedEdit === 'all'
+                  ? 'bg-[var(--brand-maroon)] text-white shadow-sm'
+                  : 'bg-[var(--bg-cream)] text-[var(--ink-chocolate)] hover:bg-[var(--bg-tan)]'
+              }`}
+            >
+              All Featured Edits
+            </button>
+            {collections.map((c) => (
+              <button
+                key={c.collectionId}
+                type="button"
+                onClick={() => setSelectedEdit(c.collectionId)}
+                className={`h-9 px-4 rounded-full text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap ${
+                  selectedEdit === c.collectionId
+                    ? 'bg-[var(--brand-maroon)] text-white shadow-sm'
+                    : 'bg-[var(--bg-cream)] text-[var(--ink-chocolate)] hover:bg-[var(--bg-tan)]'
+                }`}
+              >
+                {c.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Dynamic Adaptive Layout */}
+          {curatedLoading ? (
+            <div className="py-20 text-center">
+              <div className="w-8 h-8 border-2 border-[var(--brand-maroon)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              <p className="caption text-[var(--ink-soft)]">Unfolding handloom pieces...</p>
+            </div>
+          ) : featuredProducts.length === 0 ? (
+            <div className="py-16 text-center bg-[var(--bg-cream)] rounded-[8px] p-6">
+              <p className="serif-statement text-xl text-[var(--ink-chocolate)] mb-2">
+                "This collection is currently on the studio looms."
+              </p>
+              <button
+                onClick={() => navigate({ page: 'shop' })}
+                className="btn btn-secondary btn-sm mt-3"
+              >
+                Browse Full Atelier
+              </button>
+            </div>
+          ) : featuredProducts.length === 2 ? (
+            /* Balanced 2-Column Equal Layout when 2 items are returned */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+              {featuredProducts.map((item) => (
                 <ProductCard
-                  product={featuredProducts[0]}
+                  key={item._id || item.slug}
+                  product={item}
                   variant="editorial"
                   onSelect={(id) => navigate({ page: 'product', id })}
                 />
-              ) : (
-                <div className="aspect-[16/10] bg-[var(--bg-cream)] flex items-center justify-center p-8">
-                  <p className="serif-statement text-2xl text-[var(--ink-chocolate)]">
-                    The Flora Edit · Hand-painted botanical motifs
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* 5 Columns: 2 Stacked Grid Cards */}
-            <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6">
-              {featuredProducts.slice(1, 3).map((item) => (
-                <div key={item._id || item.slug} className="flex gap-4 bg-[var(--bg-cream)] p-4 rounded-[2px]">
-                  <img
-                    src={item.images?.[0]?.url || item.image || '/images/everyday-edit.jpg'}
-                    alt={item.title}
-                    className="w-28 h-36 object-cover flex-shrink-0"
-                  />
-                  <div className="flex flex-col justify-between py-1">
-                    <div>
-                      <span className="caption text-[var(--brand-maroon)] uppercase font-semibold">
-                        {item.category}
-                      </span>
-                      <h4
-                        onClick={() => navigate({ page: 'product', id: item.slug || item._id })}
-                        className="text-[16px] font-medium text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] cursor-pointer mt-1"
-                      >
-                        {item.title}
-                      </h4>
-                      <p className="caption text-[var(--ink-soft)] mt-1 line-clamp-2">
-                        {item.heritageCraftStory || 'Hand-spun natural dye cloth.'}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <span className="price font-bold">₹{item.price?.toLocaleString('en-IN')}</span>
-                      <button
-                        onClick={() => navigate({ page: 'product', id: item.slug || item._id })}
-                        className="btn-ghost text-xs text-[var(--brand-maroon)] font-semibold"
-                      >
-                        Explore →
-                      </button>
-                    </div>
-                  </div>
-                </div>
               ))}
             </div>
-          </div>
+          ) : (
+            /* Asymmetric 7 cols / 5 cols Layout for 3+ items */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+              {/* 7 Columns: Large Hero Feature Card */}
+              <div className="lg:col-span-7">
+                {featuredProducts[0] && (
+                  <ProductCard
+                    product={featuredProducts[0]}
+                    variant="editorial"
+                    onSelect={(id) => navigate({ page: 'product', id })}
+                  />
+                )}
+              </div>
+
+              {/* 5 Columns: 2 Stacked Cards on Right */}
+              <div className="lg:col-span-5 flex flex-col justify-between gap-6">
+                {featuredProducts.slice(1, 3).map((item) => (
+                  <div
+                    key={item._id || item.slug}
+                    onClick={() => navigate({ page: 'product', id: item.slug || item._id })}
+                    className="flex-1 flex gap-4 bg-[var(--bg-cream)] p-4 rounded-[8px] cursor-pointer hover:shadow-xs transition-shadow"
+                  >
+                    <div className="w-28 sm:w-32 h-36 bg-white rounded-[4px] overflow-hidden flex-shrink-0">
+                      <img
+                        src={item.images?.[0]?.url || item.image || '/images/hero.png'}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-between py-1 flex-grow">
+                      <div>
+                        <span className="caption text-[var(--brand-maroon)] uppercase font-semibold text-[11px]">
+                          {item.category}
+                        </span>
+                        <h4 className="text-[16px] font-medium text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] transition-colors mt-0.5 line-clamp-1">
+                          {item.title}
+                        </h4>
+                        <p className="caption text-[var(--ink-soft)] mt-1 line-clamp-2 text-xs">
+                          {item.heritageCraftStory || item.description || 'Authentic hand-spun natural dye cloth.'}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-[var(--line-khadi)]/50">
+                        <span className="price font-bold text-sm">
+                          {item.price ? `₹${item.price.toLocaleString('en-IN')}` : 'Price on request'}
+                        </span>
+                        <span className="btn-ghost text-xs text-[var(--brand-maroon)] font-semibold">
+                          Explore →
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -320,9 +413,8 @@ export default function HomePage({ navigate }) {
               {bestsellers.slice(0, 4).map((product, idx) => (
                 <div
                   key={product._id || product.slug}
-                  className={`grid grid-cols-1 md:grid-cols-12 gap-8 items-center ${
-                    idx % 2 === 1 ? 'md:flex-row-reverse' : ''
-                  }`}
+                  className={`grid grid-cols-1 md:grid-cols-12 gap-8 items-center ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''
+                    }`}
                 >
                   <div className={`md:col-span-7 ${idx % 2 === 1 ? 'md:order-2' : ''}`}>
                     <ProductCard

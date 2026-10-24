@@ -229,19 +229,10 @@ export default function CartPage({ navigate }) {
               <ArrowRight size={18} />
             </button>
 
-            {/* Enquire Alternative */}
-            <div className="text-center pt-2 border-t border-[var(--line-khadi)]/50">
-              <p className="caption text-[var(--ink-soft)] mb-2">Prefer personal assistance?</p>
-              <a
-                href={`https://wa.me/919876543210?text=${encodeURIComponent(
-                  `Namaste Rangvanat, I would like to enquire about placing an order for my bag totaling ${formatPrice(finalTotal)}.`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-ghost text-xs text-[var(--brand-maroon)] font-semibold"
-              >
-                Enquire about this order on WhatsApp ↗
-              </a>
+            <div className="text-center pt-3 border-t border-[var(--line-khadi)]/50">
+              <p className="caption text-[var(--ink-soft)] text-xs">
+                Insured luxury packaging with tamper-evident seal included.
+              </p>
             </div>
           </div>
         </div>

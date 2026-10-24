@@ -252,12 +252,15 @@ export default function Header({ currentRoute, navigate }) {
                         </li>
                         <li>
                           <a
-                            href="https://wa.me/919876543210"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[15px] text-[var(--brand-maroon)] font-medium flex items-center gap-1.5"
+                            href="/contact"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setShopMegaOpen(false);
+                              navigate({ page: 'contact' });
+                            }}
+                            className="text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] block"
                           >
-                            Enquire on WhatsApp ↗
+                            Customer & Order Support
                           </a>
                         </li>
                         <li>
@@ -741,14 +744,15 @@ export default function Header({ currentRoute, navigate }) {
 
         {/* Bottom Mobile Drawer Actions */}
         <div className="pt-6 border-t border-[var(--line-khadi)] space-y-4">
-          <a
-            href="https://wa.me/919876543210"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => {
+              setMobileDrawerOpen(false);
+              navigate({ page: 'shop' });
+            }}
             className="btn btn-primary btn-md w-full justify-center"
           >
-            Enquire on WhatsApp
-          </a>
+            Shop All Collections
+          </button>
 
           <div className="flex items-center justify-between text-xs text-[var(--ink-soft)]">
             <span>Bardoli, Gujarat, India</span>

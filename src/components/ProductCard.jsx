@@ -1,4 +1,4 @@
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useStore } from '../context/StoreContext.jsx';
 
 export default function ProductCard({
@@ -11,14 +11,15 @@ export default function ProductCard({
   const id = product._id || product.id || product.slug;
   const title = product.title || product.name || 'Handcrafted Khadi Piece';
   const slug = product.slug || product.id || 'piece';
-  const price = product.price || 12500;
+  const price = product.price;
   const compareAtPrice = product.compareAtPrice || null;
   const image =
     product.images?.[0]?.url ||
     product.image ||
-    '/images/hero.png';
+    null;
   const category = product.category || 'Handloom Garment';
   const craftSpecs = product.heritageCraftStory || product.specs?.join(' • ') || 'Hand Spun • Bardoli Khadi';
+  const defaultSize = product.variants?.[0]?.size || 'Standard';
 
   const inWishlist = isInWishlist(slug) || isInWishlist(id);
 
@@ -134,30 +135,28 @@ export default function ProductCard({
           )}
         </div>
 
-        {/* WhatsApp Enquire Link */}
+        {/* Direct E-commerce Actions */}
         <div className="mt-2.5 pt-2 border-t border-[var(--line-khadi)]/50 flex items-center justify-between">
-          <a
-            href={`https://wa.me/919876543210?text=${encodeURIComponent(
-              `Namaste Rangvanat, I would like to enquire about ${title} (${formatPrice(price)}).`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="btn-ghost flex items-center gap-1.5 text-[13px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)]"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect?.(slug || id);
+            }}
+            className="text-xs text-[var(--ink-soft)] hover:text-[var(--brand-maroon)] font-medium"
           >
-            <MessageCircle size={14} className="text-[var(--brand-gold)]" />
-            <span>Enquire on WhatsApp</span>
-          </a>
+            View Details →
+          </button>
 
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              addToCart(product, 'Standard', 1);
+              addToCart(product, defaultSize, 1);
             }}
-            className="lg:hidden text-[13px] font-semibold text-[var(--brand-maroon)] bg-[var(--brand-maroon-tint)] px-2.5 py-1 rounded-[2px]"
+            className="text-xs font-semibold text-[var(--brand-maroon)] bg-[var(--brand-maroon-tint)] hover:bg-[var(--brand-maroon)] hover:text-white transition-colors px-3 py-1 rounded-full"
           >
-            + Bag
+            + Add to Bag
           </button>
         </div>
       </div>

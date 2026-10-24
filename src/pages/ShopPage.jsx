@@ -153,9 +153,8 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
           <div className="flex items-center gap-3">
             <button
               onClick={() => setFilterPanelOpen((prev) => !prev)}
-              className={`btn btn-sm ${
-                activeFiltersCount > 0 ? 'btn-primary' : 'btn-secondary'
-              } flex items-center gap-2`}
+              className={`btn btn-sm ${activeFiltersCount > 0 ? 'btn-primary' : 'btn-secondary'
+                } flex items-center gap-2`}
             >
               <SlidersHorizontal size={14} />
               <span>Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}</span>
@@ -420,9 +419,8 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
               </div>
             ) : viewMode === 'grid' ? (
               <div
-                className={`grid grid-cols-2 ${
-                  filterPanelOpen ? 'md:grid-cols-3' : 'md:grid-cols-3 lg:grid-cols-4'
-                } gap-6 md:gap-8`}
+                className={`grid grid-cols-2 ${filterPanelOpen ? 'md:grid-cols-3' : 'md:grid-cols-3 lg:grid-cols-4'
+                  } gap-6 md:gap-8`}
               >
                 {products.map((p) => (
                   <ProductCard
@@ -439,9 +437,8 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
                 {products.map((p, idx) => (
                   <div
                     key={p._id || p.slug}
-                    className={`grid grid-cols-1 md:grid-cols-12 gap-8 items-center ${
-                      idx % 2 === 1 ? 'md:flex-row-reverse' : ''
-                    }`}
+                    className={`grid grid-cols-1 md:grid-cols-12 gap-8 items-center ${idx % 2 === 1 ? 'md:flex-row-reverse' : ''
+                      }`}
                   >
                     <div className={`md:col-span-7 ${idx % 2 === 1 ? 'md:order-2' : ''}`}>
                       <ProductCard

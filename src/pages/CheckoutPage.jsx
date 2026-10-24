@@ -292,11 +292,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
 
               <div className="space-y-3">
                 <label
-                  className={`block p-4 border rounded-[2px] cursor-pointer transition-all ${
-                    deliveryMethod === 'express'
+                  className={`block p-4 border rounded-[2px] cursor-pointer transition-all ${deliveryMethod === 'express'
                       ? 'border-[var(--brand-maroon)] bg-[var(--brand-maroon-tint)]/20'
                       : 'border-[var(--line-khadi)]'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -370,11 +369,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                 ].map((pm) => (
                   <label
                     key={pm.id}
-                    className={`block p-4 border rounded-[2px] cursor-pointer transition-all ${
-                      paymentMethod === pm.id
+                    className={`block p-4 border rounded-[2px] cursor-pointer transition-all ${paymentMethod === pm.id
                         ? 'border-[var(--brand-maroon)] bg-[var(--brand-maroon-tint)]/20'
                         : 'border-[var(--line-khadi)]'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start gap-3">
                       <input

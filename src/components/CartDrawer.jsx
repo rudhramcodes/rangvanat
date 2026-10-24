@@ -174,17 +174,10 @@ export default function CartDrawer({ navigate }) {
               <ArrowRight size={18} />
             </button>
 
-            <div className="text-center">
-              <a
-                href={`https://wa.me/919876543210?text=${encodeURIComponent(
-                  `Namaste Rangvanat, I would like to enquire about my bag with ${cartCount} handcrafted pieces totaling ${formatPrice(subtotal)}.`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-ghost text-xs text-[var(--ink-soft)] hover:text-[var(--brand-maroon)]"
-              >
-                or Enquire about this bag on WhatsApp ↗
-              </a>
+            <div className="text-center pt-1">
+              <span className="text-[11px] text-[var(--ink-soft)]">
+                Insured luxury shipping across India from Bardoli studio
+              </span>
             </div>
           </div>
         )}
