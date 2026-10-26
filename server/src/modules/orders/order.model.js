@@ -60,7 +60,8 @@ const orderSchema = new mongoose.Schema(
         default: "pending",
         index: true,
       },
-
+      transactionId: { type: String, default: "" },
+      gatewayOrderId: { type: String, default: "" },
       paidAt: { type: Date },
     },
     fulfillment: {

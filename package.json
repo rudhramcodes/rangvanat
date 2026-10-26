@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 5173 --strictPort",
+    "dev": "vite --host --port 5173 --strictPort",
     "build": "vite build",
     "lint": "eslint src server/src server/scripts server/test scripts",
     "preview": "vite preview",
@@ -14,7 +14,7 @@
     "build:legacy": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "npm run test:unit && npm --prefix server test",
-    "start": "vite --port 5173 --strictPort",
+    "start": "vite --host --port 5173 --strictPort",
     "lint:legacy": "eslint src",
     "dev:full": "node scripts/dev.mjs",
     "test:unit": "node --import tsx --test tests/*.test.js tests/*.test.jsx",
@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@clerk/react": "^6.18.1",
     "@tailwindcss/vite": "^4.3.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.31.0",

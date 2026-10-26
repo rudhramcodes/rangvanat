@@ -1,29 +1,83 @@
 import { Router } from "express";
-import {randomBytes,createHash} from "node:crypto";
-import {Resend} from "resend";
+import { randomBytes, createHash } from "node:crypto";
+import { Resend } from "resend";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
 import { Customer } from "./customer.model.js";
 import { Order } from "../orders/order.model.js";
 import { env } from "../../config/env.js";
 import { requireCustomer } from "../../middlewares/auth.js";
 import { asyncRoute, fail, text, email, ok } from "../../utils/validate.js";
+
 const router = Router();
+const googleClient = new OAuth2Client();
+
 const profile = (c) => ({
   id: c._id,
   name: c.name,
   email: c.email,
-  phone: c.phone,
-  addresses: c.addresses,
-  wishlist: c.wishlist,
+  phone: c.phone || '',
+  avatar: c.avatar || '',
+  addresses: c.addresses || [],
+  wishlist: c.wishlist || [],
   emailVerified: Boolean(c.emailVerifiedAt),
 });
 const session = (c) => ({
-  token: jwt.sign({ id: c._id, role: "customer", version:c.tokenVersion||0 }, env.JWT_SECRET, {
+  token: jwt.sign({ id: c._id, role: "customer", version: c.tokenVersion || 0 }, env.JWT_SECRET, {
     expiresIn: env.JWT_EXPIRES_IN,
   }),
   customer: profile(c),
 });
+
+router.post(
+  "/google",
+  asyncRoute(async (req, res) => {
+    const { credential } = req.body;
+    if (!credential || typeof credential !== "string") {
+      fail("Google ID credential is required", 400);
+    }
+
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: env.GOOGLE_CLIENT_ID || undefined,
+      });
+      payload = ticket.getPayload();
+    } catch (e) {
+      fail("Invalid Google token: " + e.message, 401);
+    }
+
+    const { sub: googleId, email: rawEmail, name, picture } = payload;
+    if (!rawEmail) {
+      fail("Google account has no email address", 400);
+    }
+    const mail = rawEmail.toLowerCase();
+
+    let customer = await Customer.findOne({
+      $or: [{ googleId }, { email: mail }],
+    });
+
+    if (customer) {
+      if (!customer.googleId) customer.googleId = googleId;
+      if (picture && !customer.avatar) customer.avatar = picture;
+      if (!customer.emailVerifiedAt) customer.emailVerifiedAt = new Date();
+      await customer.save();
+    } else {
+      customer = await Customer.create({
+        name: name || "Customer",
+        email: mail,
+        googleId,
+        avatar: picture || "",
+        emailVerifiedAt: new Date(),
+      });
+    }
+
+    ok(res, session(customer));
+  }),
+);
+
 router.post(
   "/register",
   asyncRoute(async (req, res) => {

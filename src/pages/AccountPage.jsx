@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Package, Heart, MapPin, User, LogOut, Plus } from 'lucide-react';
+import { Package, Heart, MapPin, User, LogOut, Plus, Trash2, CheckCircle2, Clock, Truck, ShieldCheck } from 'lucide-react';
 import { useStore } from '../context/store.js';
 import ProductCard from '../components/ProductCard.jsx';
-import { api, fetchJson } from '../api/client.js';
+import { api } from '../api/client.js';
 
 export default function AccountPage({ initialTab = 'orders', navigate }) {
-  const { customer, login, register, logout, wishlist, formatPrice, addToast, setCustomer, refreshCustomer } = useStore();
+  const { customer, login, register, logout, wishlist, addToast, setCustomer, refreshCustomer } = useStore();
 
-  const [savedProducts,setSavedProducts]=useState([]);
-  useEffect(()=>{let active=true;Promise.all(wishlist.map(id=>api.getProductByIdOrSlug(id))).then(rows=>{if(active)setSavedProducts(rows.filter(Boolean));});return()=>{active=false;};},[wishlist]);
-  const [profileError,setProfileError]=useState('');
-  const saveProfile=async values=>{const r=await api.updateProfile(values);if(r.success){setCustomer(c=>({...c,...r.data}));await refreshCustomer();return true;}setProfileError(r.message);return false;};
   const [activeTab, setActiveTab] = useState(customer ? initialTab : 'login');
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [wishlistProducts, setWishlistProducts] = useState([]);
 
   // Login Form
   const [loginEmail, setLoginEmail] = useState('');
@@ -25,13 +24,35 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
   const [regPhone, setRegPhone] = useState('');
   const [regLoading, setRegLoading] = useState(false);
 
-  // New Address Form
-  const [editingAddress,setEditingAddress]=useState(null);
-  const [showAddressModal, setShowAddressModal] = useState(false);
-  const [newStreet, setNewStreet] = useState('');
-  const [newCity, setNewCity] = useState('');
-  const [newState,setNewState] = useState('Gujarat');
-  const [newPincode, setNewPincode] = useState('');
+  // Address Form
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressLine1, setAddressLine1] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('Gujarat');
+  const [pincode, setPincode] = useState('');
+
+  // Fetch orders & wishlist products when customer is logged in
+  useEffect(() => {
+    if (customer) {
+      setOrdersLoading(true);
+      api.me().then((res) => {
+        setOrdersLoading(false);
+        if (res.success && res.data) {
+          if (res.data.orders) setOrders(res.data.orders);
+        }
+      });
+    }
+  }, [customer]);
+
+  useEffect(() => {
+    if (wishlist.length > 0) {
+      Promise.all(wishlist.map((id) => api.getProductByIdOrSlug(id))).then((prods) => {
+        setWishlistProducts(prods.filter(Boolean));
+      });
+    } else {
+      setWishlistProducts([]);
+    }
+  }, [wishlist]);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -55,74 +76,107 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
 
   const handleAddAddress = async (e) => {
     e.preventDefault();
-    if (!newStreet || !newCity || !newPincode) return;
+    if (!addressLine1 || !city || !pincode) return;
 
     const currentAddresses = customer?.addresses || [];
-    const candidate = {addressLine1:newStreet,city:newCity,state:newState,pincode:newPincode,country:'India',isDefault:currentAddresses.length===0};
-    const updated = editingAddress===null ? [
-      ...currentAddresses,
-      {
-        addressLine1: newStreet,
-        city: newCity,
-        state: newState,
-        pincode: newPincode,
-        country: 'India',
-        isDefault: currentAddresses.length === 0,
-      },
-    ] : currentAddresses.map((a,i)=>i===editingAddress?{...a,...candidate,isDefault:a.isDefault}:a);
+    const newAddr = {
+      addressLine1,
+      city,
+      state,
+      pincode,
+      country: 'India',
+      isDefault: currentAddresses.length === 0,
+    };
 
-    if (await saveProfile({addresses:updated})) {
-      addToast('Address added to profile', 'success');
-      setShowAddressModal(false);
-      setNewStreet('');
-      setNewCity('');
-      setNewPincode('');setEditingAddress(null);
+    const updated = [...currentAddresses, newAddr];
+    const res = await api.updateProfile({ addresses: updated });
+    if (res.success) {
+      setCustomer((c) => ({ ...c, addresses: res.data?.addresses || updated }));
+      setShowAddressForm(false);
+      setAddressLine1('');
+      setCity('');
+      setPincode('');
+      addToast('Address added to your profile', 'success');
+    } else {
+      addToast(res.message || 'Could not save address', 'error');
     }
   };
 
-  // Signed out state: Sign In / Register Card (§12.11)
+  const handleDeleteAddress = async (idx) => {
+    const updated = (customer?.addresses || []).filter((_, i) => i !== idx);
+    const res = await api.updateProfile({ addresses: updated });
+    if (res.success) {
+      setCustomer((c) => ({ ...c, addresses: updated }));
+      addToast('Address removed', 'info');
+    }
+  };
+
+  // Signed Out View
   if (!customer) {
     return (
-      <main id="main-content" className="rv-container py-16 md:py-24 flex justify-center">
-        <div className="w-full max-w-[440px] bg-white border border-[var(--line-khadi)] p-8 rounded-[2px] shadow-sm">
-          <div className="text-center mb-8">
-            <span className="font-display text-2xl font-semibold tracking-wider text-[var(--brand-maroon)]">
-              RANGVANAT
+      <main className="rv-container py-16 md:py-24 flex flex-col items-center justify-center min-h-[70vh]">
+        <div className="w-full max-w-md bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[8px] p-8 shadow-sm">
+          <div className="text-center mb-6">
+            <span className="font-display text-2xl font-semibold tracking-wider text-[var(--color-ink)] uppercase">
+              Rangvanat Studio
             </span>
-            <p className="serif-statement text-lg text-[var(--ink-chocolate)] mt-2">
-              {activeTab === 'login' ? 'Welcome back to the atelier.' : 'Join the custodians of Khadi.'}
+            <p className="text-sm text-[var(--color-muted)] mt-1.5 font-body">
+              {activeTab === 'login' ? 'Sign in to access your atelier orders & wishlist.' : 'Create your account to become an atelier patron.'}
             </p>
+
+            {/* Tab Switcher */}
+            <div className="flex border-b border-[var(--color-line)] mt-6">
+              <button
+                type="button"
+                onClick={() => setActiveTab('login')}
+                className={`flex-1 pb-3 text-sm font-semibold tracking-wider uppercase transition-colors border-b-2 ${
+                  activeTab === 'login'
+                    ? 'border-[var(--color-clay)] text-[var(--color-clay)]'
+                    : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('register')}
+                className={`flex-1 pb-3 text-sm font-semibold tracking-wider uppercase transition-colors border-b-2 ${
+                  activeTab === 'register'
+                    ? 'border-[var(--color-clay)] text-[var(--color-clay)]'
+                    : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                }`}
+              >
+                Register
+              </button>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate({ page: 'security' })}
-            className="btn-ghost text-xs text-[var(--ink-soft)] hover:text-[var(--brand-maroon)] block my-3 text-left"
-          >
-            Forgot password?
-          </button>
           {activeTab === 'login' ? (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label htmlFor="accountpage-field-1" className="form-label">Email Address</label>
-                <input id="accountpage-field-1"
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
+                  Email Address
+                </label>
+                <input
                   type="email"
                   value={loginEmail}
                   onChange={(e) => setLoginEmail(e.target.value)}
-                  placeholder="radhika@example.com"
-                  className="form-input"
+                  placeholder="name@example.com"
+                  className="input-base"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="accountpage-field-2" className="form-label">Password</label>
-                <input id="accountpage-field-2"
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
+                  Password
+                </label>
+                <input
                   type="password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="form-input"
+                  className="input-base"
                   required
                 />
               </div>
@@ -130,67 +184,66 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="btn btn-primary btn-md w-full justify-center uppercase tracking-wider text-sm mt-2"
+                className="btn-primary w-full h-11 justify-center mt-2"
               >
-                {loginLoading ? 'Signing In...' : 'Sign In'}
+                {loginLoading ? 'Signing in…' : 'Sign In'}
               </button>
-
-              <div className="text-center pt-4 border-t border-[var(--line-khadi)]">
-                <span className="caption text-[var(--ink-soft)]">New to Rangvanat? </span>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('register')}
-                  className="btn-ghost text-xs text-[var(--brand-maroon)] font-semibold"
-                >
-                  Create an account
-                </button>
-              </div>
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div>
-                <label htmlFor="accountpage-field-3" className="form-label">Full Name</label>
-                <input id="accountpage-field-3"
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
+                  Full Name
+                </label>
+                <input
                   type="text"
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
                   placeholder="Radhika Sharma"
-                  className="form-input"
+                  className="input-base"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="accountpage-field-4" className="form-label">Email Address</label>
-                <input id="accountpage-field-4"
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
+                  Email Address
+                </label>
+                <input
                   type="email"
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder="radhika@example.com"
-                  className="form-input"
+                  className="input-base"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="accountpage-field-5" className="form-label">Phone Number</label>
-                <input id="accountpage-field-5"
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
+                  Phone (Optional)
+                </label>
+                <input
                   type="tel"
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
                   placeholder="+91 98765 43210"
-                  className="form-input"
+                  className="input-base"
                 />
               </div>
 
               <div>
-                <label htmlFor="accountpage-field-6" className="form-label">Create Password</label>
-                <input id="accountpage-field-6"
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
+                  Password (12–72 characters)
+                </label>
+                <input
                   type="password"
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="12–72 characters" minLength={12} maxLength={72}
-                  className="form-input"
+                  placeholder="At least 12 characters"
+                  minLength={12}
+                  maxLength={72}
+                  className="input-base"
                   required
                 />
               </div>
@@ -198,21 +251,10 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               <button
                 type="submit"
                 disabled={regLoading}
-                className="btn btn-primary btn-md w-full justify-center uppercase tracking-wider text-sm mt-2"
+                className="btn-primary w-full h-11 justify-center mt-2"
               >
-                {regLoading ? 'Creating Account...' : 'Create Account'}
+                {regLoading ? 'Creating account…' : 'Create Account'}
               </button>
-
-              <div className="text-center pt-4 border-t border-[var(--line-khadi)]">
-                <span className="caption text-[var(--ink-soft)]">Already have an account? </span>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('login')}
-                  className="btn-ghost text-xs text-[var(--brand-maroon)] font-semibold"
-                >
-                  Sign in
-                </button>
-              </div>
             </form>
           )}
         </div>
@@ -222,300 +264,303 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
 
   // Signed In Customer Dashboard (§12.11)
   return (
-    <main id="main-content" className="rv-container py-12 md:py-16">
-      {/* Breadcrumbs */}
-      <nav className="caption text-[var(--ink-soft)] mb-6 flex items-center gap-2">
-        <button onClick={() => navigate({ page: 'home' })} className="hover:text-[var(--brand-maroon)]">
-          Home
-        </button>
-        <span className="w-1 h-1 rounded-full bg-[var(--brand-gold)]" />
-        <span className="text-[var(--brand-maroon)] font-semibold">Account Dashboard</span>
-      </nav>
-
-      <div className="flex flex-col md:flex-row md:items-baseline justify-between pb-6 border-b border-[var(--line-khadi)] mb-10 gap-2">
+    <main className="rv-container py-12 md:py-16 min-h-[75vh]">
+      {/* Top Banner / Welcome */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between pb-8 border-b border-[var(--color-line)] gap-4">
         <div>
-          <span className="caption uppercase font-semibold text-[var(--brand-gold)]">Customer Atelier</span>
-          <h1 className="heading-1 text-[var(--brand-maroon)] uppercase text-3xl">
+          <span className="text-xs font-semibold uppercase tracking-widest text-[var(--color-clay)]">
+            Patron Account
+          </span>
+          <h1 className="font-display text-3xl md:text-4xl text-[var(--color-ink)] font-normal mt-1">
             Namaste, {customer.name}
           </h1>
+          <p className="text-xs text-[var(--color-muted)] mt-1">{customer.email}</p>
         </div>
+
         <button
           onClick={logout}
-          className="btn-ghost text-xs text-[var(--state-error)] flex items-center gap-1.5 self-start"
+          className="btn-secondary btn-sm self-start md:self-auto flex items-center gap-1.5 text-[var(--color-error)] border-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-[var(--color-white)]"
         >
           <LogOut size={14} />
           <span>Sign Out</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Left Nav Rows (3 Cols) */}
-        <aside className="lg:col-span-3 space-y-1 bg-white p-3 border border-[var(--line-khadi)] rounded-[2px] self-start shadow-sm">
-          {[
-            { id: 'orders', label: 'My Orders', icon: Package },
-            { id: 'wishlist', label: 'My Wishlist', icon: Heart },
-            { id: 'addresses', label: 'Saved Addresses', icon: MapPin },
-            { id: 'profile', label: 'Profile Settings', icon: User },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full h-11 px-4 rounded-[2px] flex items-center gap-3 text-sm font-semibold transition-all ${
-                  activeTab === item.id
-                    ? 'bg-[var(--brand-maroon)] text-[var(--bg-ivory)]'
-                    : 'text-[var(--ink-chocolate)] hover:bg-[var(--bg-cream)]'
-                }`}
+      {/* Tabs Navigation */}
+      <div className="flex border-b border-[var(--color-line)] my-8 overflow-x-auto gap-8">
+        <button
+          type="button"
+          onClick={() => setActiveTab('orders')}
+          className={`pb-3 text-sm font-semibold tracking-wider uppercase transition-colors border-b-2 flex items-center gap-2 shrink-0 ${
+            activeTab === 'orders'
+              ? 'border-[var(--color-clay)] text-[var(--color-clay)]'
+              : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+          }`}
+        >
+          <Package size={16} />
+          <span>My Orders ({orders.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('wishlist')}
+          className={`pb-3 text-sm font-semibold tracking-wider uppercase transition-colors border-b-2 flex items-center gap-2 shrink-0 ${
+            activeTab === 'wishlist'
+              ? 'border-[var(--color-clay)] text-[var(--color-clay)]'
+              : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+          }`}
+        >
+          <Heart size={16} />
+          <span>Saved Pieces ({wishlist.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('addresses')}
+          className={`pb-3 text-sm font-semibold tracking-wider uppercase transition-colors border-b-2 flex items-center gap-2 shrink-0 ${
+            activeTab === 'addresses'
+              ? 'border-[var(--color-clay)] text-[var(--color-clay)]'
+              : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+          }`}
+        >
+          <MapPin size={16} />
+          <span>Addresses ({(customer.addresses || []).length})</span>
+        </button>
+      </div>
+
+      {/* Tab 1: Orders */}
+      {activeTab === 'orders' && (
+        <div className="space-y-6">
+          {ordersLoading ? (
+            <div className="py-16 text-center text-sm text-[var(--color-muted)]">
+              Loading your atelier orders…
+            </div>
+          ) : orders.length > 0 ? (
+            orders.map((ord) => (
+              <div
+                key={ord._id}
+                className="bg-[var(--color-white)] border border-[var(--color-line)] rounded-[8px] p-6 shadow-sm space-y-4"
               >
-                <Icon size={16} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </aside>
-
-        {/* Content Right (9 Cols) */}
-        <div className="lg:col-span-9 bg-white p-6 md:p-8 border border-[var(--line-khadi)] rounded-[2px] shadow-sm">
-          {/* TAB 1: ORDERS */}
-          {activeTab === 'orders' && (
-            <div className="space-y-6">
-              <h2 className="heading-3 text-[var(--brand-maroon)] uppercase text-lg pb-3 border-b border-[var(--line-khadi)]">
-                Order History
-              </h2>
-
-              {!customer.orders || customer.orders.length === 0 ? (
-                <div className="py-12 text-center">
-                  <p className="serif-statement text-xl text-[var(--ink-chocolate)] mb-3">
-                    "No orders placed yet."
-                  </p>
-                  <p className="body-s text-[var(--ink-soft)] mb-6">
-                    Our current seasonal lookbook is ready for your perusal.
-                  </p>
-                  <button onClick={() => navigate({ page: 'shop' })} className="btn btn-primary btn-md">
-                    Shop Lookbook
-                  </button>
+                <div className="flex flex-wrap items-center justify-between pb-4 border-b border-[var(--color-line)] gap-2">
+                  <div>
+                    <span className="text-xs text-[var(--color-muted)]">Order Number</span>
+                    <p className="font-semibold text-sm text-[var(--color-ink)]">{ord.orderNumber}</p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-[var(--color-muted)]">Date</span>
+                    <p className="text-xs text-[var(--color-ink)]">
+                      {new Date(ord.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-[var(--color-muted)]">Total Amount</span>
+                    <p className="price-tabular font-semibold text-sm text-[var(--color-ink)]">
+                      ₹{ord.financials?.totalAmount?.toLocaleString('en-IN')}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-xs text-[var(--color-muted)]">Fulfillment Status</span>
+                    <span className="inline-block px-2.5 py-0.5 rounded-[4px] text-xs font-semibold uppercase tracking-wider bg-[var(--color-cream)] text-[var(--color-clay)]">
+                      {ord.fulfillment?.status || 'Received'}
+                    </span>
+                  </div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {customer.orders.map((ord) => (
-                    <div
-                      key={ord._id}
-                      className="p-5 border border-[var(--line-khadi)] rounded-[2px] space-y-3"
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--line-khadi)] gap-2">
+
+                {/* Items */}
+                <div className="divide-y divide-[var(--color-line)]">
+                  {ord.items?.map((item, idx) => (
+                    <div key={idx} className="py-3 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={item.image || '/images/hero-home.jpg'}
+                          alt={item.productTitle}
+                          className="w-12 h-16 object-cover rounded-[4px] bg-[var(--color-sand)]"
+                        />
                         <div>
-                          <span className="font-semibold text-sm text-[var(--brand-maroon)]">
-                            {ord.orderNumber}
-                          </span>
-                          <span className="text-xs text-[var(--ink-soft)] block">
-                            Placed on {new Date(ord.createdAt).toLocaleDateString('en-IN')}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`badge-pill static ${
-                              ord.fulfillment?.status === 'delivered'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-[var(--brand-maroon-tint)] text-[var(--brand-maroon)]'
-                            }`}
-                          >
-                            {ord.fulfillment?.status?.toUpperCase() || 'RECEIVED'}
-                          </span>
-                          <button
-                            onClick={() => navigate({ page: 'track', orderNumber: ord.orderNumber })}
-                            className="btn btn-secondary btn-sm text-xs"
-                          >
-                            Track Shipment →
-                          </button>
+                          <p className="text-sm font-medium text-[var(--color-ink)]">{item.productTitle}</p>
+                          <p className="text-xs text-[var(--color-muted)]">
+                            Size: {item.variantSize} · Qty: {item.quantity}
+                          </p>
                         </div>
                       </div>
-
-                      <div className="space-y-2 text-sm">
-                        {ord.items?.map((it, i) => (
-                          <div key={i} className="flex justify-between">
-                            <span>
-                              {it.productTitle} · Size: {it.variantSize} (x{it.quantity})
-                            </span>
-                            <span className="font-semibold">{formatPrice(it.subtotal)}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="pt-3 border-t border-[var(--line-khadi)]/50 flex justify-between font-bold text-sm">
-                        <span>Order total · payment pending</span>
-                        <span className="price">{formatPrice(ord.financials?.totalAmount)}</span>
-                      </div>
+                      <span className="price-tabular text-sm font-semibold text-[var(--color-ink)]">
+                        ₹{item.subtotal?.toLocaleString('en-IN')}
+                      </span>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: WISHLIST */}
-          {activeTab === 'wishlist' && (
-            <div className="space-y-6">
-              <h2 className="heading-3 text-[var(--brand-maroon)] uppercase text-lg pb-3 border-b border-[var(--line-khadi)]">
-                My Saved Pieces ({wishlist.length})
-              </h2>
-
-              {wishlist.length === 0 ? (
-                <div className="py-12 text-center">
-                  <p className="serif-statement text-xl text-[var(--ink-chocolate)] mb-3">
-                    "Your wishlist is waiting for inspiration."
-                  </p>
-                  <button onClick={() => navigate({ page: 'shop' })} className="btn btn-primary btn-md mt-2">
-                    Explore Lookbook
-                  </button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                  {savedProducts.map(p=><ProductCard key={p._id} product={p} onSelect={id=>navigate({page:'product',id})} />)}
-
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 3: ADDRESSES */}
-          {activeTab === 'addresses' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between pb-3 border-b border-[var(--line-khadi)]">
-                <h2 className="heading-3 text-[var(--brand-maroon)] uppercase text-lg">
-                  Saved Delivery Addresses
-                </h2>
-                <button onClick={() => {setEditingAddress(null);setNewStreet('');setNewCity('');setNewState('');setNewPincode('');setShowAddressModal(true);}} className="btn btn-primary btn-sm">
-                  + Add New Address
-                </button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {customer.addresses?.map((addr, idx) => (
-                  <div
-                    key={idx}
-                    className="p-5 border border-[var(--line-khadi)] rounded-[2px] space-y-2 relative"
-                  >
-                    {addr.isDefault && (
-                      <span className="caption uppercase font-semibold text-[var(--brand-gold)] text-xs">
-                        Default Address
-                      </span>
-                    )}
-                    <p className="text-sm font-semibold text-[var(--ink-chocolate)]">
-                      {customer.name}
-                    </p>
-                    <p className="body-s text-xs leading-relaxed text-[var(--ink-soft)]">
-                      {addr.addressLine1}, {addr.addressLine2 ? addr.addressLine2 + ', ' : ''}
-                      {addr.city}, {addr.state} - {addr.pincode}
-                    </p>
-                    <p className="caption text-xs">{addr.country}</p><button className="btn btn-secondary btn-sm" onClick={()=>{setEditingAddress(idx);setNewStreet(addr.addressLine1);setNewCity(addr.city);setNewState(addr.state);setNewPincode(addr.pincode);setShowAddressModal(true);}}>Edit address</button>
-                    <button className="btn btn-secondary btn-sm" onClick={()=>saveProfile({addresses:customer.addresses.filter((_,i)=>i!==idx)})}>Delete address</button>
-                    <button className="btn btn-secondary btn-sm" onClick={()=>saveProfile({addresses:customer.addresses.map((a,i)=>({...a,isDefault:i===idx}))})}>Make default</button>
-                  </div>
-                ))}
-
-                {/* Dashed "+ Add Address" Card (§12.11) */}
-                <button
-                  type="button"
-                  onClick={() => {setEditingAddress(null);setNewStreet('');setNewCity('');setNewState('');setNewPincode('');setShowAddressModal(true);}}
-                  className="min-h-[140px] border-2 border-dashed border-[var(--line-khadi)] hover:border-[var(--brand-maroon)] rounded-[2px] flex flex-col items-center justify-center p-6 text-[var(--ink-soft)] hover:text-[var(--brand-maroon)] transition-colors"
-                >
-                  <Plus size={22} className="mb-1" />
-                  <span className="text-sm font-semibold">Add New Address</span>
-                </button>
-              </div>
-
-              {/* Add Address Modal Form */}
-              {showAddressModal && (
-                <div className="fixed inset-0 z-80 bg-black/50 flex items-center justify-center p-4">
-                  <div className="bg-white p-6 max-w-md w-full rounded-[2px] shadow-xl space-y-4">
-                    <h3 className="heading-3 text-[var(--brand-maroon)] uppercase">New Delivery Address</h3>
-                    <form onSubmit={handleAddAddress} className="space-y-3">
-                      <div>
-                        <label htmlFor="accountpage-field-7" className="form-label">Address Line 1</label>
-                        <input id="accountpage-field-7"
-                          type="text"
-                          value={newStreet}
-                          onChange={(e) => setNewStreet(e.target.value)}
-                          placeholder="Building, street, flat"
-                          className="form-input"
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label htmlFor="accountpage-field-8" className="form-label">City</label>
-                          <input id="accountpage-field-8"
-                            type="text"
-                            value={newCity}
-                            onChange={(e) => setNewCity(e.target.value)}
-                            placeholder="City"
-                            className="form-input"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label htmlFor="accountpage-field-9" className="form-label">PIN Code</label>
-                          <input id="accountpage-field-9"
-                            type="text"
-                            value={newPincode}
-                            onChange={(e) => setNewPincode(e.target.value)}
-                            placeholder="Six-digit PIN" pattern="[1-9][0-9]{5}"
-                            className="form-input"
-                            required
-                          />
-                        </div>
-                      </div>
-                      <label className="block">State / union territory<input className="form-input" required value={newState} onChange={e=>setNewState(e.target.value)} placeholder="State / union territory" /></label>
-                      <div className="flex justify-end gap-2 pt-3">
-                        <button
-                          type="button"
-                          onClick={() => setShowAddressModal(false)}
-                          className="btn btn-secondary btn-sm"
-                        >
-                          Cancel
-                        </button>
-                        <button type="submit" className="btn btn-primary btn-sm">
-                          Save Address
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 4: PROFILE */}
-          {profileError&&<p role="alert">{profileError}</p>}
-          {activeTab === 'profile' && <form className="space-y-4" onSubmit={async e=>{e.preventDefault();const data=new FormData(e.currentTarget);if(await saveProfile(Object.fromEntries(data)))addToast('Profile updated','success');}}>
-            <div className="flex items-center justify-between pb-2 border-b border-[var(--line-khadi)]">
-              <h2 className="heading-3">Profile settings</h2>
-              <button
-                type="button"
-                onClick={() => navigate({ page: 'security' })}
-                className="btn-ghost text-xs text-[var(--brand-maroon)]"
-              >
-                Change password
+            ))
+          ) : (
+            <div className="py-20 text-center bg-[var(--color-cream)]/40 border border-[var(--color-line)] rounded-[8px]">
+              <Package size={32} className="mx-auto text-[var(--color-muted)] mb-3" />
+              <h3 className="font-display text-2xl text-[var(--color-ink)] font-normal">No orders placed yet</h3>
+              <p className="text-xs text-[var(--color-muted)] mt-1 mb-6">
+                When you acquire pieces from our collections, their stitching and delivery progress will appear here.
+              </p>
+              <button onClick={() => navigate({ page: 'shop' })} className="btn-primary btn-sm">
+                Explore Pieces
               </button>
             </div>
-            <p className="text-xs text-[var(--ink-soft)]">Email {customer.emailVerified ? 'verified ✓' : 'not verified'}</p>
-            {!customer.emailVerified && (
+          )}
+        </div>
+      )}
+
+      {/* Tab 2: Wishlist */}
+      {activeTab === 'wishlist' && (
+        <div>
+          {wishlistProducts.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {wishlistProducts.map((p) => (
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  onSelect={(slug) => navigate({ page: 'product', id: slug })}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center bg-[var(--color-cream)]/40 border border-[var(--color-line)] rounded-[8px]">
+              <Heart size={32} className="mx-auto text-[var(--color-muted)] mb-3" />
+              <h3 className="font-display text-2xl text-[var(--color-ink)] font-normal">Your wishlist is empty</h3>
+              <p className="text-xs text-[var(--color-muted)] mt-1 mb-6">
+                Tap the heart on any piece in our collections to save it for your private collection.
+              </p>
+              <button onClick={() => navigate({ page: 'shop' })} className="btn-primary btn-sm">
+                Browse Collection
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tab 3: Saved Addresses */}
+      {activeTab === 'addresses' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--color-ink)]">
+              Delivery Addresses
+            </h3>
+            {!showAddressForm && (
               <button
                 type="button"
-                className="btn btn-secondary btn-sm"
-                onClick={async () => {
-                  const r = await fetchJson('/auth/email/request', { method: 'POST', body: '{}' });
-                  addToast(r.success ? r.data.message : r.message, r.success ? 'success' : 'error');
-                }}
+                onClick={() => setShowAddressForm(true)}
+                className="btn-secondary btn-sm flex items-center gap-1.5"
               >
-                Send verification email
+                <Plus size={14} />
+                <span>Add New Address</span>
               </button>
             )}
-            <label className="block">Name<input className="form-input" name="name" defaultValue={customer.name} required placeholder="Full name" /></label>
-            <label className="block">Email<input className="form-input" value={customer.email} readOnly /></label>
-            <label className="block">Phone<input className="form-input" name="phone" defaultValue={customer.phone} placeholder="Mobile phone" /></label>
-            <button className="btn btn-primary">Save profile</button>
-          </form>}
-        </div></div></main>);
+          </div>
+
+          {/* Add Address Form */}
+          {showAddressForm && (
+            <form onSubmit={handleAddAddress} className="p-6 bg-[var(--color-white)] border border-[var(--color-line)] rounded-[8px] space-y-4 max-w-lg">
+              <h4 className="font-display text-xl text-[var(--color-ink)] font-normal">New Delivery Address</h4>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                  Street Address
+                </label>
+                <input
+                  type="text"
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
+                  placeholder="Flat / House No., Street, Area"
+                  className="input-base"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="e.g. Surat"
+                    className="input-base"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                    PIN Code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={pincode}
+                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="395007"
+                    className="input-base"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                  State
+                </label>
+                <input
+                  type="text"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="input-base"
+                  required
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="submit" className="btn-primary btn-sm flex-1">
+                  Save Address
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddressForm(false)}
+                  className="btn-secondary btn-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Address List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(customer.addresses || []).map((addr, idx) => (
+              <div
+                key={idx}
+                className="p-5 bg-[var(--color-white)] border border-[var(--color-line)] rounded-[8px] flex justify-between items-start"
+              >
+                <div className="space-y-1 text-sm">
+                  {addr.isDefault && (
+                    <span className="inline-block px-2 py-0.5 rounded-[2px] text-[10px] font-bold uppercase tracking-wider bg-[var(--color-cream)] text-[var(--color-clay)] mb-1">
+                      Default Address
+                    </span>
+                  )}
+                  <p className="font-semibold text-[var(--color-ink)]">{addr.addressLine1}</p>
+                  <p className="text-xs text-[var(--color-muted)]">
+                    {addr.city}, {addr.state} — {addr.pincode}
+                  </p>
+                  <p className="text-xs text-[var(--color-muted)]">{addr.country || 'India'}</p>
+                </div>
+                <button
+                  onClick={() => handleDeleteAddress(idx)}
+                  className="text-[var(--color-muted)] hover:text-[var(--color-error)] p-1 transition-colors"
+                  aria-label="Delete address"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </main>
+  );
 }

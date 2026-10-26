@@ -1,461 +1,76 @@
-import { useState, useEffect } from 'react';
-import { Search, User, Heart, ShoppingBag, Menu, X } from 'lucide-react';
-import {api} from '../api/client';
-import { useStore } from '../context/store.js';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, ShoppingBag, Heart, User, Menu, X, ArrowRight, ChevronDown } from 'lucide-react';
+import { useStore } from '../context/store';
+import { api } from '../api/client';
+import { CATEGORIES, COLLECTIONS } from '../lib/lookbook';
+import { useDialog } from '../lib/useDialog';
+import './header.css';
 
-export default function Header({ navigate }) {
-  const { cartCount, wishlist, openCart, customer, logout, settings } = useStore();
-  const [collections,setCollections]=useState([]);
-  useEffect(()=>{api.getCollections().then(setCollections);},[]);
-  const [scrolled, setScrolled] = useState(false);
-  const [accountDropOpen, setAccountDropOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [searching, setSearching] = useState(false);
-
-
-  // Handle sticky header scroll past 24px
+export default function Header({ navigate, currentRoute }) {
+  const { cartCount, wishlist, customer, logout, openCart, settings } = useStore();
+  const [panel, setPanel] = useState(null);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [collections, setCollections] = useState([]);
+  const header = useRef(null);
+  const searchInput = useRef(null);
+  const close = useCallback(() => setPanel(null), []);
+  const mobileRef = useDialog(panel === 'mobile', close);
+  useEffect(() => { api.getCollections().then(cols => setCollections(cols)).catch(() => { }); }, []);
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 24);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Debounced search
+    if (!panel) return;
+    const outside = e => { if (!header.current?.contains(e.target)) close(); };
+    const escape = e => { if (e.key === 'Escape') { close(); header.current?.querySelector(`[data-trigger="${panel}"]`)?.focus(); } };
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    if (panel === 'search') searchInput.current?.focus();
+    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
+  }, [panel, close]);
   useEffect(() => {
-    if (!searchQuery.trim() || searchQuery.length < 2) {
-      queueMicrotask(()=>{setSearchResults([]);setSearching(false);});
-      return;
-    }
-    queueMicrotask(()=>setSearching(true));
-    let active=true;
+    let active = true;
     const timer = setTimeout(async () => {
+      if (!query.trim()) { setResults([]); setLoading(false); return; }
+      setLoading(true);
+      setError(false);
       try {
-        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery)}&limit=4`);
-        const json = await res.json();
-        if (active && json?.success) {
-          setSearchResults(json.data.products || []);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setSearching(false);
-      }
-    }, 200);
-
-    return () => {active=false;clearTimeout(timer);};
-  }, [searchQuery]);
-
-  // Close dropdowns on outside click or Escape
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setAccountDropOpen(false);
-        setSearchOpen(false);
-        setMobileDrawerOpen(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
-
-  const DEFAULT_NAV = [
-    { label: 'Shop', href: '/?page=shop' },
-    { label: 'Our Story', href: '/?page=story' },
-    { label: 'The Craft', href: '/?page=craft' },
-    { label: 'Journal', href: '/?page=journal' },
-    { label: 'Contact', href: '/?page=contact' },
-  ];
-  const navItems = settings?.navigation?.length ? settings.navigation : DEFAULT_NAV;
-
-  const handleNavClick = (e, href) => {
-    if (!href || href.startsWith('http://') || href.startsWith('https://')) return;
-    e.preventDefault();
-    setMobileDrawerOpen(false);
-    try {
-      const url = new URL(href, window.location.origin);
-      const pageParam = url.searchParams.get('page');
-      const cleanPath = url.pathname.replace(/^\//, '');
-      const page = cleanPath === 'products' ? 'shop' : pageParam || cleanPath || 'home';
-      const collection = url.searchParams.get('collection') || 'all';
-      const category = url.searchParams.get('category') || 'all';
-      navigate({ page, collection, category });
-    } catch {
-      navigate({ page: 'shop' });
-    }
-  };
-
-  return (
-    <>
-      <header
-        className={`site-header w-full ${scrolled ? 'scrolled' : ''}`}
-        style={{
-          borderBottom: scrolled ? '1px solid var(--line-khadi)' : '1px solid transparent',
-        }}
-      >
-        <div className="rv-container h-full flex items-center justify-between">
-          {/* Left: Mobile Menu Toggle & Brand Logo */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setMobileDrawerOpen(true)}
-              className="icon-btn mobile-menu-toggle"
-              aria-label="Open mobile navigation"
-            >
-              <Menu size={22} strokeWidth={1.5} />
-            </button>
-
-            <a
-              href="/"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate({ page: 'home' });
-              }}
-              className="flex items-center gap-3 select-none"
-              aria-label="Rangvanat Home"
-            >
-              <img
-                src={settings?.logo || '/images/logo-only.svg'}
-                alt="Rangvanat Monogram"
-                className="h-9 md:h-10 w-auto object-contain"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/images/logo-only.svg';
-                }}
-              />
-            </a>
-          </div>
-
-          {/* Center: Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-7" aria-label="Primary navigation">
-            {navItems.map((n) => (
-              <div key={n.href} className="relative group">
-                <a
-                  className="nav-link cursor-pointer"
-                  href={n.href}
-                  onClick={(e) => handleNavClick(e, n.href)}
-                >
-                  {n.label}
-                </a>
-                {/products|shop/.test(n.href) && collections.length > 0 && (
-                  <div className="absolute top-full left-0 hidden group-hover:block group-focus-within:block bg-white shadow-lg border border-[var(--line-khadi)] rounded-[2px] p-4 min-w-56 z-50">
-                    <p className="caption text-[var(--ink-soft)] text-xs mb-2 uppercase tracking-wider font-semibold">
-                      Curated Edits
-                    </p>
-                    {collections.map((c) => (
-                      <a
-                        className="block py-1.5 text-xs text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] transition-colors cursor-pointer"
-                        key={c.collectionId}
-                        href={`/?page=shop&collection=${encodeURIComponent(c.collectionId)}`}
-                        onClick={(e) =>
-                          handleNavClick(e, `/?page=shop&collection=${encodeURIComponent(c.collectionId)}`)
-                        }
-                      >
-                        {c.name}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </nav>
-
-          {/* Right: Actions */}
-          <div className="flex items-center gap-1">
-            {/* Search */}
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="icon-btn"
-              aria-label="Search collection"
-            >
-              <Search size={20} strokeWidth={1.5} />
-            </button>
-
-            {/* Account Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setAccountDropOpen((prev) => !prev)}
-                className="icon-btn"
-                aria-label="Account"
-              >
-                <User size={20} strokeWidth={1.5} />
-              </button>
-
-              {accountDropOpen && (
-                <div className="absolute right-0 top-full mt-2 w-64 bg-white shadow-[var(--shadow-dropdown)] border border-[var(--line-khadi)] rounded-[2px] p-3 z-50">
-                  {customer ? (
-                    <div>
-                      <p className="text-[13px] text-[var(--ink-soft)] px-2 pt-1 pb-2">
-                        Namaste, <strong className="text-[var(--brand-maroon)]">{customer.name.split(' ')[0]}</strong>
-                      </p>
-                      <div className="border-t border-[var(--line-khadi)] my-1" />
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          navigate({ page: 'account', tab: 'orders' });
-                        }}
-                        className="w-full text-left px-3 py-2 text-[14px] hover:bg-[var(--bg-cream)] rounded-[2px]"
-                      >
-                        My Orders
-                      </button>
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          navigate({ page: 'account', tab: 'wishlist' });
-                        }}
-                        className="w-full text-left px-3 py-2 text-[14px] hover:bg-[var(--bg-cream)] rounded-[2px]"
-                      >
-                        My Wishlist
-                      </button>
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          navigate({ page: 'account', tab: 'addresses' });
-                        }}
-                        className="w-full text-left px-3 py-2 text-[14px] hover:bg-[var(--bg-cream)] rounded-[2px]"
-                      >
-                        Saved Addresses
-                      </button>
-                      <div className="border-t border-[var(--line-khadi)] my-1" />
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          logout();
-                        }}
-                        className="w-full text-left px-3 py-2 text-[14px] text-[var(--state-error)] hover:bg-[var(--bg-cream)] rounded-[2px]"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          navigate({ page: 'account', tab: 'login' });
-                        }}
-                        className="btn btn-primary btn-sm w-full mb-2"
-                      >
-                        Sign In
-                      </button>
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          navigate({ page: 'account', tab: 'register' });
-                        }}
-                        className="btn-ghost block text-center w-full text-[13px] mb-2"
-                      >
-                        Create an account
-                      </button>
-                      <div className="border-t border-[var(--line-khadi)] my-2" />
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          navigate({ page: 'track' });
-                        }}
-                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[var(--bg-cream)] text-[var(--ink-chocolate)]"
-                      >
-                        Track an Order
-                      </button>
-                      <button
-                        onClick={() => {
-                          setAccountDropOpen(false);
-                          navigate({ page: 'faq' });
-                        }}
-                        className="w-full text-left px-3 py-2 text-[13px] hover:bg-[var(--bg-cream)] text-[var(--ink-chocolate)]"
-                      >
-                        Help & FAQ
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Wishlist */}
-            <button
-              onClick={() => navigate({ page: 'account', tab: 'wishlist' })}
-              className="icon-btn"
-              aria-label="Wishlist"
-            >
-              <Heart size={20} strokeWidth={1.5} />
-              {wishlist.length > 0 && (
-                <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--brand-maroon)] text-[var(--bg-ivory)] text-[10px] font-bold flex items-center justify-center">
-                  {wishlist.length}
-                </span>
-              )}
-            </button>
-
-            {/* Bag */}
-            <button
-              onClick={openCart}
-              className="icon-btn"
-              aria-label="Shopping bag"
-            >
-              <ShoppingBag size={20} strokeWidth={1.5} />
-              {cartCount > 0 && (
-                <span className="absolute top-2 right-2 w-4 h-4 rounded-full bg-[var(--brand-maroon)] text-[var(--bg-ivory)] text-[10px] font-bold flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Search Overlay */}
-      {searchOpen && (
-        <div className="fixed inset-0 z-50 bg-[var(--bg-ivory)]/95 backdrop-blur-md p-6 flex flex-col items-center">
-          <div className="w-full max-w-3xl">
-            <div className="flex items-center justify-between mb-8 pb-3 border-b-2 border-[var(--brand-maroon)]">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by piece, motif, or collection..."
-                className="w-full bg-transparent text-2xl font-serif italic text-[var(--ink-chocolate)] placeholder:text-[var(--ink-soft)] outline-none"
-                autoFocus
-              />
-              <button
-                onClick={() => setSearchOpen(false)}
-                className="icon-btn text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)]"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            {/* Quick Suggestions */}
-            {!searchQuery && (
-              <div>
-                <p className="eyebrow text-[var(--ink-soft)] mb-3">Popular Searches</p>
-                <div className="flex flex-wrap gap-2">
-                  {['Peacock Khadi Saree', 'Indigo Co-ord Set', 'Patola Border', 'Raw Khadi Fabric', 'Bridal Dupatta'].map(
-                    (term) => (
-                      <button
-                        key={term}
-                        onClick={() => setSearchQuery(term)}
-                        className="px-3.5 py-1.5 rounded-full bg-[var(--bg-cream)] text-[var(--ink-chocolate)] text-[13px] hover:bg-[var(--brand-maroon-tint)] hover:text-[var(--brand-maroon)] transition-colors"
-                      >
-                        {term}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Live Search Results */}
-            {searchQuery && (
-              <div className="mt-6">
-                <p className="eyebrow text-[var(--ink-soft)] mb-4">
-                  {searching ? 'Searching the looms...' : `${searchResults.length} Results Found`}
-                </p>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {searchResults.map((item) => (
-                    <div
-                      key={item._id || item.slug}
-                      onClick={() => {
-                        setSearchOpen(false);
-                        navigate({ page: 'product', id: item.slug || item._id });
-                      }}
-                      className="cursor-pointer group"
-                    >
-                      <div className="aspect-[3/4] bg-[var(--bg-cream)] overflow-hidden mb-2">
-                        <img
-                          src={item.images?.[0]?.url || item.image || '/images/hero.png'}
-                          alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <p className="font-medium text-[14px] text-[var(--ink-chocolate)] group-hover:text-[var(--brand-maroon)] truncate">
-                        {item.title}
-                      </p>
-                      <p className="text-[13px] font-semibold text-[var(--brand-maroon)]">
-                        ₹{item.price?.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="text-center mt-8">
-                  <button
-                    onClick={() => {
-                      setSearchOpen(false);
-                      navigate({ page: 'shop', search: searchQuery });
-                    }}
-                    className="btn btn-primary btn-md"
-                  >
-                    View All Results for "{searchQuery}"
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Drawer (Design System §8) */}
-      <div
-        className={`drawer-backdrop ${mobileDrawerOpen ? 'open' : ''}`}
-        onClick={() => setMobileDrawerOpen(false)}
-      />
-      <div
-        className={`fixed top-0 left-0 bottom-0 w-[86%] max-w-sm bg-[var(--bg-ivory)] z-70 shadow-2xl transition-transform duration-300 p-6 flex flex-col justify-between overflow-y-auto ${
-          mobileDrawerOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <div>
-          <div className="flex items-center justify-between pb-6 border-b border-[var(--line-khadi)] mb-6">
-            <span className="font-display text-2xl font-semibold tracking-wider text-[var(--brand-maroon)]">
-              RANGVANAT
-            </span>
-            <button
-              onClick={() => setMobileDrawerOpen(false)}
-              className="icon-btn"
-              aria-label="Close navigation"
-            >
-              <X size={22} />
-            </button>
-          </div>
-
-          <nav className="space-y-4">
-            {navItems.map((n) => (
-              <a
-                key={n.href}
-                className="block nav-link text-base cursor-pointer"
-                href={n.href}
-                onClick={(e) => handleNavClick(e, n.href)}
-              >
-                {n.label}
-              </a>
-            ))}
-          </nav>
-        </div>
-
-        {/* Bottom Mobile Drawer Actions */}
-        <div className="pt-6 border-t border-[var(--line-khadi)] space-y-4">
-          <button
-            onClick={() => {
-              setMobileDrawerOpen(false);
-              navigate({ page: 'shop' });
-            }}
-            className="btn btn-primary btn-md w-full justify-center"
-          >
-            Shop All Collections
-          </button>
-
-          <div className="flex items-center justify-between text-xs text-[var(--ink-soft)]">
-            <span>Bardoli, Gujarat, India</span>
-            <span>IN · INR (₹)</span>
-          </div>
-        </div>
+        const res = await api.getProducts({ search: query.trim(), limit: 4 });
+        if (active) { setResults(res.products || []); setError(Boolean(res.error)); }
+      } catch { if (active) { setResults([]); setError(true); } }
+      finally { if (active) setLoading(false); }
+    }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [query]);
+  const go = target => { close(); navigate(target); };
+  const toggle = name => setPanel(prev => prev === name ? null : name);
+  const edits = collections.length ? collections.map(c => ({ ...c, id: c.collectionId })) : COLLECTIONS;
+  const navLink = (label, page) => <a href={page === 'home' ? '/' : `/?page=${page}`} aria-current={currentRoute?.page === page ? 'page' : undefined} onClick={e => { e.preventDefault(); go({ page }); }}>{label}</a>;
+  return <header className="store-header" ref={header}>
+    <div className="header-row">
+      <button className="header-icon mobile-toggle" aria-label="Open menu" aria-expanded={panel === 'mobile'} data-trigger="mobile" onClick={() => toggle('mobile')}><Menu size={22} /></button>
+      <a className="store-brand" href="/" onClick={e => { e.preventDefault(); go({ page: 'home' }); }} aria-label="Rangvanat home"><img src={settings?.logo || '/images/logo-only.svg'} alt="" onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/images/logo-only.svg'; }} /><span>Rangvanat</span></a>
+      <nav className="desktop-nav" aria-label="Primary">{navLink('Home', 'home')}<button data-trigger="edits" aria-expanded={panel === 'edits'} aria-controls="catalog-menu" onClick={() => toggle('edits')}>Categories & edits <ChevronDown size={14} className={panel === 'edits' ? 'turned' : ''} /></button>{navLink('Our story', 'story')}{navLink('The craft', 'craft')}</nav>
+      <div className="header-actions">
+        <button className="search-trigger" data-trigger="search" aria-label="Search catalog" aria-expanded={panel === 'search'} onClick={() => toggle('search')}><Search size={18} /><span>Search pieces</span></button>
+        <button className="header-icon account-trigger" data-trigger="account" aria-label="Account" aria-expanded={panel === 'account'} onClick={() => toggle('account')}><User size={20} /></button>
+        <button className="header-icon wishlist-trigger" aria-label={`Wishlist (${wishlist.length})`} onClick={() => go({ page: 'account', tab: 'wishlist' })}><Heart size={20} /></button>
+        <button className="header-icon bag-trigger" aria-label={`Shopping bag (${cartCount})`} onClick={() => { close(); openCart(); }}><ShoppingBag size={20} /><span>{cartCount}</span></button>
       </div>
-    </>
-  );
+    </div>
+    {panel === 'edits' && <div className="header-panel mega-menu" id="catalog-menu">
+      <div><h2>Shop by category</h2><div className="category-links">{CATEGORIES.map(category => <button key={category} onClick={() => go({ page: 'shop', category })}>{category}</button>)}</div><button className="menu-all" onClick={() => go({ page: 'shop' })}>Shop all pieces <ArrowRight size={17} /></button></div>
+      <div><h2>The edits</h2><div className="collection-links">{edits.map(c => <button key={c.id} onClick={() => go({ page: 'shop', collection: c.id })}>{c.name}</button>)}</div></div>
+      <button className="menu-feature" onClick={() => go({ page: 'shop', collection: 'flora' })}><img src="/images/flora-editorial.png" alt="Floral embroidery on a Khadi jacket" /><span>A softer kind of statement <ArrowRight size={18} /></span></button>
+      <button className="header-icon panel-close" aria-label="Close categories" onClick={close}><X size={20} /></button>
+    </div>}
+    {panel === 'search' && <div className="header-panel search-panel"><form onSubmit={e => { e.preventDefault(); if (query.trim()) go({ page: 'shop', search: query.trim() }); }}><label htmlFor="catalog-search">Find something you’ll love</label><div className="search-input-wrap"><Search size={22} /><input ref={searchInput} id="catalog-search" type="search" value={query} placeholder="Try a jacket, saree or your favourite edit" onChange={e => { setQuery(e.target.value); setResults([]); setLoading(Boolean(e.target.value.trim())); }} /><button type="submit" aria-label="View search results"><ArrowRight size={22} /></button></div></form>
+      {!query.trim() ? <div className="search-suggestions"><span>Explore</span>{['Jacket', 'Saree', 'Dress', 'Designer Fabric'].map(category => <button key={category} onClick={() => go({ page: 'shop', category })}>{category}</button>)}</div> : <div aria-live="polite" className="search-results">{loading ? <p>Searching the collection…</p> : error ? <p>We couldn’t load the catalog. Please try again shortly.</p> : results.length ? <>{results.map(p => <button key={p._id || p.slug} className="search-result" onClick={() => go({ page: 'product', id: p.slug || p._id })}><img src={p.images?.[0]?.url || '/images/hero-home.jpg'} alt="" /><span>{p.title}<small>{p.fabric || p.category}</small></span><span>₹{p.price?.toLocaleString('en-IN')}</span></button>)}<button className="menu-all" onClick={() => go({ page: 'shop', search: query.trim() })}>View all results <ArrowRight size={17} /></button></> : <p>No pieces found for “{query}”. Try a different fabric or silhouette.</p>}</div>}
+      <button className="header-icon panel-close" aria-label="Close search" onClick={close}><X size={20} /></button></div>}
+    {panel === 'account' && <div className="account-menu header-panel">{customer ? <><p>Hello, {customer.name}</p><button onClick={() => go({ page: 'account', tab: 'orders' })}>My orders</button><button onClick={() => go({ page: 'account', tab: 'wishlist' })}>My wishlist ({wishlist.length})</button><button onClick={() => go({ page: 'account', tab: 'addresses' })}>Saved addresses</button><button onClick={() => { close(); logout(); }}>Sign out</button></> : <><p>Your Rangvanat account</p><button onClick={() => go({ page: 'account', tab: 'login' })}>Sign in</button><button onClick={() => go({ page: 'account', tab: 'register' })}>Create an account</button></>}</div>}
+    <div className={`mobile-navigation ${panel === 'mobile' ? 'is-open' : ''}`} inert={panel !== 'mobile'} aria-hidden={panel !== 'mobile'}>
+      <div className="mobile-scrim" onClick={close} />
+      <div className="mobile-navigation-inner" ref={mobileRef} role="dialog" aria-modal="true" aria-label="Navigation"><div className="mobile-title"><span>Explore Rangvanat</span><button className="header-icon" aria-label="Close menu" onClick={close}><X /></button></div><nav aria-label="Mobile">{navLink('Home', 'home')}{navLink('All pieces', 'shop')}<details><summary>Categories</summary>{CATEGORIES.map(category => <button key={category} onClick={() => go({ page: 'shop', category })}>{category}</button>)}</details><details><summary>The edits</summary>{edits.map(c => <button key={c.id} onClick={() => go({ page: 'shop', collection: c.id })}>{c.name}</button>)}</details>{navLink('Our story', 'story')}{navLink('The craft', 'craft')}{navLink('FAQ & care', 'faq')}</nav><button className="mobile-account" onClick={() => go({ page: 'account', tab: customer ? 'orders' : 'login' })}><User size={18} />{customer ? 'My account' : 'Sign in / Register'}</button><button className="mobile-account" onClick={() => go({ page: 'account', tab: 'wishlist' })}><Heart size={18} />Wishlist ({wishlist.length})</button></div>
+    </div>
+  </header>;
 }

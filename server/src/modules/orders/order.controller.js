@@ -69,81 +69,102 @@ export const createOrder = async (req, res, next) => {
     if (order && order.requestHash !== requestHash)
       fail("This checkout key was already used for another order", 409);
     if (!order) {
-      const session = await mongoose.startSession();
-      try {
-        await session.withTransaction(async () => {
-          const quote = await quoteCart(
-            { ...req.body, pincode: clean.shippingAddress.pincode },
-            session,
-          );
-          for (const item of quote.items) {
-            if (!item.madeToOrder) {
-              const result = await Product.updateOne(
-                {
-                  _id: item.productId,
-                  isPublished: true,
-                  salesPaused: { $ne: true },
-                  variants: {
-                    $elemMatch: {
-                      size: item.variantSize,
-                      stock: { $gte: item.quantity },
-                    },
-                  },
-                },
-                {
-                  $inc: {
-                    "variants.$.stock": -item.quantity,
-                    totalStock: -item.quantity,
-                    __v: 1,
-                  },
-                },
-                { session },
-              );
-              if (result.modifiedCount !== 1)
-                fail("Stock changed. Please review your bag", 409);
-            }
-          }
-          if (quote.coupon) {
-            const c = quote.coupon;
-            const result = await Coupon.updateOne(
+      const runOperations = async (session = null) => {
+        const opts = session ? { session } : {};
+        const quote = await quoteCart(
+          { ...req.body, pincode: clean.shippingAddress.pincode },
+          session,
+        );
+        for (const item of quote.items) {
+          if (!item.madeToOrder) {
+            const result = await Product.updateOne(
               {
-                _id: c._id,
-                isActive: true,
-                expiryDate: { $gte: new Date() },
-                ...(c.usageLimit == null
-                  ? {}
-                  : { timesUsed: { $lt: c.usageLimit } }),
+                _id: item.productId,
+                isPublished: true,
+                salesPaused: { $ne: true },
+                variants: {
+                  $elemMatch: {
+                    size: item.variantSize,
+                    stock: { $gte: item.quantity },
+                  },
+                },
               },
-              { $inc: { timesUsed: 1 } },
-              { session },
+              {
+                $inc: {
+                  "variants.$.stock": -item.quantity,
+                  totalStock: -item.quantity,
+                  __v: 1,
+                },
+              },
+              opts,
             );
-            if (!result.modifiedCount)
-              fail("Coupon is no longer available", 409);
+            if (result.modifiedCount !== 1)
+              fail("Stock changed. Please review your bag", 409);
           }
-          [order] = await Order.create(
-            [
-              {
-                orderNumber: `RV-${new Date().getFullYear()}-${randomUUID().slice(0, 12).toUpperCase()}`,
-                idempotencyKey: key,
-                requestHash,
-                accessTokenHash: hash(accessToken(key)),
-                customerId,
-                customer: clean,
-                items: quote.items,
-                financials: quote.financials,
-                payment: { gateway: "none", status: "pending" },
-                fulfillment: { status: "received" },
-              },
-            ],
-            { session },
+        }
+        if (quote.coupon) {
+          const c = quote.coupon;
+          const result = await Coupon.updateOne(
+            {
+              _id: c._id,
+              isActive: true,
+              expiryDate: { $gte: new Date() },
+              ...(c.usageLimit == null
+                ? {}
+                : { timesUsed: { $lt: c.usageLimit } }),
+            },
+            { $inc: { timesUsed: 1 } },
+            opts,
           );
-        });
+          if (!result.modifiedCount)
+            fail("Coupon is no longer available", 409);
+        }
+        [order] = await Order.create(
+          [
+            {
+              orderNumber: `RV-${new Date().getFullYear()}-${randomUUID().slice(0, 12).toUpperCase()}`,
+              idempotencyKey: key,
+              requestHash,
+              accessTokenHash: hash(accessToken(key)),
+              customerId,
+              customer: clean,
+              items: quote.items,
+              financials: quote.financials,
+              payment: {
+                gateway: ["razorpay", "cod", "stripe"].includes(req.body.paymentGateway)
+                  ? req.body.paymentGateway
+                  : "none",
+                status: "pending",
+              },
+              fulfillment: { status: "received" },
+            },
+          ],
+          opts,
+        );
+      };
+
+      try {
+        const session = await mongoose.startSession();
+        try {
+          await session.withTransaction(async () => {
+            await runOperations(session);
+          });
+        } catch (txnErr) {
+          if (
+            txnErr.message?.includes("replica set member or mongos") ||
+            txnErr.message?.includes("Transaction numbers are only allowed")
+          ) {
+            await runOperations(null);
+          } else {
+            throw txnErr;
+          }
+        } finally {
+          await session.endSession();
+        }
       } catch (err) {
         if (err.code !== 11000) throw err;
         order = await Order.findOne({ idempotencyKey: key });
         if (!order || order.requestHash !== requestHash) throw err;
-      } finally {
-        await session.endSession();
       }
     }
     if (!order.acknowledgementSentAt) {

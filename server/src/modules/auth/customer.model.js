@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const addressSchema = new mongoose.Schema({
-  name: { type: String, default: '' },
+  fullName: { type: String, default: '' },
   phone: { type: String, default: '' },
   addressLine1: { type: String, required: true },
   addressLine2: { type: String, default: '' },
@@ -17,14 +17,18 @@ const customerSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    tokenVersion: {type:Number,default:0},
-    emailVerifiedAt: Date,
-    resetHash: String, resetExpires: Date,
-    verificationHash: String, verificationExpires: Date,
-    passwordHash: { type: String, required: true },
+    passwordHash: { type: String }, // optional for Google sign-in
+    googleId: { type: String, sparse: true },
+    avatar: { type: String, default: '' },
     phone: { type: String, default: '', trim: true },
+    tokenVersion: { type: Number, default: 0 },
+    emailVerifiedAt: Date,
+    resetHash: String,
+    resetExpires: Date,
+    verificationHash: String,
+    verificationExpires: Date,
     addresses: [addressSchema],
-    wishlist: [{ type: String }], // product slugs or ids
+    wishlist: [{ type: String }], // product IDs or slugs
     role: { type: String, default: 'customer' },
     isActive: { type: Boolean, default: true },
   },
@@ -32,6 +36,7 @@ const customerSchema = new mongoose.Schema(
 );
 
 customerSchema.methods.comparePassword = async function (enteredPassword) {
+  if (!this.passwordHash) return false;
   return bcrypt.compare(enteredPassword, this.passwordHash);
 };
 

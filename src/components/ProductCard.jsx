@@ -1,167 +1,161 @@
-import { Heart } from 'lucide-react';
+import { useState } from 'react';
+import { Heart, Plus } from 'lucide-react';
 import { useStore } from '../context/store.js';
 
 export default function ProductCard({
   product,
-  variant = 'grid', // 'grid' | 'editorial'
   onSelect,
 }) {
-  const { addToCart, toggleWishlist, isInWishlist, formatPrice } = useStore();
+  const { toggleWishlist, isInWishlist, addToCart } = useStore();
+  const [showSizePicker, setShowSizePicker] = useState(false);
 
-  const id = product._id || product.id || product.slug;
-  const title = product.title || product.name || 'Handcrafted Khadi Piece';
-  const slug = product.slug || product.id || 'piece';
-  const price = product.price;
+  if (!product) return null;
+
+  const id = product._id || product.slug;
+  const slug = product.slug || id;
+  const title = product.title || 'Handcrafted Khadi Piece';
+  const price = product.price || 0;
   const compareAtPrice = product.compareAtPrice || null;
-  const image =
-    product.images?.[0]?.url ||
-    product.image ||
-    null;
-  const category = product.category || 'Handloom Garment';
-  const craftSpecs = product.heritageCraftStory || product.specs?.join(' • ') || 'Hand Spun • Bardoli Khadi';
-  const defaultSize = product.variants?.find(v=>product.madeToOrder||v.stock>0)?.size || 'Standard';
-
+  const images = product.images || [];
+  const primaryImage = images[0]?.url || product.image || '/images/hero-home.jpg';
+  const secondaryImage = images[1]?.url || primaryImage;
+  const category = product.category || product.fabric || 'Khadi Craft';
   const inWishlist = isInWishlist(slug) || isInWishlist(id);
 
-  // Badge logic
+  // Badge logic (§9: at most one badge per card, only when true)
   let badge = null;
-  if (product.isFeatured) badge = { text: 'Bestseller', class: 'badge-bestseller' };
-  else if (product.totalStock && product.totalStock <= 5) badge = { text: 'Last pieces', class: 'badge-last' };
-  else if (product.isNewArrival) badge = { text: 'New', class: 'badge-new' };
-
-  if (variant === 'editorial') {
-    return (
-      <div
-        className="group relative cursor-pointer flex flex-col"
-        onClick={() => onSelect?.(slug || id)}
-      >
-        <div className="relative aspect-[4/5] md:aspect-[16/10] overflow-hidden bg-[var(--bg-cream)] rounded-[0px]">
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            loading="lazy"
-          />
-          {/* Photographic Scrim Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8">
-            <p className="serif-statement text-white/95 text-lg md:text-2xl drop-shadow-sm mb-2">
-              "{product.description ? product.description.slice(0, 90) + '...' : 'Crafted with stories woven into thread.'}"
-            </p>
-            <div className="flex items-center justify-between">
-              <span className="eyebrow text-[var(--brand-gold-soft)]">{category}</span>
-              <span className="btn-ghost text-white text-[13px] font-medium underline">
-                Discover Piece →
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-4 flex items-baseline justify-between">
-          <h3 className="heading-2 text-[var(--brand-maroon)] text-xl md:text-2xl font-semibold uppercase">
-            {title}
-          </h3>
-          <span className="price text-lg font-bold">{formatPrice(price)}</span>
-        </div>
-      </div>
-    );
+  if (compareAtPrice && compareAtPrice > price) {
+    badge = { text: 'Sale', bg: 'bg-[var(--color-sale)] text-[var(--color-white)]' };
+  } else if (product.madeToOrder) {
+    badge = { text: 'Made to Order', bg: 'bg-[var(--color-cream)] text-[var(--color-ink)]' };
+  } else if (product.totalStock > 0 && product.totalStock <= 3) {
+    badge = { text: `Only ${product.totalStock} left`, bg: 'bg-[var(--color-cream)] text-[var(--color-warning)]' };
+  } else if (product.isFeatured) {
+    badge = { text: 'Bestseller', bg: 'bg-[var(--color-ink)] text-[var(--color-paper)]' };
   }
 
-  // Default Grid Card
+  const handleQuickAdd = (e, size) => {
+    e.stopPropagation();
+    addToCart(product, size, 1);
+    setShowSizePicker(false);
+  };
+
   return (
-    <div className="product-card group flex flex-col select-none">
-      {/* 3:4 Image Frame */}
-      <div
-        className="product-image-wrap cursor-pointer"
-        onClick={() => onSelect?.(slug || id)}
-      >
+    <div
+      className="rv-product-card group relative flex flex-col text-left"
+    >
+      <a href={`/?page=product&id=${encodeURIComponent(slug)}`} className="product-hit-area" aria-label={`View ${title}`} onClick={e => { e.preventDefault(); onSelect?.(slug); }} />
+      {/* Product image */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[4px] bg-[var(--color-sand)]">
         <img
-          src={image || '/images/hero.png'}
+          src={primaryImage}
           alt={title}
+          className={`w-full h-full object-cover transition-all duration-300 ease-out group-hover:scale-[1.03] ${
+            images.length > 1 ? 'md:group-hover:opacity-0' : ''
+          }`}
           loading="lazy"
-          className="transition-transform duration-600"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = '/images/hero.png';
-          }}
         />
 
-        {/* Badge */}
-        {badge && <span className={`badge-pill ${badge.class}`}>{badge.text}</span>}
-
-        {/* Wishlist Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleWishlist(product);
-          }}
-          className={`wishlist-heart-btn ${inWishlist ? 'active' : ''}`}
-          aria-label="Save to Wishlist"
-        >
-          <Heart
-            size={18}
-            strokeWidth={1.5}
-            fill={inWishlist ? 'var(--brand-maroon)' : 'none'}
+        {/* Desktop Second Image Hover Swap (§6) */}
+        {images.length > 1 && (
+          <img
+            src={secondaryImage}
+            alt={`${title} alternate`}
+            className="hidden md:block absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 group-hover:scale-[1.03]"
+            loading="lazy"
           />
-        </button>
+        )}
 
-        {/* Quick Add Bar (Desktop Hover) */}
+        {/* Badge (Top-Left) (§9) */}
+        {badge && (
+          <div className="absolute top-2.5 left-2.5 pointer-events-none z-10">
+            <span className={`inline-block px-2.5 py-0.5 text-xs font-medium rounded-[2px] ${badge.bg}`}>
+              {badge.text}
+            </span>
+          </div>
+        )}
+
+        {/* Wishlist Heart (Top-Right) (§9) */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            addToCart(product, defaultSize, 1);
+            toggleWishlist(slug);
           }}
-          className="quick-add-bar"
+          className={`absolute top-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center transition-transform duration-200 hover:scale-105 z-10 ${
+            inWishlist
+              ? 'bg-[var(--color-white)] text-[var(--color-sale)]'
+              : 'bg-[var(--color-white)]/90 text-[var(--color-ink)] hover:bg-[var(--color-white)]'
+          }`}
+          aria-pressed={inWishlist}
+          aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          Add to Bag
+          <Heart size={16} fill={inWishlist ? 'currentColor' : 'none'} strokeWidth={1.75} />
         </button>
-      </div>
 
-      {/* Meta Content */}
-      <div className="pt-3 flex flex-col flex-grow">
-        <h3
-          onClick={() => onSelect?.(slug || id)}
-          className="text-[15.5px] font-medium text-[var(--ink-chocolate)] leading-snug line-clamp-2 hover:text-[var(--brand-maroon)] cursor-pointer transition-colors"
+        {/* Quick Add Bar on Desktop Hover (§9: never adds silently, opens sizes) */}
+        <div
+          className={`product-quick-add ${showSizePicker ? 'is-selecting' : ''}`}
+          onClick={(e) => e.stopPropagation()}
         >
-          {title}
-        </h3>
-
-        <p className="caption text-[var(--ink-soft)] mt-1 line-clamp-1">{craftSpecs}</p>
-
-        {/* Price Row */}
-        <div className="flex items-baseline gap-2 mt-2">
-          <span className="price">{formatPrice(price)}</span>
-          {compareAtPrice && compareAtPrice > price && (
-            <span className="caption text-[var(--ink-soft)] line-through">
-              {formatPrice(compareAtPrice)}
-            </span>
+          {showSizePicker ? (
+            <div className="product-size-picker">
+              <span className="text-xs font-medium text-[var(--color-muted)] w-full text-center">
+                Select size
+              </span>
+              {product.variants?.map((v) => (
+                <button
+                  key={v.size}
+                  type="button"
+                  disabled={!product.madeToOrder && v.stock <= 0}
+                  onClick={(e) => handleQuickAdd(e, v.size)}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-[4px] border transition-colors ${
+                    !product.madeToOrder && v.stock <= 0
+                      ? 'border-[var(--color-line)] text-[var(--color-line)] line-through cursor-not-allowed'
+                      : 'border-[var(--color-ink)] text-[var(--color-ink)] hover:bg-[var(--color-ink)] hover:text-[var(--color-white)]'
+                  }`}
+                >
+                  {v.size}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setShowSizePicker(false)}
+                className="text-xs text-[var(--color-muted)] underline mt-1 block w-full text-center hover:text-[var(--color-ink)]"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => product.variants?.length ? setShowSizePicker(true) : onSelect?.(slug)}
+              className="product-quick-button"
+            >
+              <Plus size={14} />
+              <span>Quick add</span>
+            </button>
           )}
         </div>
+      </div>
 
-        {/* Direct E-commerce Actions */}
-        <div className="mt-2.5 pt-2 border-t border-[var(--line-khadi)]/50 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelect?.(slug || id);
-            }}
-            className="text-xs text-[var(--ink-soft)] hover:text-[var(--brand-maroon)] font-medium"
-          >
-            View Details →
-          </button>
-
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              addToCart(product, defaultSize, 1);
-            }}
-            className="text-xs font-semibold text-[var(--brand-maroon)] bg-[var(--brand-maroon-tint)] hover:bg-[var(--brand-maroon)] hover:text-white transition-colors px-3 py-1 rounded-full"
-          >
-            + Add to Bag
-          </button>
+      {/* Card Details (§9) */}
+      <div className="pt-3 flex flex-col gap-0.5">
+        <h3 className="font-body text-base font-medium text-[var(--color-ink)] line-clamp-1 group-hover:text-[var(--color-clay)] transition-colors">
+          {title}
+        </h3>
+        <p className="text-sm text-[var(--color-muted)] capitalize">
+          {category}
+        </p>
+        <div className="flex items-baseline gap-2 pt-1">
+          <span className="price-tabular text-base font-semibold text-[var(--color-ink)]">
+            ₹{price.toLocaleString('en-IN')}
+          </span>
+          {compareAtPrice && compareAtPrice > price && (
+            <span className="price-tabular text-sm text-[var(--color-muted)] line-through">
+              ₹{compareAtPrice.toLocaleString('en-IN')}
+            </span>
+          )}
         </div>
       </div>
     </div>

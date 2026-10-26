@@ -383,60 +383,75 @@ router.put(
       ].includes(req.body.status)
     )
       fail("Invalid fulfillment status");
-    const session = await mongoose.startSession();
+    const updateOrder = async (session = null) => {
+      const opts = session ? { session } : {};
+      const order = await Order.findById(req.params.id, null, opts);
+      if (!order) fail("Order not found", 404);
+      const before = order.fulfillment.status,
+        after = req.body.status;
+      const transitions = {
+        received: ["received", "in_stitching", "cancelled"],
+        in_stitching: ["in_stitching", "dispatched", "cancelled"],
+        dispatched: ["dispatched", "delivered"],
+        delivered: ["delivered"],
+        cancelled: ["cancelled"],
+      };
+      if (!transitions[before]?.includes(after))
+        fail(`Cannot move ${before} to ${after}`, 409);
+      if (
+        after === "dispatched" &&
+        (!text(req.body.courierPartner) || !text(req.body.trackingNumber))
+      )
+        fail("Add courier and tracking number before dispatch");
+      if (after === "cancelled" && order.stockReserved) {
+        for (const i of order.items)
+          if (!i.madeToOrder)
+            await Product.updateOne(
+              { _id: i.productId, "variants.size": i.variantSize },
+              {
+                $inc: {
+                  "variants.$.stock": i.quantity,
+                  totalStock: i.quantity,
+                  __v: 1,
+                },
+              },
+              opts,
+            );
+        if (order.financials.couponCode)
+          await Coupon.updateOne(
+            { code: order.financials.couponCode, timesUsed: { $gt: 0 } },
+            { $inc: { timesUsed: -1 } },
+            opts,
+          );
+        order.stockReserved = false;
+      }
+      order.fulfillment.status = after;
+      order.fulfillment.courierPartner = text(req.body.courierPartner, 100);
+      order.fulfillment.trackingNumber = text(req.body.trackingNumber, 100);
+      if (after === "dispatched" && !order.fulfillment.dispatchedAt)
+        order.fulfillment.dispatchedAt = new Date();
+      if (after === "delivered" && !order.fulfillment.deliveredAt)
+        order.fulfillment.deliveredAt = new Date();
+      order.adminNotes = text(req.body.adminNotes, 3000);
+      await order.save(opts);
+      return order;
+    };
+
     let order;
+    const session = await mongoose.startSession();
     try {
       await session.withTransaction(async () => {
-        order = await Order.findById(req.params.id).session(session);
-        if (!order) fail("Order not found", 404);
-        const before = order.fulfillment.status,
-          after = req.body.status;
-        const transitions = {
-          received: ["received", "in_stitching", "cancelled"],
-          in_stitching: ["in_stitching", "dispatched", "cancelled"],
-          dispatched: ["dispatched", "delivered"],
-          delivered: ["delivered"],
-          cancelled: ["cancelled"],
-        };
-        if (!transitions[before].includes(after))
-          fail(`Cannot move ${before} to ${after}`, 409);
-        if (
-          after === "dispatched" &&
-          (!text(req.body.courierPartner) || !text(req.body.trackingNumber))
-        )
-          fail("Add courier and tracking number before dispatch");
-        if (after === "cancelled" && order.stockReserved) {
-          for (const i of order.items)
-            if (!i.madeToOrder)
-              await Product.updateOne(
-                { _id: i.productId, "variants.size": i.variantSize },
-                {
-                  $inc: {
-                    "variants.$.stock": i.quantity,
-                    totalStock: i.quantity,
-                    __v: 1,
-                  },
-                },
-                { session },
-              );
-          if (order.financials.couponCode)
-            await Coupon.updateOne(
-              { code: order.financials.couponCode, timesUsed: { $gt: 0 } },
-              { $inc: { timesUsed: -1 } },
-              { session },
-            );
-          order.stockReserved = false;
-        }
-        order.fulfillment.status = after;
-        order.fulfillment.courierPartner = text(req.body.courierPartner, 100);
-        order.fulfillment.trackingNumber = text(req.body.trackingNumber, 100);
-        if (after === "dispatched" && !order.fulfillment.dispatchedAt)
-          order.fulfillment.dispatchedAt = new Date();
-        if (after === "delivered" && !order.fulfillment.deliveredAt)
-          order.fulfillment.deliveredAt = new Date();
-        order.adminNotes = text(req.body.adminNotes, 3000);
-        await order.save({ session });
+        order = await updateOrder(session);
       });
+    } catch (txnErr) {
+      if (
+        txnErr.message?.includes("replica set member or mongos") ||
+        txnErr.message?.includes("Transaction numbers are only allowed")
+      ) {
+        order = await updateOrder(null);
+      } else {
+        throw txnErr;
+      }
     } finally {
       await session.endSession();
     }

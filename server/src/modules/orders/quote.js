@@ -6,14 +6,16 @@ export const cents = (n) => Math.round(n * 100);
 export function delivery(settings, pincode) {
   if (!/^\d{6}$/.test(pincode) || pincode[0] === "0")
     fail("Enter a valid six-digit Indian PIN code");
-  const serviceable = settings.serviceablePrefixes.some((p) =>
-    pincode.startsWith(p),
-  );
+  const prefixes =
+    settings.serviceablePrefixes && settings.serviceablePrefixes.length > 0
+      ? settings.serviceablePrefixes
+      : ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  const serviceable = prefixes.some((p) => pincode.startsWith(p));
   return {
     serviceable,
-    days: settings.deliveryDays,
+    days: settings.deliveryDays || 7,
     message: serviceable
-      ? `Estimated ${settings.deliveryDays} delivery days after making`
+      ? `Estimated ${settings.deliveryDays || 7} business days delivery across India`
       : "Delivery is not configured for this PIN code. Contact the studio.",
   };
 }

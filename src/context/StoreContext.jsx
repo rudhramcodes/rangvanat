@@ -241,7 +241,7 @@ export function StoreProvider({ children }) {
     [addToast,refreshCustomer]
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     localStorage.removeItem('rv_token');
     localStorage.removeItem('rv_customer');
     setCustomer(null);

@@ -1,4 +1,4 @@
-export const cartItems = cart => cart.map(i=>({productId:i.id,variantSize:i.size,quantity:i.quantity,customMeasurements:i.customMeasurements || {}}));
+export const cartItems = cart => cart.map(i=>({productId:i.id || i._id,variantSize:i.size,quantity:i.quantity,customMeasurements:i.customMeasurements || {}}));
 export function readArray(key, validate = () => true) {
   try { const value=JSON.parse(localStorage.getItem(key)||'[]'); return Array.isArray(value)?value.filter(validate):[]; } catch { return []; }
 }

@@ -82,9 +82,60 @@ export const api = {
     });
   },
 
-  quote(items, couponCode = '', pincode = '') { return fetchJson('/cart/quote', {method:'POST',body:JSON.stringify({items,couponCode,pincode})}); },
+  async createRazorpayOrder(orderNumber) {
+    return fetchJson(`/orders/${encodeURIComponent(orderNumber)}/pay/razorpay`, {
+      method: 'POST',
+    });
+  },
+
+  async verifyRazorpayPayment(orderNumber, paymentData) {
+    return fetchJson(`/orders/${encodeURIComponent(orderNumber)}/pay/razorpay/verify`, {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  },
+
+  async confirmCodOrder(orderNumber) {
+    return fetchJson(`/orders/${encodeURIComponent(orderNumber)}/pay/cod`, {
+      method: 'POST',
+    });
+  },
+
+  async quoteCart(payloadOrItems, couponCode = '', pincode = '') {
+    let body;
+    if (Array.isArray(payloadOrItems)) {
+      body = { items: payloadOrItems, couponCode, pincode };
+    } else if (payloadOrItems && typeof payloadOrItems === 'object') {
+      body = payloadOrItems;
+    } else {
+      body = { items: [] };
+    }
+    const res = await fetchJson('/cart/quote', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    if (res?.success && res.data) {
+      return {
+        ...res,
+        ...res.data,
+        financials: res.data.financials,
+        discountAmount: res.data.financials?.discountAmount || 0,
+        shippingFee: res.data.financials?.shippingFee || 0,
+        totalAmount: res.data.financials?.totalAmount || 0,
+      };
+    }
+    return res;
+  },
+
+  quote(items, couponCode = '', pincode = '') {
+    return this.quoteCart(items, couponCode, pincode);
+  },
+
   settings() { return fetchJson('/settings'); },
+
   delivery(pin) { return fetchJson(`/delivery/${encodeURIComponent(pin)}`); },
+  checkDelivery(pin) { return fetchJson(`/delivery/${encodeURIComponent(pin)}`); },
+
   // Customer Auth
   async register(data) {
     return fetchJson('/auth/register', {
@@ -101,6 +152,9 @@ export const api = {
   },
 
   async getMe() {
+    return fetchJson('/auth/me');
+  },
+  async me() {
     return fetchJson('/auth/me');
   },
 
