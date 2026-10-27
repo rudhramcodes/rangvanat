@@ -38,6 +38,8 @@ jobs:
       # ============================================================
       - name: Build Vite
         run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       # ============================================================
       # 5. Deploy to Hostinger via FTP
@@ -54,7 +56,6 @@ jobs:
           timeout: 120000
           local-dir: ./dist/
           server-dir: /public_html/
-          # dangerous-clean-slate: true  # Commented out for safety
           exclude: |
             **/.git*
             **/.git*/**
@@ -64,5 +65,5 @@ jobs:
       # ============================================================
       # 6. Optional: Verify deployment
       # ============================================================
-      - name: ✅ Verify deployment
+      - name: Verify deployment
         run: echo "Rangvanat deployed successfully to Hostinger!"
