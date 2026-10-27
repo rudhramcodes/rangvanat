@@ -21,6 +21,7 @@ import ContactPage from './pages/ContactPage.jsx';
 import FAQPage from './pages/FAQPage.jsx';
 const Admin=lazy(()=>import('./admin/admin').then(m=>({default:m.Admin})));
 import './admin/admin.css';
+import './pages/screens.css';
 import {useStore} from './context/store';
 import ContentPage from './pages/ContentPage';
 import SecurityPage from './pages/SecurityPage';
@@ -98,7 +99,7 @@ export default function App() {
         <Header currentRoute={route} navigate={navigate} />
 
         {/* Main Content Router */}
-        <div className="flex-grow">
+        <div className={`flex-grow ${['home', 'admin'].includes(route.page) ? '' : 'store-screen'} screen-${route.page}`}>
           {route.page === 'security' && <SecurityPage />}
           {route.page === 'admin' && <div className="merchant-ui"><Suspense fallback={<p>Loading merchant studio…</p>}><Admin /></Suspense></div>}
           {route.page === 'content' && <ContentPage slug={route.id} />}
@@ -166,11 +167,11 @@ export default function App() {
             'faq',
             'account',
           ].includes(route.page) && (
-              <main id="main-content" className="rv-container py-24 text-center">
+              <main id="main-content" className="not-found rv-container py-24 text-center">
                 <p className="serif-statement text-3xl text-[var(--ink-chocolate)] mb-2">
-                  "This thread ends here."
+                  We’ve lost this thread.
                 </p>
-                <h1 className="display-l text-[var(--brand-maroon)] mb-6 font-bold">404</h1>
+                <h1 className="display-l text-[var(--brand-maroon)] mb-6 font-bold">Page not found</h1>
                 <div className="flex justify-center gap-4">
                   <button onClick={() => navigate({ page: 'home' })} className="btn btn-primary btn-md">
                     Back to Home

@@ -70,7 +70,19 @@ export default function Header({ navigate, currentRoute }) {
     {panel === 'account' && <div className="account-menu header-panel">{customer ? <><p>Hello, {customer.name}</p><button onClick={() => go({ page: 'account', tab: 'orders' })}>My orders</button><button onClick={() => go({ page: 'account', tab: 'wishlist' })}>My wishlist ({wishlist.length})</button><button onClick={() => go({ page: 'account', tab: 'addresses' })}>Saved addresses</button><button onClick={() => { close(); logout(); }}>Sign out</button></> : <><p>Your Rangvanat account</p><button onClick={() => go({ page: 'account', tab: 'login' })}>Sign in</button><button onClick={() => go({ page: 'account', tab: 'register' })}>Create an account</button></>}</div>}
     <div className={`mobile-navigation ${panel === 'mobile' ? 'is-open' : ''}`} inert={panel !== 'mobile'} aria-hidden={panel !== 'mobile'}>
       <div className="mobile-scrim" onClick={close} />
-      <div className="mobile-navigation-inner" ref={mobileRef} role="dialog" aria-modal="true" aria-label="Navigation"><div className="mobile-title"><span>Explore Rangvanat</span><button className="header-icon" aria-label="Close menu" onClick={close}><X /></button></div><nav aria-label="Mobile">{navLink('Home', 'home')}{navLink('All pieces', 'shop')}<details><summary>Categories</summary>{CATEGORIES.map(category => <button key={category} onClick={() => go({ page: 'shop', category })}>{category}</button>)}</details><details><summary>The edits</summary>{edits.map(c => <button key={c.id} onClick={() => go({ page: 'shop', collection: c.id })}>{c.name}</button>)}</details>{navLink('Our story', 'story')}{navLink('The craft', 'craft')}{navLink('FAQ & care', 'faq')}</nav><button className="mobile-account" onClick={() => go({ page: 'account', tab: customer ? 'orders' : 'login' })}><User size={18} />{customer ? 'My account' : 'Sign in / Register'}</button><button className="mobile-account" onClick={() => go({ page: 'account', tab: 'wishlist' })}><Heart size={18} />Wishlist ({wishlist.length})</button></div>
+      <div className="mobile-navigation-inner" ref={mobileRef} role="dialog" aria-modal="true" aria-label="Navigation">
+        <div className="mobile-title"><a className="store-brand" href="/" aria-label="Rangvanat home" onClick={e => { e.preventDefault(); go({ page: 'home' }); }}><img src={settings?.logo || '/images/logo-only.svg'} alt="" /><span>Rangvanat</span></a><button className="header-icon" aria-label="Close menu" onClick={close}><X size={22} /></button></div>
+        <div className="mobile-menu-body">
+          <button className="mobile-menu-search" onClick={() => setPanel('search')}><Search size={18} /><span>Search pieces, fabrics & edits</span><ArrowRight size={17} /></button>
+          <nav className="mobile-shop-nav" aria-label="Mobile shopping">
+            {navLink('Home', 'home')}{navLink('All pieces', 'shop')}
+            <details><summary>Categories<ChevronDown size={20} /></summary><div className="mobile-submenu">{CATEGORIES.map(category => <button key={category} onClick={() => go({ page: 'shop', category })}>{category}</button>)}</div></details>
+            <details><summary>The edits<ChevronDown size={20} /></summary><div className="mobile-submenu">{edits.map(c => <button key={c.id} onClick={() => go({ page: 'shop', collection: c.id })}>{c.name}</button>)}</div></details>
+          </nav>
+          <nav className="mobile-about-nav" aria-label="About Rangvanat">{navLink('Our story', 'story')}{navLink('The craft', 'craft')}{navLink('Journal', 'journal')}{navLink('FAQ & care', 'faq')}{navLink('Contact', 'contact')}</nav>
+        </div>
+        <div className="mobile-menu-footer"><button className="mobile-account" onClick={() => go({ page: 'account', tab: customer ? 'orders' : 'login' })}><User size={19} /><span>{customer ? 'My account' : 'Sign in / Register'}</span><ArrowRight size={17} /></button><button className="mobile-account" onClick={() => go({ page: 'account', tab: 'wishlist' })}><Heart size={19} /><span>Wishlist</span><span className="mobile-wishlist-count">{wishlist.length}</span></button></div>
+      </div>
     </div>
   </header>;
 }

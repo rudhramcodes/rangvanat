@@ -1,26 +1,31 @@
 import { useState, useEffect } from 'react';
-import { Package, Heart, MapPin, User, LogOut, Plus, Trash2, CheckCircle2, Clock, Truck, ShieldCheck } from 'lucide-react';
+import { Package, Heart, MapPin, LogOut, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../context/store.js';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../api/client.js';
 
 export default function AccountPage({ initialTab = 'orders', navigate }) {
-  const { customer, login, register, logout, wishlist, addToast, setCustomer, refreshCustomer } = useStore();
+  const { customer, login, register, logout, wishlist, addToast, setCustomer } = useStore();
+  const customerKey = customer ? customer._id || customer.id || customer.email || 'session' : null;
 
   const [activeTab, setActiveTab] = useState(customer ? initialTab : 'login');
   const [orders, setOrders] = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersLoadedFor, setOrdersLoadedFor] = useState(null);
+  const ordersLoading = Boolean(customerKey) && ordersLoadedFor !== customerKey;
   const [wishlistProducts, setWishlistProducts] = useState([]);
+  const visibleWishlistProducts = wishlist.length > 0 ? wishlistProducts : [];
 
   // Login Form
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
   // Register Form
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [showRegPassword, setShowRegPassword] = useState(false);
   const [regPhone, setRegPhone] = useState('');
   const [regLoading, setRegLoading] = useState(false);
 
@@ -31,27 +36,35 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
   const [state, setState] = useState('Gujarat');
   const [pincode, setPincode] = useState('');
 
-  // Fetch orders & wishlist products when customer is logged in
+  // Fetch orders & wishlist products when customer is logged in. Loading state is
+  // derived, so the effects only ever call setState from async callbacks.
   useEffect(() => {
-    if (customer) {
-      setOrdersLoading(true);
-      api.me().then((res) => {
-        setOrdersLoading(false);
-        if (res.success && res.data) {
-          if (res.data.orders) setOrders(res.data.orders);
-        }
+    if (!customerKey) return;
+    let active = true;
+    api
+      .me()
+      .then((res) => {
+        if (!active) return;
+        if (res.success && res.data && res.data.orders) setOrders(res.data.orders);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setOrdersLoadedFor(customerKey);
       });
-    }
-  }, [customer]);
+    return () => {
+      active = false;
+    };
+  }, [customerKey]);
 
   useEffect(() => {
-    if (wishlist.length > 0) {
-      Promise.all(wishlist.map((id) => api.getProductByIdOrSlug(id))).then((prods) => {
-        setWishlistProducts(prods.filter(Boolean));
-      });
-    } else {
-      setWishlistProducts([]);
-    }
+    if (!wishlist.length) return;
+    let active = true;
+    Promise.all(wishlist.map((id) => api.getProductByIdOrSlug(id))).then((prods) => {
+      if (active) setWishlistProducts(prods.filter(Boolean));
+    });
+    return () => {
+      active = false;
+    };
   }, [wishlist]);
 
   const handleLoginSubmit = async (e) => {
@@ -114,14 +127,12 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
   // Signed Out View
   if (!customer) {
     return (
-      <main className="rv-container py-16 md:py-24 flex flex-col items-center justify-center min-h-[70vh]">
-        <div className="w-full max-w-md bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[8px] p-8 shadow-sm">
+      <main className="rv-container account-auth py-16 md:py-24 min-h-[70vh]">
+        <div className="w-full max-w-md bg-[var(--color-paper)]">
           <div className="text-center mb-6">
-            <span className="font-display text-2xl font-semibold tracking-wider text-[var(--color-ink)] uppercase">
-              Rangvanat Studio
-            </span>
+            <h1>{activeTab === 'login' ? 'Welcome back.' : 'Make yourself at home.'}</h1>
             <p className="text-sm text-[var(--color-muted)] mt-1.5 font-body">
-              {activeTab === 'login' ? 'Sign in to access your atelier orders & wishlist.' : 'Create your account to become an atelier patron.'}
+              {activeTab === 'login' ? 'Your favourite pieces and orders, all in one place.' : 'Create an account to save your favourites and follow your orders.'}
             </p>
 
             {/* Tab Switcher */}
@@ -171,14 +182,24 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                 <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
                   Password
                 </label>
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="input-base"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="input-base pr-11"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] hover:text-[var(--color-ink)] p-1 transition-colors"
+                    aria-label={showLoginPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -188,7 +209,7 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               >
                 {loginLoading ? 'Signing in…' : 'Sign In'}
               </button>
-            </form>
+            <a href="/?page=security" className="block text-sm underline underline-offset-4 mt-4">Forgot your password?</a></form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div>
@@ -236,16 +257,26 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
                 <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1.5">
                   Password (12–72 characters)
                 </label>
-                <input
-                  type="password"
-                  value={regPassword}
-                  onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="At least 12 characters"
-                  minLength={12}
-                  maxLength={72}
-                  className="input-base"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showRegPassword ? 'text' : 'password'}
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    placeholder="At least 12 characters"
+                    minLength={12}
+                    maxLength={72}
+                    className="input-base pr-11"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPassword(!showRegPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)] hover:text-[var(--color-ink)] p-1 transition-colors"
+                    aria-label={showRegPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -413,9 +444,9 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
       {/* Tab 2: Wishlist */}
       {activeTab === 'wishlist' && (
         <div>
-          {wishlistProducts.length > 0 ? (
+          {visibleWishlistProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {wishlistProducts.map((p) => (
+              {visibleWishlistProducts.map((p) => (
                 <ProductCard
                   key={p._id}
                   product={p}

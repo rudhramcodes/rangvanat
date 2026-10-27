@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, ShieldCheck, Lock, CheckCircle2, AlertCircle, Truck, CreditCard } from 'lucide-react';
+import { ArrowLeft, Lock, AlertCircle, } from 'lucide-react';
 import { useStore } from '../context/store.js';
 import { api } from '../api/client.js';
 import { cartItems, checkoutKey } from '../lib/commerce.js';
@@ -199,6 +199,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
   return (
     <div className="w-full bg-[var(--color-paper)] text-[var(--color-ink)] py-8 md:py-16 min-h-screen">
       <div className="rv-container max-w-6xl">
+        <header className="checkout-heading"><h1>Make it yours.</h1><p>A few details, and your pieces are one step closer.</p></header>
         {/* Navigation & Stepper Header (§12: visible 3-step stepper) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[var(--color-line)] gap-4">
           <button
@@ -246,10 +247,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                    <label htmlFor="checkout-name" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Full Name <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input
+                    <input id="checkout-name"
                       type="text"
                       value={form.name}
                       onChange={(e) => handleChange('name', e.target.value)}
@@ -260,10 +261,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                    <label htmlFor="checkout-email" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Email Address <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input
+                    <input id="checkout-email"
                       type="email"
                       value={form.email}
                       onChange={(e) => handleChange('email', e.target.value)}
@@ -274,10 +275,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                    <label htmlFor="checkout-phone" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Phone Number <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input
+                    <input id="checkout-phone"
                       type="tel"
                       value={form.phone}
                       onChange={(e) => handleChange('phone', e.target.value)}
@@ -299,10 +300,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                    <label htmlFor="checkout-addressLine1" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Street Address <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input
+                    <input id="checkout-addressLine1"
                       type="text"
                       value={form.addressLine1}
                       onChange={(e) => handleChange('addressLine1', e.target.value)}
@@ -313,10 +314,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                    <label htmlFor="checkout-addressLine2" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Locality / Landmark (Optional)
                     </label>
-                    <input
+                    <input id="checkout-addressLine2"
                       type="text"
                       value={form.addressLine2}
                       onChange={(e) => handleChange('addressLine2', e.target.value)}
@@ -327,10 +328,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                      <label htmlFor="checkout-city" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                         City <span className="text-[var(--color-clay)]">*</span>
                       </label>
-                      <input
+                      <input id="checkout-city"
                         type="text"
                         value={form.city}
                         onChange={(e) => handleChange('city', e.target.value)}
@@ -341,10 +342,10 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                      <label htmlFor="checkout-pincode" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                         PIN Code <span className="text-[var(--color-clay)]">*</span>
                       </label>
-                      <input
+                      <input id="checkout-pincode"
                         type="text"
                         maxLength={6}
                         value={form.pincode}

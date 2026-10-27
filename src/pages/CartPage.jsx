@@ -67,7 +67,7 @@ export default function CartPage({ navigate }) {
         <span className="text-[var(--brand-maroon)] font-semibold">Shopping Bag</span>
       </nav>
 
-      <h1 className="heading-1 text-[var(--brand-maroon)] mb-8 uppercase">Your Shopping Bag</h1>
+      <h1 className="heading-1 text-[var(--brand-maroon)] mb-8 uppercase">Your bag</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Left: Cart Items Table (7 Cols) */}

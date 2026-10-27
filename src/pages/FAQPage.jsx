@@ -1,6 +1,3 @@
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-
 const FAQ_GROUPS = [
   {
     category: 'Orders & Bespoke Tailoring',
@@ -65,104 +62,8 @@ const FAQ_GROUPS = [
 ];
 
 export default function FAQPage({ navigate }) {
-  const [openItems, setOpenItems] = useState({ 'Orders & Bespoke Tailoring-0': true });
-
-  const toggleItem = (key) => {
-    setOpenItems((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  return (
-    <main id="main-content" className="w-full bg-[var(--bg-ivory)] py-12 md:py-20">
-      <div className="rv-container max-w-3xl">
-        {/* Breadcrumbs */}
-        <nav className="caption text-[var(--ink-soft)] mb-6 flex items-center gap-2">
-          <button onClick={() => navigate({ page: 'home' })} className="hover:text-[var(--brand-maroon)]">
-            Home
-          </button>
-          <span className="w-1 h-1 rounded-full bg-[var(--brand-gold)]" />
-          <span className="text-[var(--brand-maroon)] font-semibold">Help & FAQ</span>
-        </nav>
-
-        <div className="text-center mb-14">
-          <p className="eyebrow text-[var(--brand-gold)] mb-1">Custodians Repository</p>
-          <h1 className="heading-1 text-[var(--brand-maroon)] uppercase text-3xl md:text-5xl">
-            FREQUENTLY ASKED QUESTIONS
-          </h1>
-          <p className="body-l text-[var(--ink-soft)] mt-3">
-            Clear guidelines on sizing, caring for vegetable dyes, global shipping, and atelier commissions.
-          </p>
-        </div>
-
-        {/* Grouped Accordions (§12.10) */}
-        <div className="space-y-10">
-          {FAQ_GROUPS.map((group) => (
-            <div key={group.category} className="space-y-3">
-              <h2 className="heading-2 text-[var(--brand-maroon)] uppercase text-lg pb-2 border-b border-[var(--line-khadi)]">
-                {group.category}
-              </h2>
-
-              <div className="space-y-2">
-                {group.items.map((item, idx) => {
-                  const itemKey = `${group.category}-${idx}`;
-                  const isOpen = !!openItems[itemKey];
-
-                  return (
-                    <div
-                      key={idx}
-                      className="border border-[var(--line-khadi)] bg-white rounded-[2px] overflow-hidden"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => toggleItem(itemKey)}
-                        className="w-full min-h-[56px] px-5 py-3.5 flex items-center justify-between text-left font-semibold text-[15px] text-[var(--ink-chocolate)] hover:text-[var(--brand-maroon)] transition-colors"
-                      >
-                        <span className="pr-4">{item.q}</span>
-                        <div
-                          className={`w-6 h-6 flex items-center justify-center rounded-full transition-transform duration-250 ${
-                            isOpen ? 'rotate-45 text-[var(--brand-maroon)]' : 'text-[var(--ink-soft)]'
-                          }`}
-                        >
-                          <Plus size={18} />
-                        </div>
-                      </button>
-
-                      {isOpen && (
-                        <div className="px-5 pb-5 text-[14.5px] text-[var(--ink-chocolate)]/85 leading-relaxed border-t border-[var(--line-khadi)]/40 pt-3">
-                          {item.a}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Still have questions banner */}
-        <div className="mt-16 p-8 bg-[var(--bg-cream)] border border-[var(--line-khadi)] rounded-[2px] text-center space-y-3">
-          <h3 className="heading-3 text-[var(--brand-maroon)] uppercase">Still Seeking Answers?</h3>
-          <p className="body-s text-[var(--ink-chocolate)]">
-            Our atelier weavers in Bardoli are always delighted to converse about cloth.
-          </p>
-          <div className="pt-2 flex justify-center gap-4">
-            <button onClick={() => navigate({ page: 'contact' })} className="btn btn-primary btn-sm">
-              Contact Atelier
-            </button>
-            <a
-              href="https://wa.me/919876543210"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary btn-sm"
-            >
-              WhatsApp Us
-            </a>
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+  return <main id="main-content" className="faq-layout">
+    <header><nav className="screen-breadcrumb" aria-label="Breadcrumb"><a href="/" onClick={e => { e.preventDefault(); navigate({ page: 'home' }); }}>Home</a><span>/</span><span>Help</span></nav><h1>A little<br /><em>clarity.</em></h1><p>Everything you need to know about your pieces, from finding the right fit to caring for them.</p><button className="story-link" onClick={() => navigate({ page: 'contact' })}>Talk to our atelier ↗</button></header>
+    <div>{FAQ_GROUPS.map(group => <section className="faq-group" key={group.category}><h2>{group.category}</h2>{group.items.map(item => <details key={item.q}><summary>{item.q}<span aria-hidden="true">+</span></summary><p>{item.a}</p></details>)}</section>)}</div>
+  </main>;
 }

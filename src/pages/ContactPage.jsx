@@ -62,7 +62,7 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
         <div className="max-w-2xl mb-12">
           <p className="eyebrow text-[var(--brand-gold)] mb-1">Bardoli Atelier</p>
           <h1 className="heading-1 text-[var(--brand-maroon)] uppercase text-3xl md:text-5xl">
-            SPEAK WITH OUR WEAVERS
+            Let’s talk cloth.
           </h1>
           <p className="body-l text-[var(--ink-soft)] mt-3">
             Whether inquiring about a bespoke bridal commission, wholesale partnerships, or scheduling an in-person studio visit in Bardoli, our team is at your service.
@@ -72,9 +72,9 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
         {/* Split Layout (§12.9) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           {/* Left: Enquiry Form (7 Cols) */}
-          <div className="lg:col-span-7 bg-white p-6 md:p-8 border border-[var(--line-khadi)] rounded-[2px] shadow-sm">
+          <div className="contact-form-panel lg:col-span-7">
             <h2 className="heading-3 text-[var(--brand-maroon)] uppercase text-lg mb-6 pb-3 border-b border-[var(--line-khadi)]">
-              Send an Atelier Dispatch
+              A note to the atelier
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">

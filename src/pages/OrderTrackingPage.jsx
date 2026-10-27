@@ -2,17 +2,57 @@ import { useState, useEffect } from 'react';
 
 import { api } from '../api/client.js';
 
+const TRACKING_STAGES = ['received', 'in_stitching', 'dispatched', 'delivered'];
+
+function toTrackingResult(res) {
+  if (res?.success && res.data) {
+    const current = TRACKING_STAGES.indexOf(res.data.fulfillment?.status);
+    return {
+      data: {
+        ...res.data,
+        steps:
+          res.data.fulfillment?.status === 'cancelled'
+            ? [{ label: 'Cancelled', done: true }]
+            : TRACKING_STAGES.map((label, i) => ({ label: label.replaceAll('_', ' '), done: i <= current })),
+      },
+    };
+  }
+  return { error: res?.message || 'No order found with the provided details.' };
+}
+
 export default function OrderTrackingPage({ initialOrderNumber = '' }) {
   const [orderNumber, setOrderNumber] = useState(initialOrderNumber);
   const [contact, setContact] = useState(()=>sessionStorage.getItem(`rv_order_${initialOrderNumber}`)||'');
   const [trackingData, setTrackingData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(initialOrderNumber));
   const [error, setError] = useState('');
 
+  const applyTrackingResult = (result) => {
+    setTrackingData(result.data || null);
+    if (result.error) setError(result.error);
+  };
+
+  // Auto-track a shared order link once, using the access key stored for that order.
   useEffect(() => {
-    if (initialOrderNumber) {
-      handleTrack(initialOrderNumber);
-    }
+    if (!initialOrderNumber) return undefined;
+    let active = true;
+    const accessKey = (sessionStorage.getItem(`rv_order_${initialOrderNumber}`) || '').trim();
+    api
+      .trackOrder(initialOrderNumber.trim(), accessKey)
+      .then((res) => {
+        if (active) applyTrackingResult(toTrackingResult(res));
+      })
+      .catch(() => {
+        if (!active) return;
+        setError('Error communicating with order tracker. Please try again.');
+        setTrackingData(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [initialOrderNumber]);
 
   const handleTrack = async (orderNumToUse) => {
@@ -26,13 +66,7 @@ export default function OrderTrackingPage({ initialOrderNumber = '' }) {
     setError('');
     try {
       const res = await api.trackOrder(num.trim(), contact.trim());
-      if (res?.success && res.data) {
-        const stages=['received','in_stitching','dispatched','delivered'];const current=stages.indexOf(res.data.fulfillment?.status);
-        setTrackingData({...res.data,steps:res.data.fulfillment?.status==='cancelled'?[{label:'Cancelled',done:true}]:stages.map((label,i)=>({label:label.replaceAll('_',' '),done:i<=current}))});
-      } else {
-        setError(res?.message || 'No order found with the provided details.');
-        setTrackingData(null);
-      }
+      applyTrackingResult(toTrackingResult(res));
     } catch {
       setError('Error communicating with order tracker. Please try again.');
       setTrackingData(null);
@@ -45,7 +79,7 @@ export default function OrderTrackingPage({ initialOrderNumber = '' }) {
     <main id="main-content" className="rv-container py-12 md:py-20 max-w-3xl">
       <div className="text-center mb-10">
         <p className="eyebrow text-[var(--brand-gold)] mb-2">Live Atelier Tracker</p>
-        <h1 className="heading-1 text-[var(--brand-maroon)] uppercase">Track Your Weaving</h1>
+        <h1 className="heading-1 text-[var(--brand-maroon)] uppercase">Follow your piece</h1>
         <p className="body-l text-[var(--ink-soft)] max-w-md mx-auto mt-2">
           Follow your piece from the spinning wheel in Bardoli to your doorstep.
         </p>
@@ -132,7 +166,7 @@ export default function OrderTrackingPage({ initialOrderNumber = '' }) {
                     {step.label}
                   </h4>
                   <p className="caption text-xs text-[var(--ink-soft)]">
-                    {step.date ? new Date(step.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Pending dispatch'}
+                    {step.date ? new Date(step.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : step.done ? 'Complete' : 'Awaiting update'}
                   </p>
                 </div>
               </div>

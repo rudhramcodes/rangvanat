@@ -157,112 +157,12 @@ export default function JournalPage({ navigate }) {
     );
   }
 
-  // Journal Index View (§12.8)
   const featured = filtered[0];
   const others = filtered.slice(1);
-
-  return (
-    <main id="main-content" className="w-full bg-[var(--bg-ivory)] py-12 md:py-16">
-      <div className="rv-container">
-        {/* Breadcrumbs */}
-        <nav className="caption text-[var(--ink-soft)] mb-6 flex items-center gap-2">
-          <button onClick={() => navigate({ page: 'home' })} className="hover:text-[var(--brand-maroon)]">
-            Home
-          </button>
-          <span className="w-1 h-1 rounded-full bg-[var(--brand-gold)]" />
-          <span className="text-[var(--brand-maroon)] font-semibold">Weavers' Journal</span>
-        </nav>
-
-        <div className="text-center max-w-2xl mx-auto mb-10">
-          <p className="eyebrow text-[var(--brand-gold)] mb-1">Dispatches from Bardoli</p>
-          <h1 className="heading-1 text-[var(--brand-maroon)] uppercase text-3xl md:text-5xl">
-            THE WEAVERS' CHRONICLE
-          </h1>
-          <p className="body-l text-[var(--ink-soft)] mt-3">
-            Explorations into natural fermentation chemistry, handloom physics, and the living heritage of Indian khadi.
-          </p>
-
-          {/* Filter Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`h-9 px-4 rounded-full text-xs font-semibold transition-all ${
-                  selectedCategory === cat
-                    ? 'bg-[var(--brand-maroon)] text-[var(--bg-ivory)]'
-                    : 'bg-white border border-[var(--line-khadi)] text-[var(--ink-chocolate)] hover:border-[var(--brand-maroon)]'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Featured Wide Article (§12.8) */}
-        {featured && (
-          <div
-            onClick={() => setReadingArticle(featured)}
-            className="group cursor-pointer grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-[var(--bg-cream)]/50 p-6 md:p-8 rounded-[2px] mb-14 border border-[var(--line-khadi)]"
-          >
-            <div className="lg:col-span-7 aspect-[16/10] overflow-hidden bg-[var(--bg-cream)]">
-              <img
-                src={featured.image}
-                alt={featured.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="lg:col-span-5 space-y-4">
-              <span className="caption uppercase font-semibold text-[var(--brand-gold)]">
-                Featured Dispatch · {featured.category}
-              </span>
-              <h2 className="heading-2 text-[var(--brand-maroon)] text-2xl md:text-3xl uppercase leading-tight group-hover:text-[var(--brand-maroon-deep)]">
-                {featured.title}
-              </h2>
-              <p className="body-l text-[var(--ink-chocolate)]">{featured.excerpt}</p>
-              <div className="flex items-center gap-3 text-xs text-[var(--ink-soft)]">
-                <span>{featured.date}</span>
-                <span>•</span>
-                <span>{featured.readTime}</span>
-              </div>
-              <button className="btn btn-primary btn-sm mt-2">Read Dispatch →</button>
-            </div>
-          </div>
-        )}
-
-        {/* 3-Column Grid for Rest (§12.8) */}
-        {others.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {others.map((art) => (
-              <div
-                key={art.id}
-                onClick={() => setReadingArticle(art)}
-                className="group cursor-pointer flex flex-col bg-white border border-[var(--line-khadi)] p-5 rounded-[2px]"
-              >
-                <div className="aspect-[16/10] overflow-hidden bg-[var(--bg-cream)] mb-4">
-                  <img
-                    src={art.image}
-                    alt={art.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <span className="caption uppercase text-[11px] font-semibold text-[var(--brand-gold)] mb-1">
-                  {art.category}
-                </span>
-                <h3 className="heading-3 text-[17px] text-[var(--brand-maroon)] uppercase mb-2 group-hover:text-[var(--brand-maroon-deep)] line-clamp-2">
-                  {art.title}
-                </h3>
-                <p className="body-s text-[var(--ink-chocolate)]/80 line-clamp-3 mb-4">{art.excerpt}</p>
-                <div className="mt-auto pt-3 border-t border-[var(--line-khadi)] flex items-center justify-between text-xs text-[var(--ink-soft)]">
-                  <span>{art.date}</span>
-                  <span className="text-[var(--brand-maroon)] font-semibold">Read →</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </main>
-  );
+  return <main id="main-content" className="journal-page">
+    <header><nav className="screen-breadcrumb" aria-label="Breadcrumb"><button onClick={() => navigate({ page: 'home' })}>Home</button><span>/</span><span>Journal</span></nav><h1>Notes from<br /><em>the atelier.</em></h1><p>Stories of cloth, colour and the people who make them.</p></header>
+    <nav className="craft-tabs" aria-label="Journal topics">{categories.map(cat => <button key={cat} aria-pressed={selectedCategory === cat} onClick={() => setSelectedCategory(cat)}>{cat}</button>)}</nav>
+    {featured && <article className="journal-feature"><div className="journal-image"><img src={featured.image} alt={featured.title} /></div><div><p className="journal-meta">{featured.category} · {featured.readTime}</p><h2>{featured.title}</h2><p>{featured.excerpt}</p><button className="story-link" onClick={() => setReadingArticle(featured)}>Read the story →</button></div></article>}
+    <section className="journal-grid" aria-label="More stories">{others.map(art => <article key={art.id}><div className="journal-image"><img src={art.image} alt={art.title} loading="lazy" /></div><p className="journal-meta">{art.category} · {art.readTime}</p><h2>{art.title}</h2><p>{art.excerpt}</p><button className="story-link" onClick={() => setReadingArticle(art)}>Read the story →</button></article>)}</section>
+  </main>;
 }

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, Minus, Check, AlertCircle, ChevronDown, ChevronUp, Truck, ShieldCheck, Ruler } from 'lucide-react';
+import { Heart, Plus, Minus, AlertCircle, ChevronDown, ChevronUp, Truck, Ruler } from 'lucide-react';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../api/client.js';
 import { useStore } from '../context/store.js';
 
 export default function ProductDetailPage({ productId, navigate }) {
-  const { addToCart, toggleWishlist, isInWishlist, addToast, settings } = useStore();
+  const { addToCart, toggleWishlist, isInWishlist, addToast } = useStore();
 
   const [product, setProduct] = useState(null);
   const [related, setRelated] = useState([]);
@@ -13,7 +13,7 @@ export default function ProductDetailPage({ productId, navigate }) {
   const [selectedSize, setSelectedSize] = useState('');
   const [sizeError, setSizeError] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const [loadedProductId, setLoadedProductId] = useState(null);
 
   // Custom Bespoke Measurements
   const [customBust, setCustomBust] = useState('');
@@ -34,20 +34,26 @@ export default function ProductDetailPage({ productId, navigate }) {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    api.getProductByIdOrSlug(productId).then((data) => {
-      if (!active) return;
-      setProduct(data);
-      if (data?.variants?.length) {
-        const firstAvailable = data.variants.find((v) => data.madeToOrder || v.stock > 0);
-        setSelectedSize(firstAvailable ? firstAvailable.size : data.variants[0].size);
-      } else {
-        setSelectedSize('');
-      }
-      setLoading(false);
-    });
+    api
+      .getProductByIdOrSlug(productId)
+      .then((data) => {
+        if (!active) return;
+        setProduct(data);
+        if (data?.variants?.length) {
+          const firstAvailable = data.variants.find((v) => data.madeToOrder || v.stock > 0);
+          setSelectedSize(firstAvailable ? firstAvailable.size : data.variants[0].size);
+        } else {
+          setSelectedSize('');
+        }
+        setLoadedProductId(productId);
+      })
+      .catch(() => {
+        if (!active) return;
+        setProduct(null);
+        setLoadedProductId(productId);
+      });
 
     api.getRelatedProducts(productId).then((data) => {
       if (active) setRelated(data || []);
@@ -57,6 +63,8 @@ export default function ProductDetailPage({ productId, navigate }) {
       active = false;
     };
   }, [productId]);
+
+  const loading = loadedProductId !== productId;
 
   if (loading) {
     return (
@@ -161,10 +169,11 @@ export default function ProductDetailPage({ productId, navigate }) {
         {/* Two-Column Grid: Gallery Left + Sticky Buy Panel Right (§10) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           {/* Left Column: Gallery (§10) */}
-          <div className="lg:col-span-7 flex flex-col md:flex-row-reverse gap-4">
+          <div className="product-gallery lg:col-span-7 flex flex-col md:flex-row-reverse gap-4">
             {/* Main High-Res Image (3:4 ratio) */}
-            <div className="relative aspect-[3/4] flex-1 overflow-hidden rounded-[4px] bg-[var(--color-sand)] border border-[var(--color-line)] shadow-sm">
+            <div className="product-gallery-image relative aspect-[3/4] flex-1 overflow-hidden rounded-[4px] bg-[var(--color-sand)] border border-[var(--color-line)] shadow-sm">
               <img
+                key={activeImage.url}
                 src={activeImage.url}
                 alt={activeImage.alt || product.title}
                 className="w-full h-full object-cover transition-transform duration-300 ease-out"
@@ -191,6 +200,8 @@ export default function ProductDetailPage({ productId, navigate }) {
                   <button
                     key={img.url + idx}
                     type="button"
+                    aria-label={`View image ${idx + 1}`}
+                    aria-pressed={selectedImageIndex === idx}
                     onClick={() => setSelectedImageIndex(idx)}
                     className={`relative w-16 h-20 md:w-20 md:h-26 rounded-[4px] overflow-hidden bg-[var(--color-sand)] border transition-all shrink-0 ${
                       selectedImageIndex === idx
@@ -206,7 +217,7 @@ export default function ProductDetailPage({ productId, navigate }) {
           </div>
 
           {/* Right Column: Sticky Buy Panel (§10) */}
-          <div className="lg:col-span-5 sticky top-24 space-y-6">
+          <div className="purchase-panel lg:col-span-5 sticky top-24 space-y-6">
             <div>
               <span className="text-xs font-semibold tracking-widest text-[var(--color-clay)] uppercase">
                 {product.fabric || 'Pure Khadi'} · {product.craft || 'Handloom'}
@@ -422,12 +433,12 @@ export default function ProductDetailPage({ productId, navigate }) {
                   value={pincode}
                   onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
                   placeholder="Enter 6-digit PIN code"
-                  className="input-base h-10 text-xs flex-1"
+                  className="input-base text-xs flex-1"
                 />
                 <button
                   type="submit"
                   disabled={pincodeLoading || pincode.length !== 6}
-                  className="btn-secondary btn-sm h-10 px-4"
+                  className="btn-secondary shrink-0"
                 >
                   {pincodeLoading ? 'Checking…' : 'Check'}
                 </button>

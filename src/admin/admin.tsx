@@ -1,5 +1,5 @@
 "use client";
-import { ArrowUpRight, ArrowLeft } from "lucide-react";
+import { ArrowUpRight, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 
 import { api, json, money } from "./api";
@@ -49,7 +49,8 @@ export function Admin() {
     [status, setStatus] = useState(""),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(false),
-    [search, setSearch] = useState("");
+    [search, setSearch] = useState(""),
+    [showPassword, setShowPassword] = useState(false);
   const editor = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const t = sessionStorage.getItem("rv-admin-token");
@@ -122,7 +123,7 @@ export function Admin() {
   if (!token)
     return (
       <div className="shell section admin-login">
-        <p className="eyebrow">Rangvanaat merchant studio</p>
+        <p className="eyebrow">Rangvanat merchant studio</p>
         <h1>Welcome to the studio.</h1>
         <p>Sign in to manage your collection, content and orders.</p>
         <form
@@ -157,13 +158,24 @@ export function Admin() {
           </label>
           <label>
             Password
-            <input
-              placeholder="Enter your password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-            />
+            <div style={{ position: "relative", width: "100%" }}>
+              <input
+                placeholder="Enter your password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                style={{ paddingRight: "42px" }}
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </label>
           <button className="button" disabled={busy}>
             {busy ? "Signing in…" : "Sign in"}
@@ -183,7 +195,7 @@ export function Admin() {
     <div className="admin-shell">
       <aside className="admin-nav">
         <p className="eyebrow">Merchant studio</p>
-        <h1>Rangvanaat</h1>
+        <h1>Rangvanat</h1>
         <nav aria-label="Merchant sections">
           {(
             [

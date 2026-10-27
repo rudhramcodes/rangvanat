@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle2, Copy, Check, ArrowRight, Download, Package, Truck, Clock } from 'lucide-react';
+import { CheckCircle2, Copy, Check, Download, Package, Truck, Clock } from 'lucide-react';
 import { useStore } from '../context/store.js';
 import { api } from '../api/client.js';
 
@@ -15,21 +15,21 @@ export default function OrderConfirmationPage({ orderNumber, order: initialOrder
     (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(`rv_order_${num}`)) ||
     '';
 
-  const [loading, setLoading] = useState(!initialOrder && Boolean(num));
+  const [resolvedNum, setResolvedNum] = useState(initialOrder ? num : null);
+  const loading = Boolean(num) && resolvedNum !== num;
 
   useEffect(() => {
     let active = true;
     if (num && !initialOrder) {
-      setLoading(true);
       api
         .getOrderByNumber(num, token)
         .then((res) => {
           if (!active) return;
           if (res?.success && res.data) setOrder(res.data);
-          setLoading(false);
+          setResolvedNum(num);
         })
         .catch(() => {
-          if (active) setLoading(false);
+          if (active) setResolvedNum(num);
         });
     }
     return () => {
@@ -101,7 +101,7 @@ export default function OrderConfirmationPage({ orderNumber, order: initialOrder
               Order Confirmed
             </span>
             <h1 className="font-display text-3xl md:text-4xl text-[var(--color-ink)] font-normal mt-1">
-              Your piece is with the atelier
+              Thank you for choosing handloom.
             </h1>
             <p className="text-sm text-[var(--color-muted)] mt-2 font-body max-w-md mx-auto">
               Thank you for supporting handloom craft. Our master artisans in Bardoli are preparing your order.

@@ -26,6 +26,8 @@ export default function ShopPage({ initialCollection = 'all', initialCategory = 
   useEffect(() => { let alive = true; api.getCollections().then(data => { if (alive) setCollections(data); }).catch(() => {}); return () => { alive = false; }; }, []);
   useEffect(() => {
     let alive = true;
+    // A new filter request replaces the previous catalog loading state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true); setError('');
     const price = PRICES.find(p => p.id === filters.price);
     api.getProducts({ ...filters, search: initialSearch, minPrice: price.min, maxPrice: price.max, limit: 24 }).then(res => {
