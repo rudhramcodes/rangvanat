@@ -194,9 +194,8 @@ export function Admin() {
   return (
     <div className="admin-shell">
       <aside className="admin-nav">
-        <p className="eyebrow">Merchant studio</p>
-        <h1>Rangvanat</h1>
-        <nav aria-label="Merchant sections">
+        <a className="admin-brand" href="/"><img src="/images/logo-only.svg" alt="" /><span>Rangvanat<small>Merchant studio</small></span></a>
+        <details className="admin-navigation" open><summary>Workspace navigation</summary><nav aria-label="Merchant sections">
           {(
             [
               "dashboard",
@@ -226,7 +225,7 @@ export function Admin() {
                 : t[0].toUpperCase() + t.slice(1)}
             </button>
           ))}
-        </nav>
+        </nav></details>
         <a href="/" target="_blank">
           View storefront{" "}
           <ArrowUpRight className="inline-icon" aria-hidden="true" />
@@ -241,10 +240,10 @@ export function Admin() {
           Sign out
         </button>
       </aside>
-      <div className="admin-content">
+      <main className="admin-content" id="admin-main">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Your collection, your control</p>
+            <p className="eyebrow">Rangvanat / Merchant studio</p>
             <h2>
               {tab === "settings"
                 ? "Store & content"
@@ -301,14 +300,8 @@ export function Admin() {
                 <strong>{dashboard.enquiries}</strong>
               </div>
             </div>
-            <div className="notice">
-              <h3>Payments are deferred</h3>
-              <p>
-                Orders arrive as unpaid requests. No gateway is connected and
-                payment status cannot be marked paid here.
-              </p>
-            </div>
-            <h3 className="mt">Low stock</h3>
+            <div className="notice"><h3>Your daily studio check</h3><p>Review low-stock sizes before accepting new orders, then update fulfillment as pieces leave the atelier.</p></div>
+            <div className="admin-dashboard-grid"><section className="admin-dashboard-section"><h3 className="mt">Stock needing attention</h3>
             {dashboard.lowStock.length ? (
               <div className="table-wrap">
                 <table>
@@ -337,15 +330,15 @@ export function Admin() {
             ) : (
               <p>No low-stock pieces.</p>
             )}
-            <h3 className="mt">Recent requests</h3>
+            </section><section className="admin-dashboard-section"><h3 className="mt">Recent orders</h3>{!dashboard.recentOrders.length && <p className="empty">New orders will appear here.</p>}
             {dashboard.recentOrders.map((o) => (
-              <div className="admin-list-row" key={o._id}>
+              <div className="admin-order-summary" key={o._id}>
                 <span>{o.orderNumber}</span>
                 <span>{o.customer?.name}</span>
                 <span>{money(o.financials.totalAmount)}</span>
                 <span>{o.fulfillment.status.replaceAll("_", " ")}</span>
               </div>
-            ))}
+            ))}</section></div>
           </>
         )}
         {tab === "settings" && settings && !loading && (
@@ -408,16 +401,15 @@ export function Admin() {
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Find a record"
+                placeholder={`Search ${tab} by name, reference or details`}
               />
             </label>
-            {!rows.length && !loading ? (
+            {!rows.some(r => JSON.stringify(r).toLowerCase().includes(search.toLowerCase())) && !loading ? (
               <div className="empty">
-                No {tab} yet.
+                {search ? `No ${tab} match “${search}”. Try another search.` : `No ${tab} yet.`}
                 {tab === "products" && (
                   <p>
-                    Add a product, or import the original catalog as drafts
-                    using the seed command.
+                    Use Add product to create your first piece and set its sizes, stock and photos.
                   </p>
                 )}
               </div>
@@ -431,11 +423,11 @@ export function Admin() {
                   )
                   .map((r) => (
                     <article className="admin-list-row" key={r._id}>
-                      <div>
+                      <div className="admin-record">
                         {"images" in r && r.images[0] && (
                           <img src={r.images[0].url} alt="" />
                         )}
-                        <strong>{label(r)}</strong>
+                        <strong className="admin-record-title">{label(r)}</strong>
                         {"price" in r && (
                           <p>
                             {money(r.price)} · {r.totalStock} ready stock ·{" "}
@@ -543,7 +535,7 @@ export function Admin() {
             </p>
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

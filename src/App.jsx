@@ -93,10 +93,10 @@ export default function App() {
     <StoreProvider>
       <div className="min-h-screen flex flex-col bg-[var(--bg-ivory)] text-[var(--ink-chocolate)] font-sans antialiased selection:bg-[var(--brand-maroon-tint)] selection:text-[var(--brand-maroon-deep)]">
         {/* Top Announcement Bar (§7) */}
-        <AnnouncementBar />
+        {route.page !== 'admin' && <AnnouncementBar />}
 
         {/* Global Navigation Header (§8) */}
-        <Header currentRoute={route} navigate={navigate} />
+        {route.page !== 'admin' && <Header currentRoute={route} navigate={navigate} />}
 
         {/* Main Content Router */}
         <div className={`flex-grow ${['home', 'admin'].includes(route.page) ? '' : 'store-screen'} screen-${route.page}`}>
@@ -191,7 +191,7 @@ export default function App() {
         <ToastAlert />
 
         {/* Global Footer (§9) */}
-        <Footer navigate={navigate} />
+        {route.page !== 'admin' && <Footer navigate={navigate} />}
       </div>
     </StoreProvider>
   );

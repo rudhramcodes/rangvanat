@@ -455,7 +455,7 @@ export function ProductEditor({
         value={p.isPublished}
         onChange={(v) => update("isPublished", v)}
       />
-      <button className="button" disabled={busy}>
+      <button className="button admin-save" disabled={busy}>
         {busy ? "Saving…" : "Save product"}
       </button>
     </form>
@@ -485,7 +485,7 @@ export function CollectionEditor({
   );
   return (
     <form
-      className="form-stack"
+      className="form-stack compact-editor"
       onSubmit={(e) => {
         e.preventDefault();
         void save(c, c._id);
@@ -530,7 +530,7 @@ export function CollectionEditor({
         value={c.isActive}
         onChange={(v) => setC({ ...c, isActive: v })}
       />
-      <button className="button" disabled={busy}>
+      <button className="button admin-save" disabled={busy}>
         Save collection
       </button>
     </form>
@@ -561,7 +561,7 @@ export function CouponEditor({
   );
   return (
     <form
-      className="form-stack"
+      className="form-stack compact-editor"
       onSubmit={(e) => {
         e.preventDefault();
         void save(c, c._id);
@@ -629,7 +629,7 @@ export function CouponEditor({
         value={c.isActive}
         onChange={(v) => setC({ ...c, isActive: v })}
       />
-      <button className="button" disabled={busy}>
+      <button className="button admin-save" disabled={busy}>
         Save coupon
       </button>
     </form>
@@ -650,7 +650,7 @@ export function OrderEditor({
     [notes, setNotes] = useState(o.adminNotes || "");
   return (
     <form
-      className="form-stack"
+      className="form-stack compact-editor"
       onSubmit={(e) => {
         e.preventDefault();
         void save(
@@ -703,7 +703,7 @@ export function OrderEditor({
       <Field label="Courier partner" value={courier} onChange={setCourier} />
       <Field label="Tracking number" value={tracking} onChange={setTracking} />
       <Textarea label="Internal notes" value={notes} onChange={setNotes} />
-      <button className="button" disabled={busy}>
+      <button className="button admin-save" disabled={busy}>
         Save fulfillment
       </button>
     </form>
@@ -729,7 +729,7 @@ export function SettingsEditor({
   >("logo");
   return (
     <form
-      className="form-stack"
+      className="form-stack settings-editor"
       onSubmit={(e) => {
         e.preventDefault();
         void save({
@@ -741,7 +741,7 @@ export function SettingsEditor({
         });
       }}
     >
-      <h2>Store identity & content</h2>
+      <nav className="settings-jump" aria-label="Settings sections"><a href="#settings-identity">Store identity & content</a><a href="#settings-shipping">Shipping & inventory rules</a><a href="#settings-navigation">Navigation links</a><a href="#settings-homepage">Homepage sections</a><a href="#settings-policies">Pages & policies</a></nav><section className="settings-section" id="settings-identity"><h2>Store identity & content</h2>
       <div className="form-grid">
         {(
           [
@@ -801,7 +801,7 @@ export function SettingsEditor({
         token={token}
         onUpload={(p) => setS((s) => ({ ...s, [imageTarget]: p.url }))}
       />
-      <h2>Shipping & inventory rules</h2>
+      </section><section className="settings-section" id="settings-shipping"><h2>Shipping & inventory rules</h2>
       <div className="form-grid">
         {(
           [
@@ -832,7 +832,7 @@ export function SettingsEditor({
         value={prefixes}
         onChange={setPrefixes}
       />
-      <h2>Navigation links</h2>
+      </section><section className="settings-section" id="settings-navigation"><h2>Navigation links</h2>
       {s.navigation.map((link, i) => (
         <fieldset key={i}>
           <legend>Menu item {i + 1}</legend>
@@ -884,7 +884,7 @@ export function SettingsEditor({
       >
         Add menu item
       </button>
-      <h2>Homepage sections</h2>
+      </section><section className="settings-section" id="settings-homepage"><h2>Homepage sections</h2>
       <p>Sections appear in this order below the selected products.</p>
       {s.sections.map((section, i) => (
         <fieldset key={i}>
@@ -960,7 +960,7 @@ export function SettingsEditor({
       >
         Add homepage section
       </button>
-      <h2>Pages & policies</h2>
+      </section><section className="settings-section" id="settings-policies"><h2>Pages & policies</h2>
       <p>Text supports paragraphs. HTML is displayed as plain text.</p>
       {s.pages.map((page, i) => (
         <fieldset key={i}>
@@ -1035,7 +1035,7 @@ export function SettingsEditor({
       >
         Add content page
       </button>
-      <button className="button" disabled={busy}>
+      </section><button className="button admin-save" disabled={busy}>
         {busy ? "Saving…" : "Save store settings"}
       </button>
       <p className="muted">
