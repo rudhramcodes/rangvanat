@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle2, Copy, Check, Download, Package, Truck, Clock } from 'lucide-react';
 import { useStore } from '../context/store.js';
 import { api } from '../api/client.js';
+import { apiUrl } from '../lib/apiBase.js';
 
 export default function OrderConfirmationPage({ orderNumber, order: initialOrder, navigate }) {
   const { addToast } = useStore();
@@ -49,7 +50,7 @@ export default function OrderConfirmationPage({ orderNumber, order: initialOrder
     if (!num) return;
     try {
       const headers = token ? { 'X-Order-Token': token } : {};
-      const res = await fetch(`/api/orders/${encodeURIComponent(num)}/acknowledgement`, { headers });
+      const res = await fetch(apiUrl(`/orders/${encodeURIComponent(num)}/acknowledgement`), { headers });
       if (!res.ok) throw new Error('PDF invoice not ready yet');
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);

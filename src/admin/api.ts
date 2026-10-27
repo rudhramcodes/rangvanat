@@ -1,3 +1,8 @@
+// Merchant studio shares the storefront's API origin (see src/lib/apiBase.js).
+const configuredApiBase =
+  (import.meta.env && import.meta.env.VITE_API_URL) || "";
+const API_BASE = configuredApiBase.replace(/\/+$/, "");
+
 export async function api<T>(
   path: string,
   options: RequestInit = {},
@@ -5,7 +10,10 @@ export async function api<T>(
   const headers = new Headers(options.headers);
   if (!(options.body instanceof FormData))
     headers.set("Content-Type", "application/json");
-  const response = await fetch(`/api${path}`, { ...options, headers });
+  const response = await fetch(`${API_BASE}/api${path}`, {
+    ...options,
+    headers,
+  });
   let body;
   try {
     body = await response.json();

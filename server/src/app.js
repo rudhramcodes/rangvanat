@@ -1,4 +1,5 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import {fileURLToPath} from "node:url";
 import express from "express";
 import cors from "cors";
@@ -25,7 +26,15 @@ app.use(
     credentials: false,
   }),
 );
-app.use(express.json({ limit: "256kb" }));
+app.use(
+  express.json({
+    limit: "256kb",
+    // Keep the raw payload so Razorpay webhook signatures verify byte-for-byte.
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
 app.use(
   "/api",
   rateLimit({
@@ -89,10 +98,14 @@ app.use("/api/storefront", storefrontRoutes);
 app.use("/api", (req, res) =>
   res.status(404).json({ success: false, message: "Route not found" }),
 );
-if(env.NODE_ENV==='production') {
-  const dist=fileURLToPath(new URL('../../dist/',import.meta.url));
-  app.use(express.static(dist));
-  app.get('*',(req,res)=>res.sendFile(path.join(dist,'index.html')));
+if (env.NODE_ENV === "production") {
+  const dist = fileURLToPath(new URL("../../dist/", import.meta.url));
+  // The API can run on its own host (api.rangvanat.com) without a storefront
+  // build, so only serve the SPA when a build is actually present.
+  if (existsSync(path.join(dist, "index.html"))) {
+    app.use(express.static(dist));
+    app.get("*", (req, res) => res.sendFile(path.join(dist, "index.html")));
+  }
 }
 app.use(errorHandler);
 export default app;

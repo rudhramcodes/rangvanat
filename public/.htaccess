@@ -1,0 +1,20 @@
+# Hostinger serves the built SPA as static files. Routes such as /products,
+# /order/RV-2026-123456, /pages/about and /admin are handled by the client, so
+# any request that is not an existing file must fall back to index.html.
+
+<IfModule mod_negotiation.c>
+  Options -MultiViews
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Existing files and directories (assets, images, fonts, index.html) win.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else is client-side routing.
+  RewriteRule ^ index.html [L]
+</IfModule>

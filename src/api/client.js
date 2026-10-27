@@ -1,10 +1,12 @@
+import { apiUrl } from '../lib/apiBase.js';
+
 export async function fetchJson(endpoint, options = {}) {
   try {
     const headers = new Headers(options.headers);
     headers.set('Content-Type','application/json');
     const token = localStorage.getItem('rv_token');
     if(token) headers.set('Authorization',`Bearer ${token}`);
-    const res = await fetch(`/api${endpoint}`, {...options,headers});
+    const res = await fetch(apiUrl(endpoint), {...options,headers});
     const data = await res.json();
     return {...data,status:res.status};
   } catch { return {success:false,message:'Unable to connect. Please try again.'}; }

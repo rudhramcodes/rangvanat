@@ -21,12 +21,22 @@ export async function createRazorpayOrder(req, res, next) {
 
     const amountInPaise = Math.round(order.financials.totalAmount * 100);
 
+    const hasGatewayCredentials =
+      Boolean(env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET) &&
+      !env.RAZORPAY_KEY_ID.startsWith("rzp_test_placeholder");
+
+    // Never fall back to the sandbox mock in production: it would mark orders
+    // paid without collecting any money.
+    if (!hasGatewayCredentials && env.NODE_ENV === "production") {
+      return res.status(503).json({
+        success: false,
+        message:
+          "Online payment is temporarily unavailable. Please choose Cash on Delivery.",
+      });
+    }
+
     // If live/test Razorpay credentials are configured
-    if (
-      env.RAZORPAY_KEY_ID &&
-      env.RAZORPAY_KEY_SECRET &&
-      !env.RAZORPAY_KEY_ID.startsWith("rzp_test_placeholder")
-    ) {
+    if (hasGatewayCredentials) {
       const auth = Buffer.from(
         `${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`,
       ).toString("base64");
@@ -119,7 +129,26 @@ export async function verifyRazorpayPayment(req, res, next) {
       razorpay_order_id?.startsWith("order_mock_") ||
       env.RAZORPAY_KEY_SECRET.startsWith("replace-");
 
+    if (isSandbox && env.NODE_ENV === "production") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment verification is unavailable for this order.",
+      });
+    }
+
     if (!isSandbox) {
+      // A valid signature only proves the payment belongs to the Razorpay order
+      // it names, so make sure that is the order created for this order number.
+      if (
+        order.payment.gatewayOrderId &&
+        order.payment.gatewayOrderId !== razorpay_order_id
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Payment does not match this order.",
+        });
+      }
+
       const generatedSignature = crypto
         .createHmac("sha256", env.RAZORPAY_KEY_SECRET)
         .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -202,10 +231,22 @@ export async function handleRazorpayWebhook(req, res) {
     const signature = req.headers["x-razorpay-signature"];
     const webhookSecret = env.RAZORPAY_WEBHOOK_SECRET;
 
-    if (webhookSecret && signature) {
-      const shasum = crypto.createHmac("sha256", webhookSecret);
-      shasum.update(JSON.stringify(req.body));
-      const digest = shasum.digest("hex");
+    if (!webhookSecret) {
+      if (env.NODE_ENV === "production") {
+        return res
+          .status(503)
+          .json({ status: "webhook secret not configured" });
+      }
+    } else if (!signature) {
+      return res.status(400).json({ status: "missing signature" });
+    } else {
+      // Verify the raw payload: a re-serialised body can differ from the bytes
+      // Razorpay signed.
+      const payload = req.rawBody || Buffer.from(JSON.stringify(req.body));
+      const digest = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(payload)
+        .digest("hex");
 
       if (digest !== signature) {
         return res.status(400).json({ status: "invalid signature" });
