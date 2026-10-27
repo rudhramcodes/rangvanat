@@ -2,7 +2,7 @@ import { useStore } from '../context/store';
 
 export default function AnnouncementBar() {
   const { settings } = useStore();
-  const message = settings?.demoMode ? "Demo store · Sample prices, stock & reference photos · Checkout disabled" : settings?.announcement || "Complimentary Handloom Gift Box on orders above ₹5,000 | Worldwide Insured Shipping";
+  const message = settings?.demoMode ? "Demo store · Sample prices, stock & reference photos · Orders & payments disabled" : settings?.announcement || "Complimentary Handloom Gift Box on orders above ₹5,000 | Worldwide Insured Shipping";
 
   return (
     <div

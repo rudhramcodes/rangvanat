@@ -79,6 +79,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
   };
 
   const handlePlaceOrder = async () => {
+    if (settings?.demoMode) return;
     setBusy(true);
     setError('');
 
@@ -182,7 +183,6 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
     }
   };
 
-  if (settings?.demoMode) return <main className="rv-container py-24 text-center"><h1>Explore the demo.</h1><p className="my-6">Prices, sizes, stock and photos are sample data. Orders and payments are disabled.</p><button className="btn btn-primary" onClick={() => navigate({ page: 'shop' })}>Continue exploring</button></main>;
 
   if (cart.length === 0) {
     return (
@@ -201,6 +201,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
   return (
     <div className="w-full bg-[var(--color-paper)] text-[var(--color-ink)] py-8 md:py-16 min-h-screen">
       <div className="rv-container max-w-6xl">
+        {settings?.demoMode && <p role="status" className="mb-6 border border-[var(--color-line)] bg-[var(--color-cream)] p-4 text-sm">Demo checkout: review your pieces and explore the form. No order will be placed and no payment will be taken.</p>}
         <header className="checkout-heading"><h1>Make it yours.</h1><p>A few details, and your pieces are one step closer.</p></header>
         {/* Navigation & Stepper Header (§12: visible 3-step stepper) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[var(--color-line)] gap-4">
@@ -477,11 +478,11 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                 <div className="pt-2">
                   <button
                     type="button"
-                    disabled={busy}
+                    disabled={busy || settings?.demoMode}
                     onClick={handlePlaceOrder}
                     className="btn-primary w-full h-12 text-sm uppercase tracking-wider font-semibold"
                   >
-                    {busy ? 'Securing your order…' : `Pay ₹${grandTotal.toLocaleString('en-IN')} & Confirm`}
+                    {settings?.demoMode ? 'Demo preview — ordering disabled' : busy ? 'Securing your order…' : `Pay ₹${grandTotal.toLocaleString('en-IN')} & Confirm`}
                   </button>
                 </div>
 
