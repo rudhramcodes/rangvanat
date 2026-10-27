@@ -11,7 +11,10 @@
     "test": "node --test test/*.test.js",
     "admin:create": "node scripts/create-admin.js",
     "backup": "node scripts/backup.js",
-    "preview:review": "node scripts/preview.js"
+    "preview:review": "node scripts/preview.js",
+    "seed:collections": "node scripts/seed-collections.js",
+    "seed:products": "node scripts/seed-products.js",
+    "seed:demo": "node scripts/seed-demo-products.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

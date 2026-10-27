@@ -3,52 +3,30 @@ import { connectDB } from "./db.js";
 import { Collection } from "../modules/collections/collection.model.js";
 import { Product } from "../modules/products/product.model.js";
 import { Settings } from "../modules/settings/settings.model.js";
-import { COLLECTIONS, PRODUCTS } from "../../../src/lib/lookbook.js";
+import { productSeeds } from "./data/products.js";
+import { collectionSeeds } from "./data/collections.js";
 await connectDB();
 try {
-  for (const [index, c] of COLLECTIONS.entries())
+  for (const c of collectionSeeds)
     await Collection.updateOne(
-      { collectionId: c.id },
+      { collectionId: c.collectionId },
       {
         $setOnInsert: {
-          collectionId: c.id,
+          collectionId: c.collectionId,
           name: c.name,
           mood: c.mood || c.name,
-          coverImage: c.image || "",
-          displayOrder: index,
+          coverImage: c.coverImage,
+          displayOrder: c.displayOrder,
           isActive: true,
         },
       },
       { upsert: true },
     );
-  for (const p of PRODUCTS) {
-    const slug = `${p.name}-${p.code}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+  for (const product of productSeeds) {
     await Product.updateOne(
-      { slug },
-      {
-        $setOnInsert: {
-          title: p.name,
-          slug,
-          collectionId: p.collection,
-          category: p.category,
-          price: 0,
-          description: p.description || p.name,
-          heritageCraftStory: p.specs?.join(" • ") || "",
-          fabric: "Khadi",
-          images: p.image ? [{ url: p.image, alt: p.name }] : [],
-          variants: [
-            { size: "M", sku: `${p.code}-M`, stock: 0, priceDelta: 0 },
-          ],
-          totalStock: 0,
-          isPublished: false,
-          isFeatured: false,
-          leadTimeDays: 7,
-        },
-      },
-      { upsert: true },
+      { slug: product.slug },
+      { $setOnInsert: product },
+      { upsert: true, runValidators: true },
     );
   }
   await Settings.updateOne(

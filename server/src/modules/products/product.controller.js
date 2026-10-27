@@ -36,7 +36,7 @@ export const getProducts = async (req, res, next) => {
         { $or: [{ totalStock: { $gt: 0 } }, { madeToOrder: true }] },
       ];
     }
-    const page = Math.max(1, Math.min(10000, Number.parseInt(b.page, 10) || 1)),
+    const requestedPage = Math.max(1, Math.min(10000, Number.parseInt(b.page, 10) || 1)),
       limit = Math.max(1, Math.min(100, Number.parseInt(b.limit, 10) || 24));
     const sort = {
       price_asc: { price: 1 },
@@ -44,13 +44,14 @@ export const getProducts = async (req, res, next) => {
       newest: { createdAt: -1 },
       title: { title: 1 },
     }[b.sort] || { isFeatured: -1, createdAt: -1 };
-    const [products, total, facets] = await Promise.all([
+    const total = await Product.countDocuments(query);
+    const page = Math.min(requestedPage, Math.max(1, Math.ceil(total / limit)));
+    const [products, facets] = await Promise.all([
       Product.find(query)
-        .sort(sort)
+        .sort({ ...sort, _id: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
-      Product.countDocuments(query),
       Product.aggregate([
         { $match: { isPublished: true } },
         {

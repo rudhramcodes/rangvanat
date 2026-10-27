@@ -1,3 +1,4 @@
+import Pagination from '../components/Pagination.tsx';
 import { useState, useEffect } from 'react';
 import { Package, Heart, MapPin, LogOut, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useStore } from '../context/store.js';
@@ -9,11 +10,16 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
   const customerKey = customer ? customer._id || customer.id || customer.email || 'session' : null;
 
   const [activeTab, setActiveTab] = useState(customer ? initialTab : 'login');
+  const [orderPage, setOrderPage] = useState(1);
+  const [wishlistPage, setWishlistPage] = useState(1);
   const [orders, setOrders] = useState([]);
   const [ordersLoadedFor, setOrdersLoadedFor] = useState(null);
   const ordersLoading = Boolean(customerKey) && ordersLoadedFor !== customerKey;
   const [wishlistProducts, setWishlistProducts] = useState([]);
   const visibleWishlistProducts = wishlist.length > 0 ? wishlistProducts : [];
+  const currentOrderPage = Math.min(orderPage, Math.max(1, Math.ceil(orders.length / 6)));
+  const currentWishlistPage = Math.min(wishlistPage, Math.max(1, Math.ceil(visibleWishlistProducts.length / 12)));
+
 
   // Login Form
   const [loginEmail, setLoginEmail] = useState('');
@@ -367,7 +373,7 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               Loading your atelier orders…
             </div>
           ) : orders.length > 0 ? (
-            orders.map((ord) => (
+            orders.slice((currentOrderPage - 1) * 6, currentOrderPage * 6).map((ord) => (
               <div
                 key={ord._id}
                 className="bg-[var(--color-white)] border border-[var(--color-line)] rounded-[8px] p-6 shadow-sm space-y-4"
@@ -438,6 +444,7 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               </button>
             </div>
           )}
+          <Pagination page={currentOrderPage} total={orders.length} pageSize={6} onChange={setOrderPage} />
         </div>
       )}
 
@@ -446,7 +453,7 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
         <div>
           {visibleWishlistProducts.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {visibleWishlistProducts.map((p) => (
+              {visibleWishlistProducts.slice((currentWishlistPage - 1) * 12, currentWishlistPage * 12).map((p) => (
                 <ProductCard
                   key={p._id}
                   product={p}
@@ -466,6 +473,7 @@ export default function AccountPage({ initialTab = 'orders', navigate }) {
               </button>
             </div>
           )}
+          <Pagination page={currentWishlistPage} total={visibleWishlistProducts.length} pageSize={12} onChange={setWishlistPage} />
         </div>
       )}
 

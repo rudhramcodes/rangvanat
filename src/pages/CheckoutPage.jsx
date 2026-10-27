@@ -14,7 +14,7 @@ const INDIAN_STATES = [
 ];
 
 export default function CheckoutPage({ navigate, onOrderComplete }) {
-  const { cart, customer, clearCart, couponCode, refreshCustomer, addToast } = useStore();
+  const { settings, cart, customer, clearCart, couponCode, refreshCustomer, addToast } = useStore();
 
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment Preview
   const [busy, setBusy] = useState(false);
@@ -181,6 +181,8 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
       setBusy(false);
     }
   };
+
+  if (settings?.demoMode) return <main className="rv-container py-24 text-center"><h1>Explore the demo.</h1><p className="my-6">Prices, sizes, stock and photos are sample data. Orders and payments are disabled.</p><button className="btn btn-primary" onClick={() => navigate({ page: 'shop' })}>Continue exploring</button></main>;
 
   if (cart.length === 0) {
     return (

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./components/pagination.css";
 
 @theme {
   --font-sans: 'Archivo', -apple-system, BlinkMacSystemFont, sans-serif;

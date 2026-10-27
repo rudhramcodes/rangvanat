@@ -21,6 +21,7 @@ const section = new mongoose.Schema(
 const schema = new mongoose.Schema(
   {
     key: { type: String, unique: true, default: "store" },
+    demoMode: { type: Boolean, default: false },
     name: { type: String, default: "Rangvanaat" },
     description: {
       type: String,

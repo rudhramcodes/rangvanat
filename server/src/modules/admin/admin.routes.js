@@ -1,3 +1,4 @@
+import { paginatedList } from "../../utils/pagination.js";
 import { Router } from "express";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
@@ -357,19 +358,10 @@ function fields(kind, b) {
     isActive: b.isActive === true,
   };
 }
-router.get(
-  "/orders",
-  asyncRoute(async (req, res) =>
-    ok(
-      res,
-      await Order.find()
-        .select("-requestHash -idempotencyKey")
-        .sort({ createdAt: -1 })
-        .limit(200)
-        .lean(),
-    ),
-  ),
-);
+router.get("/orders", asyncRoute(async (req, res) => {
+  if (req.query.paginated === 'true') return ok(res, await paginatedList(Order, req.query, ['orderNumber', 'customer.name', 'customer.email', 'fulfillment.status', 'payment.status'], '-requestHash -idempotencyKey'));
+  ok(res, await Order.find().select('-requestHash -idempotencyKey').sort({createdAt:-1}).limit(200).lean());
+}));
 router.put(
   "/orders/:id",
   asyncRoute(async (req, res) => {
@@ -458,18 +450,14 @@ router.put(
     ok(res, order);
   }),
 );
-router.get(
-  "/enquiries",
-  asyncRoute(async (req, res) =>
-    ok(res, await Enquiry.find().sort({ createdAt: -1 }).limit(200).lean()),
-  ),
-);
-router.get(
-  "/subscribers",
-  asyncRoute(async (req, res) =>
-    ok(res, await Subscriber.find().sort({ createdAt: -1 }).limit(1000).lean()),
-  ),
-);
+router.get('/enquiries', asyncRoute(async (req,res) => {
+  if(req.query.paginated === 'true') return ok(res, await paginatedList(Enquiry,req.query,['name','email','message','topic']));
+  ok(res,await Enquiry.find().sort({createdAt:-1}).limit(200).lean());
+}));
+router.get('/subscribers', asyncRoute(async (req,res) => {
+  if(req.query.paginated === 'true') return ok(res, await paginatedList(Subscriber,req.query,['email']));
+  ok(res,await Subscriber.find().sort({createdAt:-1}).limit(1000).lean());
+}));
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 8 * 1024 * 1024, files: 1 },
@@ -530,6 +518,7 @@ router.get(
   asyncRoute(async (req, res) => {
     const Model = models[req.params.kind];
     if (!Model) fail("Not found", 404);
+    if(req.query.paginated === 'true') return ok(res, await paginatedList(Model, req.query, req.params.kind === 'products' ? ['title','slug','category','collectionId','variants.sku'] : req.params.kind === 'collections' ? ['name','collectionId','mood'] : ['code','discountType']));
     ok(res, await Model.find().sort({ createdAt: -1 }).limit(1000).lean());
   }),
 );

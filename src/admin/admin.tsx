@@ -1,3 +1,4 @@
+import Pagination from "../components/Pagination";
 "use client";
 import { ArrowUpRight, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
@@ -51,6 +52,9 @@ export function Admin() {
     [loading, setLoading] = useState(false),
     [search, setSearch] = useState(""),
     [showPassword, setShowPassword] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const requestId = useRef(0);
   const editor = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const t = sessionStorage.getItem("rv-admin-token");
@@ -63,6 +67,7 @@ export function Admin() {
   }, []);
   async function load(t = token, kind = tab) {
     if (!t) return;
+    const request = ++requestId.current;
     setLoading(true);
     setError("");
     try {
@@ -71,20 +76,26 @@ export function Admin() {
         setDashboard(await api<Dashboard>("/admin/dashboard", { headers }));
       else if (kind === "settings")
         setSettings(await api<Settings>("/admin/settings", { headers }));
-      else setRows(await api<Row[]>(`/admin/${kind}`, { headers }));
+      else {
+        const result = await api<{ rows: Row[]; pagination: { total: number; page: number } }>(`/admin/${kind}?paginated=true&page=${page}&limit=12&search=${encodeURIComponent(search)}`, { headers });
+        if (request !== requestId.current) return;
+        setRows(result.rows); setTotal(result.pagination.total);
+        if (result.pagination.page !== page) setPage(result.pagination.page);
+      }
       if (kind === "products")
         setCollections(
           await api<Collection[]>("/admin/collections", { headers }),
         );
     } catch (e) {
-      setError((e as Error).message);
+      if (request === requestId.current) setError((e as Error).message);
     } finally {
-      setLoading(false);
+      if (request === requestId.current) setLoading(false);
     }
   }
   useEffect(() => {
     void load();
-  }, [token, tab]);
+    return () => { requestId.current++; };
+  }, [token, tab, page, search]);
   useEffect(() => {
     if (editing !== undefined) editor.current?.focus();
   }, [editing]);
@@ -212,6 +223,7 @@ export function Admin() {
               key={t}
               aria-current={tab === t ? "page" : undefined}
               onClick={() => {
+                setPage(1); setTotal(0);
                 setTab(t);
                 setEditing(undefined);
                 setRows([]);
@@ -400,11 +412,11 @@ export function Admin() {
               <input
                 type="search"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 placeholder={`Search ${tab} by name, reference or details`}
               />
             </label>
-            {!rows.some(r => JSON.stringify(r).toLowerCase().includes(search.toLowerCase())) && !loading ? (
+            {!rows.length && !loading ? (
               <div className="empty">
                 {search ? `No ${tab} match “${search}”. Try another search.` : `No ${tab} yet.`}
                 {tab === "products" && (
@@ -416,11 +428,6 @@ export function Admin() {
             ) : (
               <div className="admin-list">
                 {rows
-                  .filter((r) =>
-                    JSON.stringify(r)
-                      .toLowerCase()
-                      .includes(search.toLowerCase()),
-                  )
                   .map((r) => (
                     <article className="admin-list-row" key={r._id}>
                       <div className="admin-record">
@@ -528,11 +535,7 @@ export function Admin() {
                   ))}
               </div>
             )}
-            <p className="muted">
-              Showing up to{" "}
-              {tab === "orders" || tab === "enquiries" ? 200 : 1000} most recent
-              records.
-            </p>
+            <Pagination page={page} total={total} pageSize={12} disabled={loading} onChange={next => { setPage(next); document.getElementById('admin-main')?.scrollIntoView({block:'start'}); }} />
           </>
         )}
       </main>
