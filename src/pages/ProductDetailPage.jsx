@@ -1,8 +1,69 @@
 import { useState, useEffect, useRef } from 'react';
-import { Heart, Plus, Minus, AlertCircle, ChevronDown, ChevronUp, Truck, Ruler } from 'lucide-react';
+import {
+  Heart,
+  Plus,
+  Minus,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Truck,
+  Ruler,
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+} from 'lucide-react';
 import ProductCard from '../components/ProductCard.jsx';
 import { api } from '../api/client.js';
 import { useStore } from '../context/store.js';
+
+const SIZE_CHART = [
+  {
+    size: 'XS',
+    bust: { in: '32 – 34', cm: '81 – 86' },
+    waist: { in: '26 – 28', cm: '66 – 71' },
+    hips: { in: '35 – 37', cm: '89 – 94' },
+    length: { in: '42', cm: '107' },
+  },
+  {
+    size: 'S',
+    bust: { in: '34 – 36', cm: '86 – 91' },
+    waist: { in: '28 – 30', cm: '71 – 76' },
+    hips: { in: '37 – 39', cm: '94 – 99' },
+    length: { in: '42.5', cm: '108' },
+  },
+  {
+    size: 'M',
+    bust: { in: '36 – 38', cm: '91 – 97' },
+    waist: { in: '30 – 32', cm: '76 – 81' },
+    hips: { in: '39 – 41', cm: '99 – 104' },
+    length: { in: '43', cm: '109' },
+  },
+  {
+    size: 'L',
+    bust: { in: '38 – 40', cm: '97 – 102' },
+    waist: { in: '32 – 34', cm: '81 – 86' },
+    hips: { in: '41 – 43', cm: '104 – 109' },
+    length: { in: '43.5', cm: '110' },
+  },
+  {
+    size: 'XL',
+    bust: { in: '40 – 42', cm: '102 – 107' },
+    waist: { in: '34 – 36', cm: '86 – 91' },
+    hips: { in: '43 – 45', cm: '109 – 114' },
+    length: { in: '44', cm: '112' },
+  },
+  {
+    size: 'XXL',
+    bust: { in: '42 – 44', cm: '107 – 112' },
+    waist: { in: '36 – 38', cm: '91 – 97' },
+    hips: { in: '45 – 47', cm: '114 – 119' },
+    length: { in: '44.5', cm: '113' },
+  },
+];
 
 export default function ProductDetailPage({ productId, navigate }) {
   const { addToCart, toggleWishlist, isInWishlist, addToast } = useStore();
@@ -14,6 +75,18 @@ export default function ProductDetailPage({ productId, navigate }) {
   const [sizeError, setSizeError] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [loadedProductId, setLoadedProductId] = useState(null);
+
+  // Zoom & Lightbox
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  // Size Guide Modal
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [sizeUnit, setSizeUnit] = useState('in');
+
+  // Mobile Sticky Add to Bag
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const buyButtonRef = useRef(null);
 
   // Custom Bespoke Measurements
   const [customBust, setCustomBust] = useState('');
@@ -41,12 +114,9 @@ export default function ProductDetailPage({ productId, navigate }) {
       .then((data) => {
         if (!active) return;
         setProduct(data);
-        if (data?.variants?.length) {
-          const firstAvailable = data.variants.find((v) => data.madeToOrder || v.stock > 0);
-          setSelectedSize(firstAvailable ? firstAvailable.size : data.variants[0].size);
-        } else {
-          setSelectedSize('');
-        }
+        // Explicit size selection: leave empty until customer actively chooses
+        setSelectedSize('');
+        setSizeError(false);
         setLoadedProductId(productId);
       })
       .catch(() => {
@@ -63,6 +133,53 @@ export default function ProductDetailPage({ productId, navigate }) {
       active = false;
     };
   }, [productId]);
+
+  // Lock body scroll when Lightbox or Size Guide is open
+  useEffect(() => {
+    if (lightboxOpen || showSizeGuide) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [lightboxOpen, showSizeGuide]);
+
+  // Keyboard navigation for Lightbox and Size Guide
+  useEffect(() => {
+    if (!lightboxOpen && !showSizeGuide) return;
+    const imagesLength = product?.images?.length || 1;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setLightboxOpen(false);
+        setShowSizeGuide(false);
+        setZoomLevel(1);
+      } else if (lightboxOpen) {
+        if (e.key === 'ArrowLeft') {
+          setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : imagesLength - 1));
+        } else if (e.key === 'ArrowRight') {
+          setSelectedImageIndex((prev) => (prev < imagesLength - 1 ? prev + 1 : 0));
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, showSizeGuide, product]);
+
+  // Observer to reveal mobile sticky add-to-bag bar once user scrolls past the primary button
+  useEffect(() => {
+    const el = buyButtonRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setStickyVisible(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product]);
 
   const loading = loadedProductId !== productId;
 
@@ -170,13 +287,16 @@ export default function ProductDetailPage({ productId, navigate }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
           {/* Left Column: Gallery (§10) */}
           <div className="product-gallery lg:col-span-7 flex flex-col md:flex-row-reverse gap-4">
-            {/* Main High-Res Image (3:4 ratio) */}
-            <div className="product-gallery-image relative aspect-[3/4] flex-1 overflow-hidden rounded-[4px] bg-[var(--color-sand)] border border-[var(--color-line)] shadow-sm">
+            {/* Main High-Res Image (3:4 ratio) with Click to Zoom */}
+            <div
+              className="product-gallery-image relative aspect-[3/4] flex-1 overflow-hidden rounded-[4px] bg-[var(--color-sand)] border border-[var(--color-line)] shadow-sm group cursor-zoom-in"
+              onClick={() => setLightboxOpen(true)}
+            >
               <img
                 key={activeImage.url}
                 src={activeImage.url}
                 alt={activeImage.alt || product.title}
-                className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
               />
               {/* Subtle Tag Overlay */}
               <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
@@ -191,6 +311,20 @@ export default function ProductDetailPage({ productId, navigate }) {
                   </span>
                 )}
               </div>
+
+              {/* Tap to Zoom Pill */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxOpen(true);
+                }}
+                aria-label="Open image zoom lightbox"
+                className="absolute bottom-3 right-3 bg-[var(--color-white)]/90 hover:bg-[var(--color-white)] text-[var(--color-ink)] px-2.5 py-1.5 rounded-full shadow-sm text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer backdrop-blur-sm"
+              >
+                <Maximize2 size={13} />
+                <span className="text-[11px] font-semibold">Zoom</span>
+              </button>
             </div>
 
             {/* Thumbnail Strip (§10: tapping a thumbnail swaps main image) */}
@@ -203,7 +337,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                     aria-label={`View image ${idx + 1}`}
                     aria-pressed={selectedImageIndex === idx}
                     onClick={() => setSelectedImageIndex(idx)}
-                    className={`relative w-16 h-20 md:w-20 md:h-26 rounded-[4px] overflow-hidden bg-[var(--color-sand)] border transition-all shrink-0 ${
+                    className={`relative w-16 h-20 md:w-20 md:h-26 rounded-[4px] overflow-hidden bg-[var(--color-sand)] border transition-all shrink-0 cursor-pointer ${
                       selectedImageIndex === idx
                         ? 'border-[var(--color-ink)] ring-1 ring-[var(--color-ink)]'
                         : 'border-[var(--color-line)] opacity-70 hover:opacity-100'
@@ -250,19 +384,30 @@ export default function ProductDetailPage({ productId, navigate }) {
             {/* Size Selector Matrix (§10 & §2: XS to XXL + Custom) */}
             <div ref={sizeSelectorRef} className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)]">
-                  Select Size <span className="text-[var(--color-clay)]">*</span>
-                </label>
-                {selectedSize && (
-                  <span className="text-xs font-medium text-[var(--color-clay)]">
-                    Selected: {selectedSize}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)]">
+                    Select Size <span className="text-[var(--color-clay)]">*</span>
+                  </label>
+                  {selectedSize && (
+                    <span className="text-xs font-medium text-[var(--color-clay)]">
+                      · Selected: {selectedSize}
+                    </span>
+                  )}
+                </div>
+                {/* Size Guide Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(true)}
+                  className="inline-flex items-center gap-1 text-xs text-[var(--color-clay)] hover:text-[var(--color-clay-deep)] font-medium transition-colors underline underline-offset-4 cursor-pointer"
+                >
+                  <Ruler size={13} />
+                  <span>Size Guide</span>
+                </button>
               </div>
 
               {sizeError && (
-                <div className="flex items-center gap-1.5 text-xs text-[var(--color-error)] font-medium animate-shake">
-                  <AlertCircle size={14} />
+                <div className="flex items-center gap-1.5 text-xs text-[var(--color-error)] font-medium animate-shake" role="alert">
+                  <AlertCircle size={14} className="shrink-0" />
                   <span>Please choose a size before adding to bag</span>
                 </div>
               )}
@@ -280,11 +425,13 @@ export default function ProductDetailPage({ productId, navigate }) {
                         setSelectedSize(v.size);
                         setSizeError(false);
                       }}
-                      className={`h-11 px-4 text-xs font-semibold rounded-[6px] border transition-all flex items-center justify-center gap-1 ${
+                      className={`h-11 px-4 text-xs font-semibold rounded-[6px] border transition-all flex items-center justify-center gap-1 cursor-pointer ${
                         outOfStock
                           ? 'border-[var(--color-line)] text-[var(--color-muted)] line-through bg-[var(--color-cream)]/50 cursor-not-allowed'
                           : isSelected
                           ? 'border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-paper)] shadow-sm'
+                          : sizeError && !selectedSize
+                          ? 'border-[var(--color-error)] bg-[var(--color-paper)] text-[var(--color-ink)] hover:border-[var(--color-ink)]'
                           : 'border-[var(--color-line)] bg-[var(--color-paper)] text-[var(--color-ink)] hover:border-[var(--color-ink)]'
                       }`}
                     >
@@ -382,7 +529,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                     type="button"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1}
-                    className="p-1 text-[var(--color-muted)] hover:text-[var(--color-ink)] disabled:opacity-30"
+                    className="p-1 text-[var(--color-muted)] hover:text-[var(--color-ink)] disabled:opacity-30 cursor-pointer"
                   >
                     <Minus size={14} />
                   </button>
@@ -390,27 +537,29 @@ export default function ProductDetailPage({ productId, navigate }) {
                   <button
                     type="button"
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="p-1 text-[var(--color-muted)] hover:text-[var(--color-ink)]"
+                    className="p-1 text-[var(--color-muted)] hover:text-[var(--color-ink)] cursor-pointer"
                   >
                     <Plus size={14} />
                   </button>
                 </div>
 
-                {/* Primary Add to Bag Pill Button */}
-                <button
-                  type="button"
-                  disabled={isOutOfStock}
-                  onClick={handleAddToBag}
-                  className="btn-primary flex-1 h-12"
-                >
-                  {isOutOfStock ? 'Sold Out' : 'Add to Bag'}
-                </button>
+                {/* Primary Add to Bag Pill Button with ref for mobile sticky observer */}
+                <div ref={buyButtonRef} className="flex-1">
+                  <button
+                    type="button"
+                    disabled={isOutOfStock}
+                    onClick={handleAddToBag}
+                    className="btn-primary w-full h-12"
+                  >
+                    {isOutOfStock ? 'Sold Out' : 'Add to Bag'}
+                  </button>
+                </div>
 
                 {/* Wishlist Button */}
                 <button
                   type="button"
                   onClick={() => toggleWishlist(slug)}
-                  className={`w-12 h-12 rounded-full border border-[var(--color-line)] flex items-center justify-center transition-colors ${
+                  className={`w-12 h-12 rounded-full border border-[var(--color-line)] flex items-center justify-center transition-colors cursor-pointer ${
                     inWishlist ? 'text-[var(--color-sale)] bg-[var(--color-white)]' : 'text-[var(--color-ink)] hover:bg-[var(--color-cream)]'
                   }`}
                   aria-label="Wishlist"
@@ -438,7 +587,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                 <button
                   type="submit"
                   disabled={pincodeLoading || pincode.length !== 6}
-                  className="btn-secondary shrink-0"
+                  className="btn-secondary shrink-0 cursor-pointer"
                 >
                   {pincodeLoading ? 'Checking…' : 'Check'}
                 </button>
@@ -457,7 +606,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                 <button
                   type="button"
                   onClick={() => setOpenAccordion((prev) => (prev === 'story' ? '' : 'story'))}
-                  className="w-full flex items-center justify-between text-left font-semibold text-[var(--color-ink)]"
+                  className="w-full flex items-center justify-between text-left font-semibold text-[var(--color-ink)] cursor-pointer"
                 >
                   <span>Artisan &amp; Handloom Heritage</span>
                   {openAccordion === 'story' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -474,7 +623,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                 <button
                   type="button"
                   onClick={() => setOpenAccordion((prev) => (prev === 'care' ? '' : 'care'))}
-                  className="w-full flex items-center justify-between text-left font-semibold text-[var(--color-ink)]"
+                  className="w-full flex items-center justify-between text-left font-semibold text-[var(--color-ink)] cursor-pointer"
                 >
                   <span>Fabric &amp; Wash Care</span>
                   {openAccordion === 'care' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -492,7 +641,7 @@ export default function ProductDetailPage({ productId, navigate }) {
                 <button
                   type="button"
                   onClick={() => setOpenAccordion((prev) => (prev === 'shipping' ? '' : 'shipping'))}
-                  className="w-full flex items-center justify-between text-left font-semibold text-[var(--color-ink)]"
+                  className="w-full flex items-center justify-between text-left font-semibold text-[var(--color-ink)] cursor-pointer"
                 >
                   <span>Complimentary Shipping &amp; Returns</span>
                   {openAccordion === 'shipping' ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -535,6 +684,304 @@ export default function ProductDetailPage({ productId, navigate }) {
           </section>
         )}
       </div>
+
+      {/* Mobile Sticky Add to Bag Bar (Shows on scroll past primary button) */}
+      {stickyVisible && (
+        <aside
+          aria-label="Quick purchase bar"
+          className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--color-white)]/95 backdrop-blur-md border-t border-[var(--color-line)] p-3 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] md:hidden animate-fade-in"
+        >
+          <div className="flex items-center gap-3">
+            <img
+              src={activeImage.url}
+              alt={product.title}
+              className="w-11 h-11 object-cover rounded-[4px] bg-[var(--color-sand)] border border-[var(--color-line)] shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-[var(--color-ink)] truncate">{product.title}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="price-tabular text-xs font-bold text-[var(--color-ink)]">
+                  ₹{product.price?.toLocaleString('en-IN')}
+                </span>
+                {selectedSize ? (
+                  <span className="text-[11px] text-[var(--color-clay)] font-semibold">
+                    Size: {selectedSize}
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-[var(--color-muted)]">
+                    Choose size
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {!selectedSize ? (
+              <button
+                type="button"
+                onClick={() => {
+                  sizeSelectorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  setSizeError(true);
+                  addToast('Please select a size first', 'info');
+                }}
+                className="btn-primary text-xs h-10 px-4 shrink-0 font-semibold uppercase tracking-wider"
+              >
+                Choose Size
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isOutOfStock}
+                onClick={handleAddToBag}
+                className="btn-primary text-xs h-10 px-4 shrink-0 font-semibold uppercase tracking-wider"
+              >
+                {isOutOfStock ? 'Sold Out' : 'Add to Bag'}
+              </button>
+            )}
+          </div>
+        </aside>
+      )}
+
+      {/* Lightbox / Zoom Modal */}
+      {lightboxOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Image gallery zoom view"
+          className="fixed inset-0 z-50 bg-black/92 backdrop-blur-md flex flex-col justify-between animate-fade-in text-white"
+        >
+          {/* Lightbox Top Control Bar */}
+          <div className="flex items-center justify-between p-4 md:px-8 border-b border-white/10 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-xs uppercase tracking-wider text-white/70 font-medium">
+                {product.title}
+              </span>
+              <span className="text-xs text-white/40">·</span>
+              <span className="text-xs text-white/70">
+                {selectedImageIndex + 1} / {images.length}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setZoomLevel((z) => (z === 1 ? 2 : 1))}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/80 hover:text-white cursor-pointer"
+                aria-label={zoomLevel === 1 ? 'Zoom in 2x' : 'Reset zoom'}
+                title={zoomLevel === 1 ? 'Zoom in (2x)' : 'Reset zoom'}
+              >
+                {zoomLevel === 1 ? <ZoomIn size={18} /> : <ZoomOut size={18} />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setLightboxOpen(false);
+                  setZoomLevel(1);
+                }}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors text-white/80 hover:text-white cursor-pointer"
+                aria-label="Close zoom gallery"
+              >
+                <X size={20} />
+              </button>
+            </div>
+          </div>
+
+          {/* Lightbox Center Image View */}
+          <div className="relative flex-1 flex items-center justify-center p-4 overflow-auto min-h-0">
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+                className="absolute left-3 md:left-6 z-10 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white/90 hover:text-white transition-all backdrop-blur-sm cursor-pointer"
+                aria-label="Previous image"
+              >
+                <ChevronLeft size={24} />
+              </button>
+            )}
+
+            <div
+              className="max-w-full max-h-full flex items-center justify-center overflow-auto cursor-zoom-in"
+              onClick={() => setZoomLevel((z) => (z === 1 ? 2 : 1))}
+            >
+              <img
+                src={activeImage.url}
+                alt={activeImage.alt || product.title}
+                style={{
+                  transform: `scale(${zoomLevel})`,
+                  transformOrigin: 'center center',
+                }}
+                className="max-h-[78vh] w-auto object-contain transition-transform duration-300 ease-out select-none"
+              />
+            </div>
+
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setSelectedImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+                className="absolute right-3 md:right-6 z-10 p-3 rounded-full bg-black/40 hover:bg-black/80 text-white/90 hover:text-white transition-all backdrop-blur-sm cursor-pointer"
+                aria-label="Next image"
+              >
+                <ChevronRight size={24} />
+              </button>
+            )}
+          </div>
+
+          {/* Lightbox Bottom Thumbnails */}
+          {images.length > 1 && (
+            <div className="p-4 flex items-center justify-center gap-2 overflow-x-auto border-t border-white/10 shrink-0">
+              {images.map((img, idx) => (
+                <button
+                  key={img.url + idx}
+                  type="button"
+                  onClick={() => setSelectedImageIndex(idx)}
+                  className={`w-12 h-14 rounded-[3px] overflow-hidden border transition-all cursor-pointer ${
+                    selectedImageIndex === idx
+                      ? 'border-white scale-105 opacity-100 ring-1 ring-white'
+                      : 'border-white/30 opacity-50 hover:opacity-100'
+                  }`}
+                >
+                  <img src={img.url} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Size Guide Modal */}
+      {showSizeGuide && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="size-guide-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/55 backdrop-blur-sm animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSizeGuide(false);
+          }}
+        >
+          <div className="bg-[var(--color-white)] text-[var(--color-ink)] rounded-[8px] border border-[var(--color-line)] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 animate-scale-in">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-4 border-b border-[var(--color-line)]">
+              <div>
+                <span className="text-xs font-semibold tracking-widest text-[var(--color-clay)] uppercase">
+                  Atelier Measurements
+                </span>
+                <h2 id="size-guide-title" className="font-display text-2xl md:text-3xl text-[var(--color-ink)] mt-1 font-normal">
+                  Garment Size Guide
+                </h2>
+                <p className="text-xs text-[var(--color-muted)] mt-1">
+                  Handcrafted khadi garments feature a relaxed, breathable drape. Tap any row to select that size.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSizeGuide(false)}
+                className="p-1 text-[var(--color-muted)] hover:text-[var(--color-ink)] rounded-full hover:bg-[var(--color-cream)] transition-colors cursor-pointer"
+                aria-label="Close size guide"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Unit Switcher */}
+            <div className="flex items-center justify-between my-5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                Measurement Unit:
+              </span>
+              <div className="inline-flex rounded-full border border-[var(--color-line)] p-0.5 bg-[var(--color-paper)]">
+                <button
+                  type="button"
+                  onClick={() => setSizeUnit('in')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${
+                    sizeUnit === 'in'
+                      ? 'bg-[var(--color-ink)] text-[var(--color-paper)] shadow-sm'
+                      : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                  }`}
+                >
+                  Inches (in)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSizeUnit('cm')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer ${
+                    sizeUnit === 'cm'
+                      ? 'bg-[var(--color-ink)] text-[var(--color-paper)] shadow-sm'
+                      : 'text-[var(--color-muted)] hover:text-[var(--color-ink)]'
+                  }`}
+                >
+                  Centimeters (cm)
+                </button>
+              </div>
+            </div>
+
+            {/* Size Chart Table */}
+            <div className="overflow-x-auto border border-[var(--color-line)] rounded-[6px]">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr className="bg-[var(--color-cream)]/70 border-b border-[var(--color-line)] font-semibold uppercase tracking-wider text-[var(--color-ink)]">
+                    <th className="p-3">Size</th>
+                    <th className="p-3">Bust / Chest</th>
+                    <th className="p-3">Waist</th>
+                    <th className="p-3">Hips</th>
+                    <th className="p-3">Length</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--color-line)]">
+                  {SIZE_CHART.map((row) => {
+                    const isSelected = selectedSize === row.size;
+                    return (
+                      <tr
+                        key={row.size}
+                        onClick={() => {
+                          setSelectedSize(row.size);
+                          setSizeError(false);
+                          setShowSizeGuide(false);
+                          addToast(`Selected size ${row.size}`, 'info');
+                        }}
+                        className={`cursor-pointer transition-colors hover:bg-[var(--color-cream)]/50 ${
+                          isSelected ? 'bg-[var(--color-cream)] font-semibold text-[var(--color-clay)]' : ''
+                        }`}
+                      >
+                        <td className="p-3 font-bold flex items-center gap-1.5">
+                          <span>{row.size}</span>
+                          {isSelected && <Check size={12} className="text-[var(--color-clay)]" />}
+                        </td>
+                        <td className="p-3 price-tabular">{row.bust[sizeUnit]}</td>
+                        <td className="p-3 price-tabular">{row.waist[sizeUnit]}</td>
+                        <td className="p-3 price-tabular">{row.hips[sizeUnit]}</td>
+                        <td className="p-3 price-tabular">{row.length[sizeUnit]}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* How to Measure guidance */}
+            <div className="mt-6 p-4 bg-[var(--color-paper)] border border-[var(--color-line)] rounded-[6px] space-y-2 text-xs">
+              <h4 className="font-semibold text-[var(--color-ink)] uppercase tracking-wider text-[11px]">
+                How To Measure:
+              </h4>
+              <ul className="space-y-1 text-[var(--color-muted)] list-disc list-inside">
+                <li><strong>Bust:</strong> Measure around the fullest part of your chest keeping the tape parallel to the floor.</li>
+                <li><strong>Waist:</strong> Measure around your natural waistline, where your body creases when bending sideways.</li>
+                <li><strong>Hips:</strong> Measure around the fullest part of your hips and seat with feet together.</li>
+                <li><strong>Custom Tailoring:</strong> Need bespoke fitting? Select the &quot;Custom&quot; size button on the piece to enter tailored dimensions.</li>
+              </ul>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowSizeGuide(false)}
+                className="btn-secondary btn-sm cursor-pointer"
+              >
+                Close Guide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
