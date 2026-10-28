@@ -122,7 +122,7 @@ export default function Footer({ navigate }) {
                   onClick={() => handleNav({ page: 'contact' })}
                   className="hover:text-[var(--color-ink)] transition-colors"
                 >
-                  Studio Visit
+                  Contact &amp; Studio Visit
                 </button>
               </li>
             </ul>
