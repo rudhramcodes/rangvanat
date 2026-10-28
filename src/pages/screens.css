@@ -62,3 +62,19 @@
 @media(max-width:760px){.journal-feature,.journal-grid{grid-template-columns:1fr;gap:32px}.journal-feature{margin-bottom:40px}.journal-grid{gap:48px}.journal-page>header{padding:32px 24px}.journal-page .craft-tabs{gap:20px}.journal-feature h2{font-size:2.5rem}}
 .screen-contact .contact-form-panel{background:var(--color-cream);padding:32px}.screen-contact .contact-form-panel form{padding:0}.screen-contact h1,.screen-cart h1,.screen-track h1{text-transform:none}.security-intro{color:var(--color-muted);margin-top:20px}.screen-order-confirmed h1{font-size:clamp(2.6rem,4vw,4rem);max-width:650px;margin:16px auto}.screen-order-confirmed h3{font-family:var(--font-body);font-size:.85rem;letter-spacing:0}.not-found{min-height:65vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}.not-found>p{font-family:var(--font-body);font-size:1rem;color:var(--color-muted)}.not-found>div{flex-wrap:wrap}.store-screen summary:focus-visible{outline:2px solid #627551;outline-offset:4px}
 @media(max-width:640px){.screen-contact .contact-form-panel{padding:24px}.screen-track form{padding:0}.screen-checkout .checkout-heading{margin-bottom:28px}.screen-cart .sticky{position:static}}
+
+/* The marker and connector share one axis at every screen width. */
+.tracking-order-number{font-family:var(--font-display);font-size:clamp(1.35rem,3vw,2rem);line-height:1.3;color:var(--color-ink);overflow-wrap:anywhere;margin-top:8px}
+.tracking-timeline{list-style:none;margin:0;padding:0}
+.tracking-step{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);column-gap:18px;padding-bottom:28px}
+.tracking-step:last-child{padding-bottom:0}
+.tracking-step:not(:last-child)::after{content:"";position:absolute;left:13px;top:28px;bottom:0;width:2px;background:var(--color-line)}
+.tracking-step.is-complete:not(:last-child)::after{background:var(--color-ink)}
+.tracking-marker{width:28px;height:28px;display:grid;place-items:center;border:2px solid var(--color-line);border-radius:50%;background:white;color:var(--color-ink);font-size:15px;line-height:1}
+.is-complete .tracking-marker{background:var(--color-ink);border-color:var(--color-ink);color:white}
+.is-current .tracking-marker{border-color:var(--color-ink)}
+.is-current .tracking-marker::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--color-ink)}
+.is-cancelled .tracking-marker{border-color:var(--color-clay);color:var(--color-clay)}
+.tracking-step-copy h3{font-family:inherit;font-size:16px;font-weight:600;line-height:28px;margin:0;color:var(--color-ink)}
+.tracking-step-copy p{font-size:14px;line-height:1.5;margin:3px 0 0;color:var(--color-muted)}
+.is-upcoming .tracking-step-copy h3{color:var(--color-muted);font-weight:500}

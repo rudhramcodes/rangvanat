@@ -2,18 +2,14 @@ import { useState, useEffect } from 'react';
 
 import { api } from '../api/client.js';
 
-const TRACKING_STAGES = ['received', 'in_stitching', 'dispatched', 'delivered'];
+import { trackingSteps } from '../lib/orderTracking.js';
 
 function toTrackingResult(res) {
   if (res?.success && res.data) {
-    const current = TRACKING_STAGES.indexOf(res.data.fulfillment?.status);
     return {
       data: {
         ...res.data,
-        steps:
-          res.data.fulfillment?.status === 'cancelled'
-            ? [{ label: 'Cancelled', done: true }]
-            : TRACKING_STAGES.map((label, i) => ({ label: label.replaceAll('_', ' '), done: i <= current })),
+        steps: trackingSteps(res.data.fulfillment?.status),
       },
     };
   }
@@ -134,12 +130,12 @@ export default function OrderTrackingPage({ initialOrderNumber = '' }) {
         <div className="bg-white border border-[var(--line-khadi)] p-6 md:p-8 rounded-[2px] shadow-sm space-y-8 animate-fade-in">
           <div className="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-[var(--line-khadi)] gap-2">
             <div>
-              <span className="caption uppercase text-[var(--ink-soft)] font-semibold">Order Confirmed</span>
-              <h2 className="heading-2 text-[var(--brand-maroon)] text-xl uppercase">
+              <span className="caption uppercase text-[var(--ink-soft)] font-semibold">{trackingData.fulfillment?.status === 'cancelled' ? 'Order cancelled' : 'Order status'}</span>
+              <h2 className="tracking-order-number">
                 {trackingData.orderNumber}
               </h2>
             </div>
-            <div className="text-right">
+            <div className="text-left md:text-right">
               <span className="caption text-xs text-[var(--ink-soft)]">Courier Partner</span>
               <p className="font-semibold text-sm text-[var(--ink-chocolate)]">
                 {trackingData.fulfillment?.courierPartner || 'Not dispatched'} ({trackingData.fulfillment?.trackingNumber || 'Pending'})
@@ -148,43 +144,33 @@ export default function OrderTrackingPage({ initialOrderNumber = '' }) {
           </div>
 
           {/* Stepper Timeline */}
-          <div className="space-y-6 relative before:absolute before:left-3 before:top-3 before:bottom-3 before:w-[2px] before:bg-[var(--line-khadi)]">
-            {trackingData.steps?.map((step, idx) => (
-              <div key={idx} className="relative flex items-start gap-4 pl-8">
-                <div
-                  className={`absolute left-1.5 -translate-x-1/2 w-4 h-4 rounded-full flex items-center justify-center border-2 ${
-                    step.done
-                      ? 'bg-[var(--brand-maroon)] border-[var(--brand-maroon)] text-white'
-                      : 'bg-white border-[var(--line-khadi)]'
-                  }`}
-                >
-                  {step.done && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+          <ol className="tracking-timeline" aria-label="Order progress">
+            {trackingData.steps.map((step) => (
+              <li key={step.label} className={`tracking-step is-${step.state}`}
+                aria-current={step.state === 'current' ? 'step' : undefined}>
+                <span className="tracking-marker" aria-hidden="true">
+                  {step.state === 'complete' ? '✓' : step.state === 'cancelled' ? '×' : ''}
+                </span>
+                <div className="tracking-step-copy">
+                  <h3>{step.label}</h3>
+                  <p>{step.description}</p>
                 </div>
-
-                <div>
-                  <h4 className={`text-base font-semibold ${step.done ? 'text-[var(--brand-maroon)]' : 'text-[var(--ink-soft)]'}`}>
-                    {step.label}
-                  </h4>
-                  <p className="caption text-xs text-[var(--ink-soft)]">
-                    {step.date ? new Date(step.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : step.done ? 'Complete' : 'Awaiting update'}
-                  </p>
-                </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ol>
 
           {/* Items Summary */}
           <div className="pt-4 border-t border-[var(--line-khadi)]">
             <h4 className="caption uppercase font-semibold text-[var(--ink-soft)] mb-3">
-              Garments in Shipment ({trackingData.items?.length})
+              Items in your order ({trackingData.items?.length})
             </h4>
             <div className="space-y-2">
               {trackingData.items?.map((it, i) => (
-                <div key={i} className="flex justify-between text-sm py-1 border-b border-[var(--line-khadi)]/40">
+                <div key={i} className="flex items-start justify-between gap-4 text-sm py-3 border-b border-[var(--line-khadi)]/40">
                   <span>
                     {it.productTitle} · {it.variantSize} (x{it.quantity})
                   </span>
-                  <span className="font-semibold">₹{it.subtotal?.toLocaleString('en-IN')}</span>
+                  <span className="font-semibold whitespace-nowrap">₹{it.subtotal?.toLocaleString('en-IN')}</span>
                 </div>
               ))}
             </div>
