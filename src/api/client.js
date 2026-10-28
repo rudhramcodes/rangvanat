@@ -97,9 +97,10 @@ export const api = {
     });
   },
 
-  async confirmCodOrder(orderNumber) {
+  async confirmCodOrder(orderNumber, accessToken) {
     return fetchJson(`/orders/${encodeURIComponent(orderNumber)}/pay/cod`, {
       method: 'POST',
+      headers: { "X-Order-Token": accessToken || "" },
     });
   },
 

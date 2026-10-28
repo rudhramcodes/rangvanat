@@ -93,6 +93,10 @@ router.put(
   asyncRoute(async (req, res) => {
     const b = req.body,
       updates = {};
+    if ("demoMode" in b) {
+      if (typeof b.demoMode !== "boolean") fail("Demo mode must be true or false");
+      updates.demoMode = b.demoMode;
+    }
     for (const k of [
       "name",
       "description",

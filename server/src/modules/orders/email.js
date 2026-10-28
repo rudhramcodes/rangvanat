@@ -1,3 +1,4 @@
+// TODO(client-details): Add client-approved legal business name, registered address, GST registration status/GSTIN, state code, HSN and tax rates, invoice series, and invoice contact details when supplied by the client. Do not infer tax values.
 import { Resend } from "resend";
 import { env } from "../../config/env.js";
 import { acknowledgement } from "./acknowledgement.js";

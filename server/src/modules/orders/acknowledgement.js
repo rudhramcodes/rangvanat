@@ -1,3 +1,4 @@
+// TODO(client-details): Add client-approved legal business name, registered address, GST registration status/GSTIN, state code, HSN and tax rates, invoice series, and invoice contact details when supplied by the client. Do not infer tax values.
 import PDFDocument from "pdfkit";
 import { authorizedOrder } from "./order.controller.js";
 import { getSettings } from "../settings/settings.model.js";

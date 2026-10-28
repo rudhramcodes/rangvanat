@@ -741,6 +741,16 @@ export function SettingsEditor({
         });
       }}
     >
+      <section className="settings-section" aria-labelledby="store-mode-title">
+        <h2 id="store-mode-title">Store mode</h2>
+        <label className="checkbox">
+          <input type="checkbox" checked={s.demoMode ?? false} disabled={busy}
+            onChange={(e) => setS({ ...s, demoMode: e.target.checked })} />
+          Demo mode — disable order placement
+        </label>
+        <p>When checked, customers can browse but cannot place orders. Uncheck and save to enable Cash on Delivery orders. Online payments remain unavailable.</p>
+        <button type="submit" className="button" disabled={busy}>{busy ? "Saving…" : "Save store mode"}</button>
+      </section>
       <nav className="settings-jump" aria-label="Settings sections"><a href="#settings-identity">Store identity & content</a><a href="#settings-shipping">Shipping & inventory rules</a><a href="#settings-navigation">Navigation links</a><a href="#settings-homepage">Homepage sections</a><a href="#settings-policies">Pages & policies</a></nav><section className="settings-section" id="settings-identity"><h2>Store identity & content</h2>
       <div className="form-grid">
         {(

@@ -19,7 +19,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment Preview
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' | 'cod' | 'stripe'
+  const [paymentMethod, setPaymentMethod] = useState('cod'); // 'razorpay' | 'cod'
 
   const [form, setForm] = useState({
     name: customer?.name || '',
@@ -101,76 +101,12 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
       const orderData = res.data;
       sessionStorage.setItem(`rv_order_${orderData.orderNumber}`, orderData.accessToken || '');
 
-      // 1. Razorpay Payment Rail
-      if (paymentMethod === 'razorpay') {
-        const rzRes = await api.createRazorpayOrder(orderData.orderNumber);
-        if (!rzRes.success) {
-          throw new Error(rzRes.message || 'Failed to initialize payment gateway');
-        }
-
-        if (!rzRes.sandbox) {
-          if (!window.Razorpay) {
-            throw new Error('Payment gateway could not load. Please disable ad-blockers and retry.');
-          }
-          const rzpOptions = {
-            key: rzRes.data.keyId,
-            amount: rzRes.data.amount,
-            currency: rzRes.data.currency || 'INR',
-            name: 'Rangvanat Studio',
-            description: `Khadi Art Order ${orderData.orderNumber}`,
-            order_id: rzRes.data.razorpayOrderId,
-            prefill: {
-              name: form.name,
-              email: form.email,
-              contact: form.phone,
-            },
-            theme: {
-              color: '#B4552D',
-            },
-            handler: async (response) => {
-              try {
-                const verifyRes = await api.verifyRazorpayPayment(orderData.orderNumber, response);
-                if (verifyRes.success) {
-                  clearCart();
-                  await refreshCustomer?.();
-                  addToast('Payment verified! Your handcrafted piece is being prepared.', 'success');
-                  onOrderComplete(orderData);
-                } else {
-                  setError('Payment verification failed. Please contact studio support.');
-                }
-              } catch {
-                setError('Payment verification error. Please contact studio support.');
-              }
-            },
-            modal: {
-              ondismiss: () => {
-                setBusy(false);
-                addToast('Payment dismissed. Your order request remains saved.', 'info');
-              },
-            },
-          };
-
-          const rzp = new window.Razorpay(rzpOptions);
-          rzp.open();
-          return;
-        }
-
-        // Sandbox / Test fallback verification
-        const mockRes = await api.verifyRazorpayPayment(orderData.orderNumber, {
-          razorpay_order_id: rzRes.data.razorpayOrderId,
-          razorpay_payment_id: `pay_mock_${Date.now()}`,
-          razorpay_signature: 'sandbox_signature',
-        });
-        if (!mockRes?.success) {
-          throw new Error(mockRes?.message || 'Payment verification failed');
-        }
-      } else if (paymentMethod === 'cod') {
-        // 2. Cash on Delivery Rail
-        const codRes = await api.confirmCodOrder(orderData.orderNumber);
-        if (!codRes?.success) {
-          throw new Error(codRes?.message || 'Could not confirm Cash on Delivery');
-        }
+      const codRes = await api.confirmCodOrder(orderData.orderNumber, orderData.accessToken);
+      if (!codRes?.success) {
+        throw new Error(codRes?.message || 'Could not confirm Cash on Delivery');
       }
+      orderData.payment = { ...orderData.payment, gateway: 'cod', status: codRes.data.paymentStatus };
+      orderData.fulfillment = { ...orderData.fulfillment, status: codRes.data.fulfillmentStatus };
 
       clearCart();
       await refreshCustomer?.();
@@ -409,7 +345,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                   </button>
                 </div>
 
-                {/* Payment Rail Options (§4 PRD: Dual Payment Rails) */}
+                {/* Payment Rail Options (§4 PRD: Razorpay Payments) */}
                 <div>
                   <h3 className="font-display text-2xl text-[var(--color-ink)] font-normal mb-3">
                     Payment Method
@@ -418,16 +354,16 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                   <div className="space-y-3">
                     {/* Option 1: Razorpay UPI & Cards */}
                     <label
-                      className={`p-4 border rounded-[8px] flex items-start gap-3 cursor-pointer transition-all ${
-                        paymentMethod === 'razorpay'
-                          ? 'border-[var(--color-ink)] bg-[var(--color-white)] shadow-sm'
-                          : 'border-[var(--color-line)] bg-[var(--color-paper)]'
-                      }`}
+                      className={`p-4 border rounded-[8px] flex items-start gap-3 cursor-pointer transition-all ${paymentMethod === 'razorpay'
+                        ? 'border-[var(--color-ink)] bg-[var(--color-white)] shadow-sm'
+                        : 'border-[var(--color-line)] bg-[var(--color-paper)]'
+                        }`}
                     >
                       <input
                         type="radio"
                         name="paymentMethod"
                         value="razorpay"
+                        disabled
                         checked={paymentMethod === 'razorpay'}
                         onChange={() => setPaymentMethod('razorpay')}
                         className="mt-1 accent-[var(--color-clay)]"
@@ -438,22 +374,21 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                             Razorpay (UPI, Google Pay, PhonePe, Cards, Netbanking)
                           </span>
                           <span className="text-[11px] font-bold text-[var(--color-success)] bg-[var(--color-cream)] px-2 py-0.5 rounded-[2px]">
-                            Recommended
+                            Coming soon
                           </span>
                         </div>
                         <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                          Instant UPI &amp; bank payment with 100% zero-drop confirmation.
+                          Online payments will be available once payment setup is complete.
                         </p>
                       </div>
                     </label>
 
                     {/* Option 2: Cash on Delivery / Atelier Concierge */}
                     <label
-                      className={`p-4 border rounded-[8px] flex items-start gap-3 cursor-pointer transition-all ${
-                        paymentMethod === 'cod'
-                          ? 'border-[var(--color-ink)] bg-[var(--color-white)] shadow-sm'
-                          : 'border-[var(--color-line)] bg-[var(--color-paper)]'
-                      }`}
+                      className={`p-4 border rounded-[8px] flex items-start gap-3 cursor-pointer transition-all ${paymentMethod === 'cod'
+                        ? 'border-[var(--color-ink)] bg-[var(--color-white)] shadow-sm'
+                        : 'border-[var(--color-line)] bg-[var(--color-paper)]'
+                        }`}
                     >
                       <input
                         type="radio"

@@ -45,13 +45,6 @@ export const createOrder = async (req, res, next) => {
       !/^\d{6}$/.test(clean.shippingAddress.pincode)
     )
       fail("Enter complete contact and delivery details");
-    const requestHash = hash(
-      JSON.stringify({
-        customer: clean,
-        items: req.body.items,
-        couponCode: req.body.couponCode || "",
-      }),
-    );
     let customerId;
     if (req.headers.authorization) {
       const decoded = jwt.verify(
@@ -65,12 +58,23 @@ export const createOrder = async (req, res, next) => {
         fail("Use the email of your signed-in account", 403);
       customerId = c._id;
     }
+    const gateway = req.body.paymentGateway ?? "none";
+    if (!["none", "cod", "razorpay"].includes(gateway))
+      fail("Choose a supported payment method");
+    if (gateway === "razorpay") fail("Online payments are not available yet", 503);
+    const requestHash = hash(JSON.stringify({
+      customer: clean,
+      customerId: customerId ? String(customerId) : null,
+      items: req.body.items,
+      couponCode: req.body.couponCode || "",
+      paymentGateway: gateway,
+    }));
     let order = await Order.findOne({ idempotencyKey: key });
     if (order && order.requestHash !== requestHash)
       fail("This checkout key was already used for another order", 409);
     if (!order) {
-      const runOperations = async (session = null) => {
-        const opts = session ? { session } : {};
+      const runOperations = async (session) => {
+        const opts = { session };
         const quote = await quoteCart(
           { ...req.body, pincode: clean.shippingAddress.pincode },
           session,
@@ -131,9 +135,7 @@ export const createOrder = async (req, res, next) => {
               items: quote.items,
               financials: quote.financials,
               payment: {
-                gateway: ["razorpay", "cod", "stripe"].includes(req.body.paymentGateway)
-                  ? req.body.paymentGateway
-                  : "none",
+                gateway,
                 status: "pending",
               },
               fulfillment: { status: "received" },
@@ -149,15 +151,6 @@ export const createOrder = async (req, res, next) => {
           await session.withTransaction(async () => {
             await runOperations(session);
           });
-        } catch (txnErr) {
-          if (
-            txnErr.message?.includes("replica set member or mongos") ||
-            txnErr.message?.includes("Transaction numbers are only allowed")
-          ) {
-            await runOperations(null);
-          } else {
-            throw txnErr;
-          }
         } finally {
           await session.endSession();
         }
@@ -198,7 +191,7 @@ export const createOrder = async (req, res, next) => {
 };
 export async function authorizedOrder(req) {
   const number = text(
-    req.params.orderNumber || req.body.orderNumber,
+    req.params.orderNumber || req.body?.orderNumber,
     80,
   ).toUpperCase();
   const order = await Order.findOne({ orderNumber: number })
@@ -211,7 +204,7 @@ export async function authorizedOrder(req) {
     } catch { /* Fall back to private access key validation. */ }
   }
   const supplied = text(
-    req.headers["x-order-token"] || req.body.accessToken,
+    req.headers["x-order-token"] || req.body?.accessToken,
     100,
   );
   const valid =

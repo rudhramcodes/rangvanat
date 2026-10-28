@@ -56,6 +56,7 @@ export type Section = {
   enabled: boolean;
 };
 export type Settings = {
+  demoMode: boolean;
   navigation: { label: string; href: string }[];
   name: string;
   description: string;

@@ -487,3 +487,103 @@ test('password reset and email verification tokens expire and are single-use',as
  await Customer.updateOne({_id:id},{$set:{resetHash:digest(token),resetExpires:new Date(Date.now()-1000)}});
  assert.equal((await request('/auth/password/reset',{token,password:'replacement-password-123'})).status,400);
 });
+
+test('COD requires private access and confirmation is safe to retry', async () => {
+  const created = await request('/orders', {...payload(), paymentGateway: 'cod'}, {headers: {'Idempotency-Key': key()}});
+  assert.equal(created.status, 201);
+  const o = created.data.data, path = `/orders/${o.orderNumber}/pay/cod`;
+  assert.equal((await request(path, {})).status, 404);
+  assert.equal((await request(path, {}, {headers: {'X-Order-Token': 'wrong'}})).status, 404);
+  const headers = {'X-Order-Token': o.accessToken};
+  const results = await Promise.all([request(path, {}, {headers}), request(path, {}, {headers})]);
+  for (const result of results) {
+    assert.equal(result.status, 200);
+    assert.equal(result.data.data.paymentStatus, 'pending');
+    assert.equal(result.data.data.fulfillmentStatus, 'in_stitching');
+  }
+  await Order.updateOne({orderNumber:o.orderNumber}, {$set:{'fulfillment.status':'dispatched'}});
+  assert.equal((await request(path, {}, {headers})).data.data.fulfillmentStatus, 'dispatched');
+});
+
+test('COD cannot overwrite paid, cancelled, unreserved or online-payment orders', async () => {
+  const created = await request('/orders', {...payload(), paymentGateway:'cod'}, {headers:{'Idempotency-Key':key()}});
+  const o = created.data.data;
+  for (const patch of [
+    {'payment.status':'paid'},
+    {'payment.status':'failed'},
+    {'fulfillment.status':'cancelled'},
+    {stockReserved:false},
+    {'payment.gateway':'razorpay'},
+    {'payment.gatewayOrderId':'order_existing'},
+    {'payment.transactionId':'pay_existing'},
+  ]) {
+    await Order.updateOne({orderNumber:o.orderNumber}, {$set:{'payment.status':'pending','payment.gateway':'cod','payment.gatewayOrderId':'','payment.transactionId':'','fulfillment.status':'received',stockReserved:true,...patch}});
+    const before = await Order.findOne({orderNumber:o.orderNumber}).lean();
+    assert.equal((await request(`/orders/${o.orderNumber}/pay/cod`, {}, {headers:{'X-Order-Token':o.accessToken}})).status,409);
+    const after = await Order.findOne({orderNumber:o.orderNumber}).lean();
+    assert.deepEqual(after,before);
+  }
+});
+
+test('payment choice is validated and bound to the checkout idempotency key', async () => {
+  const k=key(), body=payload();
+  assert.equal((await request('/orders', {...body,paymentGateway:'unknown'}, {headers:{'Idempotency-Key':k}})).status,400);
+  assert.equal((await request('/orders', body, {headers:{'Idempotency-Key':k}})).status,201);
+  assert.equal((await request('/orders', {...body,paymentGateway:'cod'}, {headers:{'Idempotency-Key':k}})).status,409);
+});
+
+test('failed order insert rolls back inventory and coupon redemption', async (t) => {
+  await Coupon.create({code:'ROLLBACK',discountType:'fixed',discountValue:10,expiryDate:new Date(Date.now()+86400000)});
+  const before = await Product.findById(product._id);
+  const stub=t.mock.method(Order,'create',async()=>{throw new Error('Simulated insert failure');});
+  try {
+    assert.equal((await request('/orders', {...payload(),couponCode:'ROLLBACK'}, {headers:{'Idempotency-Key':key()}})).status,500);
+  } finally { stub.mock.restore(); }
+  assert.equal((await Product.findById(product._id)).variants[0].stock,before.variants[0].stock);
+  assert.equal((await Coupon.findOne({code:'ROLLBACK'})).timesUsed,0);
+});
+
+test('deferred online payment endpoints never create or mark orders paid', async () => {
+  const k=key();
+  assert.equal((await request('/orders', {...payload(),paymentGateway:'razorpay'}, {headers:{'Idempotency-Key':k}})).status,503);
+  assert.equal(await Order.countDocuments({idempotencyKey:k}),0);
+  for(const path of ['/orders/anything/pay/razorpay','/orders/anything/pay/razorpay/verify','/orders/webhook/razorpay'])
+    assert.equal((await request(path,{razorpay_order_id:'order_mock_forged',event:'payment.captured'})).status,503);
+});
+
+test('COD accepts only the owning active account and checkout retries preserve ownership', async () => {
+  const registered=await request('/auth/register',{name:'COD Buyer',email:'cod-owner@example.com',password:'safe-password-123'});
+  const token=registered.data.data.token, headers={Authorization:`Bearer ${token}`};
+  const k=key(), body={...payload(),customer:{...customer,email:'cod-owner@example.com'},paymentGateway:'cod'};
+  const created=await request('/orders',body,{headers:{...headers,'Idempotency-Key':k}});
+  assert.equal(created.status,201);
+  const path=`/orders/${created.data.data.orderNumber}/pay/cod`;
+  assert.equal((await request('/orders',body,{headers:{'Idempotency-Key':k}})).status,409);
+  const other=await request('/auth/register',{name:'Other Buyer',email:'cod-other@example.com',password:'safe-password-123'});
+  assert.equal((await request(path,{}, {headers:{Authorization:`Bearer ${other.data.data.token}`}})).status,404);
+  assert.equal((await request(path,{}, {headers})).status,200);
+  const {Customer}=await import('../src/modules/auth/customer.model.js');
+  await Customer.updateOne({email:'cod-owner@example.com'},{$inc:{tokenVersion:1}});
+  assert.equal((await request(path,{}, {headers})).status,404);
+});
+
+test('concurrent retries reserve stock only once', async () => {
+  const k=key(), before=await Product.findById(product._id), body=payload();
+  const results=await Promise.all([request('/orders',body,{headers:{'Idempotency-Key':k}}),request('/orders',body,{headers:{'Idempotency-Key':k}})]);
+  assert.deepEqual(results.map(r=>r.status),[201,201]);
+  assert.equal(results[0].data.data.orderNumber,results[1].data.data.orderNumber);
+  assert.equal((await Product.findById(product._id)).variants[0].stock,before.variants[0].stock-1);
+});
+
+test('admin can toggle demo mode; invalid values and guests cannot change it', async () => {
+  assert.equal((await request('/admin/settings',{demoMode:false},{method:'PUT'})).status,401);
+  assert.equal((await request('/admin/settings',{demoMode:'false'},{method:'PUT',headers:auth()})).status,400);
+  try {
+    assert.equal((await request('/admin/settings',{demoMode:true},{method:'PUT',headers:auth()})).status,200);
+    assert.equal((await request('/settings')).data.data.demoMode,true);
+    assert.equal((await request('/orders',payload(),{headers:{'Idempotency-Key':key()}})).status,403);
+    assert.equal((await request('/admin/settings',{demoMode:false},{method:'PUT',headers:auth()})).status,200);
+    assert.equal((await request('/settings')).data.data.demoMode,false);
+    assert.equal((await request('/orders',payload(),{headers:{'Idempotency-Key':key()}})).status,201);
+  } finally { await Settings.updateOne({key:'store'},{$set:{demoMode:false}}); }
+});
