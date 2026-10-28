@@ -452,6 +452,23 @@ export function Admin() {
                           </p>
                         )}
                         {"email" in r && <p>{r.email}</p>}
+                        {"topic" in r && (typeof r.topic === "string" && (
+                          <p>Topic: {r.topic || "General Enquiry"}</p>
+                        ))}
+                        {"phone" in r && typeof r.phone === "string" && r.phone && (
+                          <p>Phone: {r.phone}</p>
+                        )}
+                        {"createdAt" in r &&
+                          !("fulfillment" in r) &&
+                          typeof r.createdAt === "string" && (
+                            <p>
+                              Received{" "}
+                              {new Date(r.createdAt).toLocaleString()}
+                            </p>
+                          )}
+                        {"productRef" in r && typeof r.productRef === "string" && r.productRef && (
+                          <p>Reference: {r.productRef}</p>
+                        )}
                         {"message" in r && r.message && (
                           <p className="prose">{r.message}</p>
                         )}

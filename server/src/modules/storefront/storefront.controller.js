@@ -57,6 +57,8 @@ export const subscribeNewsletter = async (req, res, next) => {
   }
 };
 
+import { sendEnquiryEmails } from "./enquiry.email.js";
+
 export const submitEnquiry = async (req, res, next) => {
   try {
     const name = text(req.body.name, 120),
@@ -86,10 +88,18 @@ export const submitEnquiry = async (req, res, next) => {
 
     await enquiry.save();
 
+    let emailed = false;
+    try {
+      emailed = await sendEnquiryEmails(enquiry);
+    } catch (emailErr) {
+      console.error("Enquiry email error:", emailErr?.message || emailErr);
+    }
+
     res.json({
       success: true,
       message:
         "Thank you for reaching out to Rangvanat. Our master weaver or stylist will contact you within 24 hours.",
+        emailed,
     });
   } catch (err) {
     next(err);

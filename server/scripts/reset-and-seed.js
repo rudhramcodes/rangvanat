@@ -286,8 +286,8 @@ async function resetAndSeed() {
     description: "Handcrafted khadi. Made to be lived in.",
     logo: "/images/logo-only.svg",
     announcement: "Complimentary Handloom Gift Box on orders above ₹5,000 | Worldwide Insured Shipping",
-    contactEmail: "orders@rangvanat.com",
-    phone: "+91 90238 27460",
+    contactEmail: "rangvanat.official@gmail.com",
+    phone: "+91 98255 73657",
     freeShippingThreshold: 5000,
     shippingFee: 250,
   });

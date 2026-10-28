@@ -175,8 +175,8 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
                   <Mail size={18} className="text-[var(--brand-maroon)] flex-shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-[var(--ink-chocolate)]">Direct Email:</strong>
-                    <a href={`mailto:${settings?.contactEmail||''}`} className="text-[var(--brand-maroon)] hover:underline">
-                      {settings?.contactEmail || 'Contact us using this form'}
+                    <a href={`mailto:${settings?.contactEmail || 'rangvanat.official@gmail.com'}`} className="text-[var(--brand-maroon)] hover:underline">
+                      {settings?.contactEmail || 'rangvanat.official@gmail.com'}
                     </a>
                   </div>
                 </div>
@@ -185,8 +185,8 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
                   <Phone size={18} className="text-[var(--brand-maroon)] flex-shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-[var(--ink-chocolate)]">WhatsApp & Phone:</strong>
-                    <a href={settings?.phone ? `https://wa.me/${settings.phone.replace(/\D/g,'')}` : '#main-content'} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-maroon)] hover:underline">
-                      {settings?.phone || 'Use the enquiry form'}
+                    <a href={`https://wa.me/${(settings?.phone || '+91 98255 73657').replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="text-[var(--brand-maroon)] hover:underline">
+                      {settings?.phone || '+91 98255 73657'}
                     </a>
                   </div>
                 </div>
@@ -200,19 +200,21 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
                 </div>
               </div>
 
-              {/* Aesthetic Studio Map Representation */}
-              <div className="aspect-[16/9] bg-stone-200 border border-[var(--line-khadi)] overflow-hidden relative rounded-[2px]">
-                <img
-                  src="/images/heritage-main.jpg"
-                  alt="Bardoli Loom Cluster"
-                  className="w-full h-full object-cover"
+              {/* Studio location map */}
+              <div className="aspect-[16/9] border border-[var(--line-khadi)] overflow-hidden rounded-[2px] relative bg-[var(--bg-cream)]">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7443.38467921209!2d73.11039694327498!3d21.124828572194343!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be0675f2c83cb5d%3A0x9e1c4f8fbf9c5139!2sRang%20Vanat!5e0!3m2!1sen!2sin!4v1793182597862!5m2!1sen!2sin"
+                  title="Rangvanat Studio location — Bardoli, Gujarat"
+                  width="600"
+                  height="450"
+                  style={{ border: 0, width: '100%', height: '100%' }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
                 />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-center p-4">
-                  <div>
-                    <p className="font-display tracking-widest text-lg font-bold">BARDOLI · GUJARAT</p>
-                    <p className="caption text-white/80 text-xs">Visits by appointment only</p>
-                  </div>
-                </div>
+                <p className="caption absolute bottom-2 right-2 bg-white/85 text-[var(--ink-chocolate)] px-2 py-1 rounded-[2px] text-[10px]">
+                  Visits by appointment only
+                </p>
               </div>
             </div>
           </div>

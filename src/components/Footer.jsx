@@ -33,8 +33,8 @@ export default function Footer({ navigate }) {
               Handcrafted artisanal Khadi studio based in Bardoli, Gujarat. Dedicated to preserving centuries-old charkha handspinning and botanical vat dyeing traditions.
             </p>
             <div className="pt-2 text-sm text-[var(--color-muted)]">
-              <p>Atelier Studio: Station Road, Bardoli, Gujarat 394601</p>
-              <p className="mt-1">Inquiries: orders@rangvanat.com · +91 90238 27460</p>
+              <p>Atelier Studio: Rangvanat Studio, Gandhi Ashram Road, Bardoli 394601, Gujarat, India</p>
+              <p className="mt-1">Inquiries: rangvanat.official@gmail.com · +91 98255 73657</p>
             </div>
           </div>
 
