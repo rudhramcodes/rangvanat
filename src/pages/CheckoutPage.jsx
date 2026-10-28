@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Lock, AlertCircle, } from 'lucide-react';
+import { ArrowLeft, Lock, AlertCircle, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
+import CustomDropdown from '../components/CustomDropdown.jsx';
 import { useStore } from '../context/store.js';
 import { api } from '../api/client.js';
 import { cartItems, checkoutKey } from '../lib/commerce.js';
@@ -13,12 +14,76 @@ const INDIAN_STATES = [
   'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
 ];
 
+function OrderSummaryContent({ cart, subtotal, discountAmount, couponCode, shippingFee, grandTotal }) {
+  return (
+    <>
+      {/* Line items */}
+      <div className="divide-y divide-[var(--color-line)] max-h-64 overflow-y-auto pr-1">
+        {cart.map((item) => (
+          <div key={item.key} className="py-3 flex items-center gap-3">
+            <img
+              src={item.image || '/images/hero-home.jpg'}
+              alt={item.title}
+              className="w-14 aspect-[3/4] object-cover rounded-[4px] bg-[var(--color-sand)]"
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-[var(--color-ink)] truncate">{item.title}</p>
+              <p className="text-[11px] text-[var(--color-muted)]">
+                Size: {item.size} · Qty: {item.quantity}
+              </p>
+            </div>
+            <span className="price-tabular text-xs font-semibold text-[var(--color-ink)]">
+              ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Price Breakdown */}
+      <div className="border-t border-[var(--color-line)] pt-3 space-y-2 text-xs">
+        <div className="flex justify-between text-[var(--color-muted)]">
+          <span>Subtotal</span>
+          <span className="price-tabular text-[var(--color-ink)] font-semibold">
+            ₹{subtotal.toLocaleString('en-IN')}
+          </span>
+        </div>
+
+        {discountAmount > 0 && (
+          <div className="flex justify-between text-[var(--color-success)] font-semibold">
+            <span>Coupon Discount ({couponCode})</span>
+            <span className="price-tabular">-₹{discountAmount.toLocaleString('en-IN')}</span>
+          </div>
+        )}
+
+        <div className="flex justify-between text-[var(--color-muted)]">
+          <span>Insured Handloom Delivery</span>
+          <span>{shippingFee === 0 ? <strong className="text-[var(--color-success)]">FREE</strong> : `₹${shippingFee}`}</span>
+        </div>
+
+        <div className="border-t border-[var(--color-line)] pt-3 flex justify-between text-base font-semibold text-[var(--color-ink)]">
+          <span>Total Amount</span>
+          <span className="price-tabular text-xl">
+            ₹{grandTotal.toLocaleString('en-IN')}
+          </span>
+        </div>
+      </div>
+
+      <div className="p-3 bg-[var(--color-cream)]/70 rounded-[6px] text-[11px] text-[var(--color-muted)] space-y-1">
+        <p>• Authentic Gandhian handspun certified Khadi.</p>
+        <p>• Complimentary GST tax invoice dispatched via email.</p>
+      </div>
+    </>
+  );
+}
+
 export default function CheckoutPage({ navigate, onOrderComplete }) {
   const { settings, cart, customer, clearCart, couponCode, refreshCustomer, addToast } = useStore();
 
   const [step, setStep] = useState(1); // 1: Shipping, 2: Payment Preview
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [mobileSummaryOpen, setMobileSummaryOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('cod'); // 'razorpay' | 'cod'
 
   const [form, setForm] = useState({
@@ -60,26 +125,89 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
     }
   }, [cart, couponCode]);
 
+  const validateForm = () => {
+    const errs = {};
+    if (!form.name.trim()) {
+      errs.name = 'Please enter your full name';
+    } else if (form.name.trim().length < 2) {
+      errs.name = 'Full name must be at least 2 characters';
+    }
+
+    if (!form.email.trim()) {
+      errs.email = 'Please enter your email address';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      errs.email = 'Please enter a valid email address';
+    }
+
+    const cleanPhone = form.phone.replace(/[\s\-\(\)]/g, '');
+    if (!form.phone.trim()) {
+      errs.phone = 'Please enter your phone number';
+    } else if (!/^(?:\+?91|0)?[6-9]\d{9}$/.test(cleanPhone)) {
+      errs.phone = 'Please enter a valid 10-digit Indian mobile number';
+    }
+
+    if (!form.addressLine1.trim()) {
+      errs.addressLine1 = 'Please enter your street address';
+    }
+
+    if (!form.city.trim()) {
+      errs.city = 'Please enter your city';
+    }
+
+    if (!form.pincode.trim()) {
+      errs.pincode = 'Please enter your 6-digit PIN code';
+    } else if (!/^[1-9]\d{5}$/.test(form.pincode.trim())) {
+      errs.pincode = 'Please enter a valid 6-digit Indian PIN code';
+    }
+
+    if (!form.state) {
+      errs.state = 'Please select a state';
+    }
+
+    return errs;
+  };
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
     setError('');
   };
 
   const handleProceedToPayment = (e) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.phone.trim()) {
-      setError('Please fill in your contact information');
+    setError('');
+    const errs = validateForm();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setError('Please review and correct the highlighted fields before proceeding.');
+      const firstField = Object.keys(errs)[0];
+      const el = document.getElementById(`checkout-${firstField}`);
+      if (el) {
+        el.focus();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
-    if (!form.addressLine1.trim() || !form.city.trim() || !/^[1-9]\d{5}$/.test(form.pincode.trim())) {
-      setError('Please provide a complete delivery address with a valid 6-digit Indian PIN code');
-      return;
-    }
+    setFieldErrors({});
     setStep(2);
   };
 
   const handlePlaceOrder = async () => {
-    if (settings?.demoMode) return;
+    if (busy || settings?.demoMode) return;
+    const errs = validateForm();
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      setStep(1);
+      setError('Please correct your contact and delivery details before placing your order.');
+      return;
+    }
+
     setBusy(true);
     setError('');
 
@@ -163,12 +291,45 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
           </div>
         </div>
 
+        {/* Mobile Collapsible Order Summary Accordion (Visible on < lg screens) */}
+        <div className="lg:hidden mt-6 border border-[var(--color-line)] rounded-[8px] bg-[var(--color-white)] overflow-hidden shadow-sm">
+          <button
+            type="button"
+            onClick={() => setMobileSummaryOpen((prev) => !prev)}
+            className="w-full p-4 flex items-center justify-between bg-[var(--color-cream)]/50 text-left transition-colors hover:bg-[var(--color-cream)] cursor-pointer"
+            aria-expanded={mobileSummaryOpen}
+            aria-controls="mobile-order-summary-panel"
+          >
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--color-ink)]">
+              <ShoppingBag size={16} className="text-[var(--color-clay)]" />
+              <span>{mobileSummaryOpen ? 'Hide order summary' : 'Show order summary'}</span>
+              {mobileSummaryOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            </div>
+            <span className="price-tabular text-sm font-bold text-[var(--color-ink)]">
+              ₹{grandTotal.toLocaleString('en-IN')}
+            </span>
+          </button>
+
+          {mobileSummaryOpen && (
+            <div id="mobile-order-summary-panel" className="p-4 border-t border-[var(--color-line)] space-y-4 animate-fade-in">
+              <OrderSummaryContent
+                cart={cart}
+                subtotal={subtotal}
+                discountAmount={discountAmount}
+                couponCode={couponCode}
+                shippingFee={shippingFee}
+                grandTotal={grandTotal}
+              />
+            </div>
+          )}
+        </div>
+
         {/* Checkout Body: 2 Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 pt-8 items-start">
           {/* Left Form (lg:col-span-7) */}
           <div className="lg:col-span-7 space-y-8">
             {error && (
-              <div className="p-4 bg-[var(--color-cream)] border border-[var(--color-error)] rounded-[8px] flex items-center gap-2.5 text-xs text-[var(--color-error)] font-medium animate-shake">
+              <div className="p-4 bg-[var(--color-cream)] border border-[var(--color-error)] rounded-[8px] flex items-center gap-2.5 text-xs text-[var(--color-error)] font-medium animate-shake" role="alert">
                 <AlertCircle size={16} className="shrink-0" />
                 <span>{error}</span>
               </div>
@@ -176,7 +337,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
 
             {/* Step 1: Contact & Shipping */}
             {step === 1 && (
-              <form onSubmit={handleProceedToPayment} className="space-y-6">
+              <form onSubmit={handleProceedToPayment} noValidate className="space-y-6">
                 <div>
                   <h3 className="font-display text-2xl text-[var(--color-ink)] font-normal mb-1">
                     Contact Information
@@ -191,42 +352,69 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                     <label htmlFor="checkout-name" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Full Name <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input id="checkout-name"
+                    <input
+                      id="checkout-name"
                       type="text"
                       value={form.name}
                       onChange={(e) => handleChange('name', e.target.value)}
                       placeholder="e.g. Radhika Sharma"
                       className="input-base"
+                      aria-invalid={Boolean(fieldErrors.name)}
+                      aria-describedby={fieldErrors.name ? "checkout-name-error" : undefined}
                       required
                     />
+                    {fieldErrors.name && (
+                      <p id="checkout-name-error" className="text-xs text-[var(--color-error)] mt-1.5 flex items-center gap-1 font-medium" role="alert">
+                        <AlertCircle size={13} className="shrink-0" />
+                        <span>{fieldErrors.name}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label htmlFor="checkout-email" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Email Address <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input id="checkout-email"
+                    <input
+                      id="checkout-email"
                       type="email"
                       value={form.email}
                       onChange={(e) => handleChange('email', e.target.value)}
                       placeholder="name@example.com"
                       className="input-base"
+                      aria-invalid={Boolean(fieldErrors.email)}
+                      aria-describedby={fieldErrors.email ? "checkout-email-error" : undefined}
                       required
                     />
+                    {fieldErrors.email && (
+                      <p id="checkout-email-error" className="text-xs text-[var(--color-error)] mt-1.5 flex items-center gap-1 font-medium" role="alert">
+                        <AlertCircle size={13} className="shrink-0" />
+                        <span>{fieldErrors.email}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label htmlFor="checkout-phone" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Phone Number <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input id="checkout-phone"
+                    <input
+                      id="checkout-phone"
                       type="tel"
                       value={form.phone}
                       onChange={(e) => handleChange('phone', e.target.value)}
                       placeholder="+91 98765 43210"
                       className="input-base"
+                      aria-invalid={Boolean(fieldErrors.phone)}
+                      aria-describedby={fieldErrors.phone ? "checkout-phone-error" : undefined}
                       required
                     />
+                    {fieldErrors.phone && (
+                      <p id="checkout-phone-error" className="text-xs text-[var(--color-error)] mt-1.5 flex items-center gap-1 font-medium" role="alert">
+                        <AlertCircle size={13} className="shrink-0" />
+                        <span>{fieldErrors.phone}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -244,21 +432,31 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                     <label htmlFor="checkout-addressLine1" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Street Address <span className="text-[var(--color-clay)]">*</span>
                     </label>
-                    <input id="checkout-addressLine1"
+                    <input
+                      id="checkout-addressLine1"
                       type="text"
                       value={form.addressLine1}
                       onChange={(e) => handleChange('addressLine1', e.target.value)}
                       placeholder="Flat, Wing, House No., Building Name, Street"
                       className="input-base"
+                      aria-invalid={Boolean(fieldErrors.addressLine1)}
+                      aria-describedby={fieldErrors.addressLine1 ? "checkout-addressLine1-error" : undefined}
                       required
                     />
+                    {fieldErrors.addressLine1 && (
+                      <p id="checkout-addressLine1-error" className="text-xs text-[var(--color-error)] mt-1.5 flex items-center gap-1 font-medium" role="alert">
+                        <AlertCircle size={13} className="shrink-0" />
+                        <span>{fieldErrors.addressLine1}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
                     <label htmlFor="checkout-addressLine2" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                       Locality / Landmark (Optional)
                     </label>
-                    <input id="checkout-addressLine2"
+                    <input
+                      id="checkout-addressLine2"
                       type="text"
                       value={form.addressLine2}
                       onChange={(e) => handleChange('addressLine2', e.target.value)}
@@ -272,46 +470,74 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
                       <label htmlFor="checkout-city" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                         City <span className="text-[var(--color-clay)]">*</span>
                       </label>
-                      <input id="checkout-city"
+                      <input
+                        id="checkout-city"
                         type="text"
                         value={form.city}
                         onChange={(e) => handleChange('city', e.target.value)}
                         placeholder="e.g. Surat"
                         className="input-base"
+                        aria-invalid={Boolean(fieldErrors.city)}
+                        aria-describedby={fieldErrors.city ? "checkout-city-error" : undefined}
                         required
                       />
+                      {fieldErrors.city && (
+                        <p id="checkout-city-error" className="text-xs text-[var(--color-error)] mt-1.5 flex items-center gap-1 font-medium" role="alert">
+                          <AlertCircle size={13} className="shrink-0" />
+                          <span>{fieldErrors.city}</span>
+                        </p>
+                      )}
                     </div>
 
                     <div>
                       <label htmlFor="checkout-pincode" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                         PIN Code <span className="text-[var(--color-clay)]">*</span>
                       </label>
-                      <input id="checkout-pincode"
+                      <input
+                        id="checkout-pincode"
                         type="text"
                         maxLength={6}
                         value={form.pincode}
                         onChange={(e) => handleChange('pincode', e.target.value.replace(/\D/g, ''))}
                         placeholder="395007"
                         className="input-base"
+                        aria-invalid={Boolean(fieldErrors.pincode)}
+                        aria-describedby={fieldErrors.pincode ? "checkout-pincode-error" : undefined}
                         required
                       />
+                      {fieldErrors.pincode && (
+                        <p id="checkout-pincode-error" className="text-xs text-[var(--color-error)] mt-1.5 flex items-center gap-1 font-medium" role="alert">
+                          <AlertCircle size={13} className="shrink-0" />
+                          <span>{fieldErrors.pincode}</span>
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
+                      <label htmlFor="checkout-state" className="text-xs font-semibold uppercase tracking-wider text-[var(--color-ink)] block mb-1">
                         State <span className="text-[var(--color-clay)]">*</span>
                       </label>
-                      <select
+                      <CustomDropdown
+                        id="checkout-state"
+                        options={INDIAN_STATES}
                         value={form.state}
-                        onChange={(e) => handleChange('state', e.target.value)}
-                        className="input-base cursor-pointer"
-                      >
-                        {INDIAN_STATES.map((st) => (
-                          <option key={st} value={st}>
-                            {st}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleChange('state', val)}
+                        placeholder="Select State"
+                        size="md"
+                        className="w-full"
+                        buttonClassName={`input-base !flex !items-center !justify-between !h-12 !rounded-[8px] !bg-[var(--color-paper)] !text-[var(--color-ink)] !text-[15px] cursor-pointer ${
+                          fieldErrors.state ? '!border-[var(--color-error)]' : '!border-[var(--color-line)]'
+                        }`}
+                        menuClassName="w-full min-w-full max-h-60 overflow-y-auto !rounded-[8px] !bg-[var(--color-white)] !border-[var(--color-line)] shadow-lg"
+                        aria-invalid={Boolean(fieldErrors.state)}
+                        aria-describedby={fieldErrors.state ? "checkout-state-error" : undefined}
+                      />
+                      {fieldErrors.state && (
+                        <p id="checkout-state-error" className="text-xs text-[var(--color-error)] mt-1.5 flex items-center gap-1 font-medium" role="alert">
+                          <AlertCircle size={13} className="shrink-0" />
+                          <span>{fieldErrors.state}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -431,67 +657,19 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
             )}
           </div>
 
-          {/* Right Sticky Order Summary Panel (§12) */}
-          <div className="lg:col-span-5 sticky top-24 bg-[var(--color-white)] border border-[var(--color-line)] rounded-[8px] p-6 shadow-sm space-y-4">
+          {/* Right Sticky Order Summary Panel (§12 - Desktop) */}
+          <div className="hidden lg:block lg:col-span-5 sticky top-24 bg-[var(--color-white)] border border-[var(--color-line)] rounded-[8px] p-6 shadow-sm space-y-4">
             <h3 className="font-display text-xl text-[var(--color-ink)] font-normal border-b border-[var(--color-line)] pb-3">
               Order Summary ({cart.length} {cart.length === 1 ? 'item' : 'items'})
             </h3>
-
-            {/* Line items */}
-            <div className="divide-y divide-[var(--color-line)] max-h-64 overflow-y-auto pr-1">
-              {cart.map((item) => (
-                <div key={item.key} className="py-3 flex items-center gap-3">
-                  <img
-                    src={item.image || '/images/hero-home.jpg'}
-                    alt={item.title}
-                    className="w-14 aspect-[3/4] object-cover rounded-[4px] bg-[var(--color-sand)]"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[var(--color-ink)] truncate">{item.title}</p>
-                    <p className="text-[11px] text-[var(--color-muted)]">
-                      Size: {item.size} · Qty: {item.quantity}
-                    </p>
-                  </div>
-                  <span className="price-tabular text-xs font-semibold text-[var(--color-ink)]">
-                    ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Price Breakdown */}
-            <div className="border-t border-[var(--color-line)] pt-3 space-y-2 text-xs">
-              <div className="flex justify-between text-[var(--color-muted)]">
-                <span>Subtotal</span>
-                <span className="price-tabular text-[var(--color-ink)] font-semibold">
-                  ₹{subtotal.toLocaleString('en-IN')}
-                </span>
-              </div>
-
-              {discountAmount > 0 && (
-                <div className="flex justify-between text-[var(--color-success)] font-semibold">
-                  <span>Coupon Discount ({couponCode})</span>
-                  <span className="price-tabular">-₹{discountAmount.toLocaleString('en-IN')}</span>
-                </div>
-              )}
-
-              <div className="flex justify-between text-[var(--color-muted)]">
-                <span>Insured Handloom Delivery</span>
-                <span>{shippingFee === 0 ? <strong className="text-[var(--color-success)]">FREE</strong> : `₹${shippingFee}`}</span>
-              </div>
-
-              <div className="border-t border-[var(--color-line)] pt-3 flex justify-between text-base font-semibold text-[var(--color-ink)]">
-                <span>Total Amount</span>
-                <span className="price-tabular text-xl">
-                  ₹{grandTotal.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 bg-[var(--color-cream)]/70 rounded-[6px] text-[11px] text-[var(--color-muted)] space-y-1">
-              <p>• Authentic Gandhian handspun certified Khadi.</p>
-              <p>• Complimentary GST tax invoice dispatched via email.</p>
-            </div>
+            <OrderSummaryContent
+              cart={cart}
+              subtotal={subtotal}
+              discountAmount={discountAmount}
+              couponCode={couponCode}
+              shippingFee={shippingFee}
+              grandTotal={grandTotal}
+            />
           </div>
         </div>
       </div>

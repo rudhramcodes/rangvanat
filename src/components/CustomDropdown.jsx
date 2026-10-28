@@ -18,6 +18,7 @@ import { ChevronDown, Check } from 'lucide-react';
  * @param {string} [menuClassName=''] - Custom menu container classes
  */
 export default function CustomDropdown({
+  id,
   options = [],
   value,
   onChange,
@@ -30,6 +31,7 @@ export default function CustomDropdown({
   className = '',
   buttonClassName = '',
   menuClassName = '',
+  ...props
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -176,12 +178,15 @@ export default function CustomDropdown({
 
       {/* Trigger Button */}
       <button
+        id={id}
         ref={buttonRef}
         type="button"
         disabled={disabled}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={listboxId}
+        aria-invalid={props['aria-invalid']}
+        aria-describedby={props['aria-describedby']}
         onClick={() => setIsOpen((prev) => !prev)}
         className={`group relative flex items-center justify-between bg-white text-[var(--ink-chocolate)] border border-[var(--line-khadi)] rounded-[2px] transition-all duration-200 ease-out select-none cursor-pointer outline-none ${
           sizeStyles.btn
@@ -224,13 +229,13 @@ export default function CustomDropdown({
         role="listbox"
         tabIndex={-1}
         aria-orientation="vertical"
-        className={`absolute top-[calc(100%+6px)] z-50 min-w-[200px] w-max max-w-[280px] bg-white border border-[var(--line-khadi)] rounded-[3px] shadow-[0_16px_36px_rgba(42,24,16,0.14)] py-1.5 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`absolute top-[calc(100%+6px)] z-50 min-w-[200px] max-h-60 overflow-y-auto bg-white border border-[var(--line-khadi)] rounded-[3px] shadow-[0_16px_36px_rgba(42,24,16,0.14)] py-1.5 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           align === 'right' ? 'right-0 origin-top-right' : 'left-0 origin-top-left'
         } ${
           isOpen
             ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto visible'
             : 'opacity-0 scale-95 -translate-y-2 pointer-events-none invisible'
-        } ${menuClassName}`}
+        } ${menuClassName || 'w-max max-w-[280px]'}`}
       >
         {normalizedOptions.map((opt, index) => {
           const isSelected = opt.value === value;

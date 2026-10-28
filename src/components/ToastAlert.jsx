@@ -16,13 +16,12 @@ export default function ToastAlert() {
           key={toast.id}
           className="pointer-events-auto bg-white border border-[var(--line-khadi)] shadow-lg rounded-[2px] p-3.5 flex items-center justify-between gap-3 animate-fade-in"
           style={{
-            borderLeft: `4px solid ${
-              toast.type === 'success'
+            borderLeft: `4px solid ${toast.type === 'success'
                 ? 'var(--state-success)'
                 : toast.type === 'error'
-                ? 'var(--state-error)'
-                : 'var(--brand-gold)'
-            }`,
+                  ? 'var(--state-error)'
+                  : 'var(--brand-gold)'
+              }`,
           }}
         >
           <div className="flex items-center gap-2.5">
