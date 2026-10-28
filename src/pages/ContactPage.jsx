@@ -139,7 +139,7 @@ export default function ContactPage({ initialTopic = 'General Enquiry', navigate
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   placeholder="Tell us about the pieces you are interested in, measurement preferences, or visit dates..."
-                  className="form-textarea"
+                  className="form-input form-textarea"
                   rows={4}
                   required
                 />
