@@ -29,6 +29,8 @@ const orderSchema = new mongoose.Schema(
     idempotencyKey: { type: String, unique: true, sparse: true },
     requestHash: String,
     accessTokenHash: { type: String, select: false },
+    reservationExpiresAt: Date,
+    reservationExpiredAt: Date,
     stockReserved: { type: Boolean, default: true },
     customer: {
       name: { type: String, required: true, trim: true },
@@ -88,5 +90,7 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+orderSchema.index({ stockReserved: 1, 'fulfillment.status': 1, reservationExpiresAt: 1 });
 
 export const Order = mongoose.model("Order", orderSchema);

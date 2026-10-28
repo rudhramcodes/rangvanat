@@ -9,7 +9,7 @@ function toTrackingResult(res) {
     return {
       data: {
         ...res.data,
-        steps: trackingSteps(res.data.fulfillment?.status),
+        steps: trackingSteps(res.data.fulfillment?.status, Boolean(res.data.reservationExpiredAt)),
       },
     };
   }

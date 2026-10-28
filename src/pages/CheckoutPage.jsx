@@ -95,6 +95,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
 
       const res = await api.createOrder(payload, checkoutKey(payload));
       if (!res.success) {
+        if (res.code === 'CHECKOUT_EXPIRED') sessionStorage.removeItem('rv_checkout');
         throw new Error(res.message || 'Could not place order request');
       }
 
@@ -103,6 +104,7 @@ export default function CheckoutPage({ navigate, onOrderComplete }) {
 
       const codRes = await api.confirmCodOrder(orderData.orderNumber, orderData.accessToken);
       if (!codRes?.success) {
+        if (codRes?.code === 'CHECKOUT_EXPIRED') sessionStorage.removeItem('rv_checkout');
         throw new Error(codRes?.message || 'Could not confirm Cash on Delivery');
       }
       orderData.payment = { ...orderData.payment, gateway: 'cod', status: codRes.data.paymentStatus };

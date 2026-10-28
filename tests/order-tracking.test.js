@@ -9,3 +9,6 @@ test('tracking distinguishes completed, current, upcoming and terminal stages',(
   assert.equal(trackingSteps('cancelled')[0].state,'cancelled');
   assert.ok(trackingSteps(undefined).every(s=>s.state==='upcoming'));
 });
+test('expired reservations explain why a new checkout is needed',()=>{
+  assert.equal(trackingSteps('cancelled',true)[0].label,'Checkout expired');
+});

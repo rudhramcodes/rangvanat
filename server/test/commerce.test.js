@@ -587,3 +587,67 @@ test('admin can toggle demo mode; invalid values and guests cannot change it', a
     assert.equal((await request('/orders',payload(),{headers:{'Idempotency-Key':key()}})).status,201);
   } finally { await Settings.updateOne({key:'store'},{$set:{demoMode:false}}); }
 });
+
+test('expired checkout releases stock and coupon exactly once under concurrent cleanup', async () => {
+  const {expireReservations}=await import('../src/modules/orders/reservations.js');
+  await Coupon.create({code:'EXPIRE',discountType:'fixed',discountValue:10,expiryDate:new Date(Date.now()+86400000)});
+  const before=await Product.findById(product._id);
+  const result=await request('/orders',{...payload(),couponCode:'EXPIRE',paymentGateway:'cod'},{headers:{'Idempotency-Key':key()}});
+  assert.equal(result.status,201);
+  const o=result.data.data;
+  await Order.updateOne({orderNumber:o.orderNumber},{$set:{reservationExpiresAt:new Date(Date.now()-1000)}});
+  assert.equal((await request(`/orders/${o.orderNumber}/pay/cod`,{},{headers:{'X-Order-Token':o.accessToken}})).status,409);
+  await Promise.all([expireReservations(),expireReservations()]);
+  await expireReservations();
+  const expired=await Order.findOne({orderNumber:o.orderNumber});
+  assert.equal(expired.fulfillment.status,'cancelled');
+  assert.equal(expired.stockReserved,false);
+  assert.ok(expired.reservationExpiredAt);
+  assert.equal((await Product.findById(product._id)).variants[0].stock,before.variants[0].stock);
+  assert.equal((await Coupon.findOne({code:'EXPIRE'})).timesUsed,0);
+  assert.equal((await request(`/admin/orders/${expired._id}`,{status:'cancelled'},{method:'PUT',headers:auth()})).status,200);
+  assert.equal((await Product.findById(product._id)).variants[0].stock,before.variants[0].stock);
+});
+
+test('cleanup preserves fresh, confirmed COD and paid orders; legacy abandoned orders expire',async()=>{
+  const {expireReservations}=await import('../src/modules/orders/reservations.js');
+  const orders=[];
+  for(let i=0;i<4;i++) {
+    const result=await request('/orders',payload(),{headers:{'Idempotency-Key':key()}});
+    assert.equal(result.status,201);orders.push(result.data.data);
+  }
+  const [fresh,cod,paid,legacy]=orders;
+  assert.equal((await request(`/orders/${cod.orderNumber}/pay/cod`,{},{headers:{'X-Order-Token':cod.accessToken}})).status,200);
+  await Order.updateOne({orderNumber:cod.orderNumber},{$set:{reservationExpiresAt:new Date(0)}});
+  await Order.updateOne({orderNumber:paid.orderNumber},{$set:{'payment.status':'paid',reservationExpiresAt:new Date(0)}});
+  await Order.collection.updateOne({orderNumber:legacy.orderNumber},{$unset:{reservationExpiresAt:''},$set:{createdAt:new Date(Date.now()-3600000)}});
+  await expireReservations();
+  for(const o of [fresh,cod,paid]) assert.equal((await Order.findOne({orderNumber:o.orderNumber})).stockReserved,true);
+  assert.equal((await Order.findOne({orderNumber:legacy.orderNumber})).stockReserved,false);
+});
+
+test('expiry rolls inventory back on failure and can retry safely',async(t)=>{
+  const {expireReservations}=await import('../src/modules/orders/reservations.js');
+  const result=await request('/orders',payload(),{headers:{'Idempotency-Key':key()}});
+  const o=result.data.data;
+  await Order.updateOne({orderNumber:o.orderNumber},{$set:{reservationExpiresAt:new Date(0)}});
+  const before=await Product.findById(product._id);
+  const stub=t.mock.method(Order.prototype,'save',async()=>{throw new Error('Simulated expiry save failure');});
+  try { await assert.rejects(expireReservations(),/Simulated expiry save failure/); }
+  finally { stub.mock.restore(); }
+  assert.equal((await Product.findById(product._id)).variants[0].stock,before.variants[0].stock);
+  assert.equal((await Order.findOne({orderNumber:o.orderNumber})).stockReserved,true);
+  await expireReservations();
+  assert.equal((await Product.findById(product._id)).variants[0].stock,before.variants[0].stock+1);
+});
+
+test('expired checkout retry returns a recoverable code without reserving again',async()=>{
+  const {expireReservations}=await import('../src/modules/orders/reservations.js');
+  const k=key(),body=payload();
+  const created=await request('/orders',body,{headers:{'Idempotency-Key':k}});
+  await Order.updateOne({orderNumber:created.data.data.orderNumber},{$set:{reservationExpiresAt:new Date(0)}});
+  await expireReservations();
+  const retry=await request('/orders',body,{headers:{'Idempotency-Key':k}});
+  assert.equal(retry.status,409);assert.equal(retry.data.code,'CHECKOUT_EXPIRED');
+  assert.equal(await Order.countDocuments({idempotencyKey:k}),1);
+});

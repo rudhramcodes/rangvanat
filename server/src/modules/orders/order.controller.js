@@ -1,3 +1,4 @@
+import { RESERVATION_MS, expiredReservation } from './reservations.js';
 import mongoose from "mongoose";
 import {
   randomUUID,
@@ -72,6 +73,10 @@ export const createOrder = async (req, res, next) => {
     let order = await Order.findOne({ idempotencyKey: key });
     if (order && order.requestHash !== requestHash)
       fail("This checkout key was already used for another order", 409);
+    if (order && (order.reservationExpiredAt || (
+      order.fulfillment.status === 'received' && order.payment.status !== 'paid' &&
+      await Order.exists({ _id: order._id, ...expiredReservation() })
+    ))) return res.status(409).json({ success: false, code: 'CHECKOUT_EXPIRED', message: 'Your checkout reservation expired. Please retry to check current stock.' });
     if (!order) {
       const runOperations = async (session) => {
         const opts = { session };
@@ -130,6 +135,7 @@ export const createOrder = async (req, res, next) => {
               idempotencyKey: key,
               requestHash,
               accessTokenHash: hash(accessToken(key)),
+              reservationExpiresAt: new Date(Date.now() + RESERVATION_MS),
               customerId,
               customer: clean,
               items: quote.items,
@@ -243,6 +249,7 @@ export const trackOrder = async (req, res, next) => {
         fulfillment: order.fulfillment,
         payment: order.payment,
         createdAt: order.createdAt,
+        reservationExpiredAt: order.reservationExpiredAt,
         items: order.items,
         financials: order.financials,
       },

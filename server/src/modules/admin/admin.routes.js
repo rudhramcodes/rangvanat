@@ -1,3 +1,4 @@
+import { releaseReservation, expiredReservation } from '../orders/reservations.js';
 import { paginatedList } from "../../utils/pagination.js";
 import { Router } from "express";
 import mongoose from "mongoose";
@@ -379,8 +380,8 @@ router.put(
       ].includes(req.body.status)
     )
       fail("Invalid fulfillment status");
-    const updateOrder = async (session = null) => {
-      const opts = session ? { session } : {};
+    const updateOrder = async (session) => {
+      const opts = { session };
       const order = await Order.findById(req.params.id, null, opts);
       if (!order) fail("Order not found", 404);
       const before = order.fulfillment.status,
@@ -400,26 +401,12 @@ router.put(
       )
         fail("Add courier and tracking number before dispatch");
       if (after === "cancelled" && order.stockReserved) {
-        for (const i of order.items)
-          if (!i.madeToOrder)
-            await Product.updateOne(
-              { _id: i.productId, "variants.size": i.variantSize },
-              {
-                $inc: {
-                  "variants.$.stock": i.quantity,
-                  totalStock: i.quantity,
-                  __v: 1,
-                },
-              },
-              opts,
-            );
-        if (order.financials.couponCode)
-          await Coupon.updateOne(
-            { code: order.financials.couponCode, timesUsed: { $gt: 0 } },
-            { $inc: { timesUsed: -1 } },
-            opts,
-          );
-        order.stockReserved = false;
+        await releaseReservation(order, session);
+      }
+      if (before === 'received' && after === 'in_stitching') {
+        if (await Order.exists({ _id: order._id, ...expiredReservation() }).session(session))
+          fail('Checkout reservation expired. Please create a new order.', 409);
+        order.reservationExpiresAt = undefined;
       }
       order.fulfillment.status = after;
       order.fulfillment.courierPartner = text(req.body.courierPartner, 100);
@@ -439,15 +426,6 @@ router.put(
       await session.withTransaction(async () => {
         order = await updateOrder(session);
       });
-    } catch (txnErr) {
-      if (
-        txnErr.message?.includes("replica set member or mongos") ||
-        txnErr.message?.includes("Transaction numbers are only allowed")
-      ) {
-        order = await updateOrder(null);
-      } else {
-        throw txnErr;
-      }
     } finally {
       await session.endSession();
     }

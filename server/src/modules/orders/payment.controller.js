@@ -1,3 +1,4 @@
+import { expiredReservation } from './reservations.js';
 import { Order } from "./order.model.js";
 import { authorizedOrder } from "./order.controller.js";
 import { fail } from "../../utils/validate.js";
@@ -12,9 +13,13 @@ export const handleRazorpayWebhook = createRazorpayOrder;
 export async function confirmCodOrder(req, res, next) {
   try {
     const owned = await authorizedOrder(req);
+    if (owned.reservationExpiredAt || (owned.fulfillment.status === 'received' &&
+        owned.payment.status !== 'paid' && await Order.exists({ _id: owned._id, ...expiredReservation() })))
+      return res.status(409).json({ success: false, code: 'CHECKOUT_EXPIRED', message: 'Your checkout reservation expired. Please retry to check current stock.' });
     const order = await Order.findOneAndUpdate(
       {
         _id: owned._id,
+        $nor: [expiredReservation()],
         "payment.gateway": { $in: ["none", "cod"] },
         "payment.status": "pending",
         "payment.gatewayOrderId": { $in: ["", null] },
@@ -22,7 +27,7 @@ export async function confirmCodOrder(req, res, next) {
         stockReserved: true,
         "fulfillment.status": "received",
       },
-      { $set: { "payment.gateway": "cod", "fulfillment.status": "in_stitching" } },
+      { $set: { "payment.gateway": "cod", "fulfillment.status": "in_stitching" }, $unset: { reservationExpiresAt: 1 } },
       { new: true },
     );
     const confirmed = order || await Order.findById(owned._id);

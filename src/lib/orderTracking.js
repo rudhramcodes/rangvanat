@@ -5,7 +5,8 @@ const stages = [
   ['delivered', 'Delivered'],
 ];
 
-export function trackingSteps(status) {
+export function trackingSteps(status, expired = false) {
+  if (expired) return [{label: 'Checkout expired', state: 'cancelled', description: 'The reservation was released. Please place a new order.'}];
   if (status === 'cancelled') return [{label: 'Order cancelled', state: 'cancelled', description: 'This order will not be fulfilled.'}];
   const current = stages.findIndex(([id]) => id === status);
   return stages.map(([id, label], index) => {

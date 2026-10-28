@@ -1,3 +1,4 @@
+import { resolveContentPages } from '../../../../shared/contentPages.js';
 import mongoose from "mongoose";
 const page = new mongoose.Schema(
   {
@@ -100,7 +101,11 @@ const schema = new mongoose.Schema(
   { timestamps: true },
 );
 export const Settings = mongoose.model("Settings", schema);
-export const getSettings = async () => ({
+export const getSettings = async () => {
+  const settings = {
   ...new Settings().toObject(),
   ...(await Settings.findOne({ key: "store" }).lean()),
-});
+  };
+  settings.pages = resolveContentPages(settings.pages);
+  return settings;
+};
